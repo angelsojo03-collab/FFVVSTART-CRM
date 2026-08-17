@@ -3,62 +3,8 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>FFVV START | CRM Call Center</title>
     <script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.1.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script>
-    // ================= POLYFILL DE GOOGLE SCRIPT RUN PARA VERCEL =================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeggsbjtLfDEZWCdA9THWvfhDyzHDKr0IuqhB2mrZz2ysnyUptibxQZl9OsemObey-1g/exec";
-
-    class ScriptRunMock {
-        constructor() {
-            this.successCb = null;
-            this.failureCb = null;
-        }
-        withSuccessHandler(cb) {
-            this.successCb = cb;
-            return this;
-        }
-        withFailureHandler(cb) {
-            this.failureCb = cb;
-            return this;
-        }
-    }
-
-    window.google = {
-        script: {
-            run: new Proxy(new ScriptRunMock(), {
-                get(target, prop) {
-                    if (prop === 'withSuccessHandler' || prop === 'withFailureHandler') {
-                        return target[prop].bind(target);
-                    }
-                    return async function(...args) {
-                        try {
-                            const response = await fetch(SCRIPT_URL, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify({ action: prop, args: args })
-                            });
-                            const result = await response.json();
-                            if (target.successCb) {
-                                target.successCb(result);
-                            }
-                            target.successCb = null;
-                            target.failureCb = null;
-                        } catch (err) {
-                            if (target.failureCb) {
-                                target.failureCb(err);
-                            } else {
-                                console.error("Error en llamada API:", err);
-                            }
-                            target.successCb = null;
-                            target.failureCb = null;
-                        }
-                    };
-                }
-            })
-        }
-    };
-</script>
-<style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.1.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
         * { scrollbar-width: thin; } ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #f8fafc; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .sidebar-hidden { transform: translateX(-100%); } .transition-slide { transition: transform 0.3s ease-in-out; } .view-hidden { display: none !important; }
         select.inline-edit, input.inline-edit, textarea.inline-edit { background: transparent; border: 1px solid transparent; cursor: pointer; padding: 4px 6px; border-radius: 4px; color: inherit; width: 100%; transition: all 0.2s ease; }
@@ -70,7 +16,6 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
-    <script> Chart.register(ChartDataLabels); </script>
     <div id="loginView" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
         <div class="w-full max-w-md bg-white rounded-xl shadow-xl p-8 border border-slate-200">
             <div class="text-center mb-8"><h1 class="text-3xl font-extrabold text-red-600 tracking-wider">FFVV START</h1><p class="text-slate-500 text-sm mt-1">Portal de Gestión de Ventas</p></div>
@@ -224,6 +169,7 @@
                                 <tbody id="tablaCuerpo" class="divide-y divide-slate-100 bg-white"></tbody>
                             </table>
                         </div>
+                        <!-- Contenedor de Paginación CRM (Letra grande y legible) -->
                         <div id="paginacionVentas" class="bg-slate-50 border-t border-slate-200 p-4 flex flex-wrap justify-between items-center text-sm text-slate-800 font-bold"></div>
                     </div>
                 </div>
@@ -352,12 +298,64 @@
         </div>
 <!-- SCRIPTS CORE -->
     <script>
+        // ================= POLYFILL DE GOOGLE SCRIPT RUN PARA VERCEL =================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeggsbjtLfDEZWCdA9THWvfhDyzHDKr0IuqhB2mrZz2ysnyUptibxQZl9OsemObey-1g/exec";
+
+        class ScriptRunMock {
+            constructor() {
+                this.successCb = null;
+                this.failureCb = null;
+            }
+            withSuccessHandler(cb) {
+                this.successCb = cb;
+                return this;
+            }
+            withFailureHandler(cb) {
+                this.failureCb = cb;
+                return this;
+            }
+        }
+
+        window.google = {
+            script: {
+                run: new Proxy(new ScriptRunMock(), {
+                    get(target, prop) {
+                        if (prop === 'withSuccessHandler' || prop === 'withFailureHandler') {
+                            return target[prop].bind(target);
+                        }
+                        return async function(...args) {
+                            try {
+                                const response = await fetch(SCRIPT_URL, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                    body: JSON.stringify({ action: prop, args: args })
+                                });
+                                const result = await response.json();
+                                if (target.successCb) {
+                                    target.successCb(result);
+                                }
+                                target.successCb = null;
+                                target.failureCb = null;
+                            } catch (err) {
+                                if (target.failureCb) {
+                                    target.failureCb(err);
+                                } else {
+                                    console.error("Error en llamada API:", err);
+                                }
+                                target.successCb = null;
+                                target.failureCb = null;
+                            }
+                        };
+                    }
+                })
+            }
+        };
+
         const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
         const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
         let currentUser = null; let ventasGlobal = []; let baseVentasGlobal = []; let chartDiasInstance = null; let chartAsesoresInstance = null; let chartDiasGrupalInstance = null; let chartAsesoresGrupalInstance = null; let baseSortCol = ''; let baseSortAsc = true; let baseSyncInterval = null;
         
-        // Variables de Paginación CRM
         let ventasFiltradasGlobal = [];
         let currentPageVentas = 1;
         const itemsPerPageVentas = 15;
@@ -479,7 +477,6 @@
             }
         }
 
-        // ====== LÓGICA DE BASE DE VENTAS ======
         function aplicarFiltrosBase(silencioso = false) {
             const txtEl = document.getElementById('filtroTextoBase'); const txt = txtEl ? txtEl.value.toLowerCase() : '';
             const chkOcultar = document.getElementById('chkOcultarGestionados'); const ocultar = chkOcultar ? chkOcultar.checked : true;
@@ -491,7 +488,7 @@
 
             const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc };
             const tbody = document.getElementById('tablaCuerpoBase');
-            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando registros...</td></tr>';
+            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando 50 registros sincronizados...</td></tr>';
 
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { baseVentasGlobal = res.baseVentas || []; renderBaseTable(baseVentasGlobal); } 
@@ -766,7 +763,7 @@
                 if(ventas.length === 0) { tb.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-500 font-bold">No se encontraron registros.</td></tr>'; return; }
                 const isGerencia = (currentUser.rol === 'GERENCIA' || currentUser.rol === 'SUPERVISOR');
                 
-                let htmlTemp = ''; // Buffer para evitar parpadeos en el HTML
+                let htmlTemp = ''; 
                 ventas.forEach(function(v) {
                     let optEst = ''; Object.keys(DEP_ESTADOS).forEach(function(e) { optEst += '<option value="' + e + '" ' + (v.ESTADO===e ? 'selected' : '') + '>' + e + '</option>'; });
                     let optSub = ''; let subArr = DEP_ESTADOS[v.ESTADO] || []; subArr.forEach(function(s) { optSub += '<option value="' + s + '" ' + (v.SUB_ESTADO===s ? 'selected' : '') + '>' + s + '</option>'; });
@@ -780,7 +777,6 @@
 
                     const safeCliente = (v.CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeCampana = (v.CAMPANA || '').toString().replace(/['"\n\r]/g, ''); const safeFecha = (v.FECHA_ACTIVACION || '').toString().replace(/['"\n\r]/g, ''); const safeAni = (v.ANI || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBSERVACIONES || '').toString().replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-                    // Colores visuales dinámicos
                     let rowColor = 'bg-white hover:bg-slate-50';
                     if (v.ESTADO === 'ENTREGADO') rowColor = 'bg-green-50 hover:bg-green-100';
                     else if (v.ESTADO === 'P.ENTREGA') rowColor = 'bg-yellow-50 hover:bg-yellow-100';
@@ -842,7 +838,7 @@
                             '</div>' +
                         '</td>' +
                     '</tr>';
-                });.
+                });
                 tb.innerHTML = htmlTemp;
             } catch(e) { console.error("Error en renderTable:", e); }
         }
