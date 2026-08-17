@@ -1351,7 +1351,6 @@
             const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
             if(tbCarr) { 
                 tbCarr.innerHTML = ''; 
-                // Extraemos el objeto de carruseleros de forma flexible para gerencia o grupal
                 const carrData = (dashboard && dashboard.carruselerosDetalle) ? dashboard.carruselerosDetalle : (g.carruselerosDetalle || {});
                 
                 Object.keys(carrData).forEach(function(cName) { 
