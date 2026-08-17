@@ -368,29 +368,11 @@
         const SUPABASE_KEY = 'sb_publishable_1co4uYVkYwVPClzHxSSYCw_JVLBTU5k';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // CONFIGURACIONES GLOBALES POR LOCALSTORAGE
+        // CONFIGURACIONES GLOBALES
         function getConfig() { return JSON.parse(localStorage.getItem('ffvv_config')) || { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, globalSort: [] }; }
-        function saveConfig(e) { 
-            e.preventDefault(); 
-            const c = { 
-                metaCuota: parseFloat(document.getElementById('confMeta').value) || 4000, 
-                diasMes: parseInt(document.getElementById('confDias').value) || 30, 
-                bonoMeta: parseFloat(document.getElementById('confBono').value) || 7000, 
-                globalSort: getConfig().globalSort 
-            }; 
-            localStorage.setItem('ffvv_config', JSON.stringify(c)); 
-            showToast("Configuración Guardada localmente"); 
-            loadVentas(); 
-            google.script.run.withSuccessHandler(()=>showToast('Sincronizado a toda la empresa')).guardarConfiguracion(c);
-        }
-        function loadConfigUI() { 
-            let c = getConfig(); 
-            const m = document.getElementById('confMeta'); if(m) m.value = c.metaCuota; 
-            const d = document.getElementById('confDias'); if(d) d.value = c.diasMes; 
-            const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; 
-        }
+        function saveConfig(e) { e.preventDefault(); const c = { metaCuota: parseFloat(document.getElementById('confMeta').value) || 4000, diasMes: parseInt(document.getElementById('confDias').value) || 30, bonoMeta: parseFloat(document.getElementById('confBono').value) || 7000, globalSort: getConfig().globalSort }; localStorage.setItem('ffvv_config', JSON.stringify(c)); showToast("Configuración Guardada localmente"); loadVentas(); google.script.run.withSuccessHandler(()=>showToast('Sincronizado a toda la empresa')).guardarConfiguracion(c); }
+        function loadConfigUI() { let c = getConfig(); const m = document.getElementById('confMeta'); if(m) m.value = c.metaCuota; const d = document.getElementById('confDias'); if(d) d.value = c.diasMes; const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; }
 
-        // MOTOR DE DESCARGA TOTAL SIN LÍMITES
         async function fetchAllRecords(table) {
             let all = [];
             for (let i = 0; i < 100000; i += 1000) {
@@ -420,7 +402,6 @@
                                         if (data && data.length > 0) { result = { success: true, user: { nombre: data[0].NOMBRE, correo: data[0].EMAIL, rol: data[0].ROL } }; } else { result = { success: false, message: 'Credenciales inválidas' }; }
                                     }
                                     
-                                    // === CONFIGURACIÓN GLOBAL NUBE ===
                                     else if (prop === 'obtenerConfiguracion') {
                                         const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
@@ -446,11 +427,8 @@
                                         result = { success: true };
                                     }
                                     
-                                    // === OBTENER VENTAS Y DASHBOARD ===
                                     else if (prop === 'getDashboardData') {
                                         const [rol, nombre] = args;
-                                        
-                                        // Obtener Config de Nube
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
                                         if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
@@ -544,7 +522,6 @@
                                     
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
-                                        
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { vistaDito: null, globalSort: [] };
                                         if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
@@ -570,9 +547,19 @@
                                         if (ciclos.length > 0) { filtered = filtered.filter(v => ciclos.includes(String(v.CICLO))); }
                                         if (meses.length > 0) { filtered = filtered.filter(v => meses.includes(String(v.MES).toLowerCase())); }
                                         
+                                        // LOGICA COLOR DUPLICADOS SEGURA
                                         let dniMap = {};
-                                        filtered.forEach(v => { if(!v.DNI) return; let dniS = String(v.DNI); if(!dniMap[dniS]) dniMap[dniS] = new Set(); if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO)); });
-                                        filtered.forEach(v => { if(v.DNI && dniMap[String(v.DNI)] && dniMap[String(v.DNI)].size > 1) { v.isDuplicate = true; } else { v.isDuplicate = false; } });
+                                        filtered.forEach(v => { 
+                                            if(!v.DNI || String(v.DNI).trim() === '') return; 
+                                            let dniS = String(v.DNI).trim(); 
+                                            if(!dniMap[dniS]) dniMap[dniS] = new Set(); 
+                                            if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO).trim()); 
+                                        });
+                                        filtered.forEach(v => { 
+                                            if(v.DNI && String(v.DNI).trim() !== '' && dniMap[String(v.DNI).trim()] && dniMap[String(v.DNI).trim()].size > 1) { 
+                                                v.isDuplicate = true; 
+                                            } else { v.isDuplicate = false; } 
+                                        });
 
                                         let globalSort = cloudConf.globalSort || [];
                                         if (globalSort.length > 0) {
@@ -630,11 +617,7 @@
                                     }
 
                                     if (target.successCb) target.successCb(result);
-                                } catch (err) {
-                                    console.error("Error Supabase:", err);
-                                    if (target.failureCb) target.failureCb(err);
-                                    else showToast("Fallo: " + err.message);
-                                }
+                                } catch (err) { console.error("Error Supabase:", err); if (target.failureCb) target.failureCb(err); else showToast("Fallo: " + err.message); }
                             };
                         }
                     });
@@ -642,7 +625,6 @@
             }
         };
 
-        // UI HELPERS PARA RANGOS COLORIDOS
         function formatRangoText(rango) {
             let color = 'text-slate-500';
             if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
@@ -655,10 +637,11 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             if(typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
+            loadConfigUI();
             const saved = localStorage.getItem('ffvv_user'); if (saved) { try { currentUser = JSON.parse(saved); initApp(); } catch(e) { localStorage.removeItem('ffvv_user'); } }
             const loginForm = document.getElementById('loginForm'); if(loginForm) { loginForm.onsubmit = function(e) { e.preventDefault(); google.script.run.withSuccessHandler(function(res) { if(res && res.success) { localStorage.setItem('ffvv_user', JSON.stringify(res.user)); currentUser = res.user; initApp(); } else { const errEl = document.getElementById('loginError'); if(errEl) { errEl.textContent = res ? res.message : 'Error desconocido'; errEl.classList.remove('hidden'); } } }).loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); }; }
             const logoutBtn = document.getElementById('logoutBtn'); if(logoutBtn) { logoutBtn.onclick = function() { localStorage.removeItem('ffvv_user'); location.reload(); }; }
-            const sidebarToggle = document.getElementById('sidebarToggle'); if(sidebarToggle) { sidebarToggle.onclick = function() { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.toggle('sidebar-hidden'); if(mc) { mc.classList.toggle('md:pl-64'); } }; }
+            const sidebarToggle = document.getElementById('sidebarToggle'); if(sidebarToggle) { sidebarToggle.onclick = function() { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.toggle('sidebar-hidden'); if(mc) { mc.classList.remove('md:pl-64'); } }; }
             document.querySelectorAll('.nav-link').forEach(function(link) { link.onclick = function(e) { e.preventDefault(); if(link.dataset.view) cambiarVista(link.dataset.view); }; });
 
             const ventaForm = document.getElementById('ventaForm');
@@ -1005,7 +988,7 @@
         function addLinea() { const container = document.getElementById('lineasContainer'); if(!container) return; const div = document.createElement('div'); div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 linea-row'; div.innerHTML = '<div><label class="block text-[10px] text-slate-600 font-bold">N° a Portar</label><input type="text" name="n_portar" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: 999888777" required></div><div><label class="block text-[10px] text-slate-600 font-bold">N° SEC</label><input type="text" name="sec" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: SEC-123"></div><div><label class="block text-[10px] text-slate-600 font-bold">Tipo de Venta</label><select name="tipoVenta" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" onchange="actualizarOpRow(this)"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovación</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Operador</label><select name="operador" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Plan (CF S/)</label><select name="cf" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-green-700 text-sm font-bold focus:outline-none focus:border-red-600"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Campaña</label><select name="campana" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div><div class="col-span-1 md:col-span-6 flex justify-end"><button type="button" onclick="this.closest(\'.linea-row\').remove()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded text-xs transition">Eliminar Línea</button></div>'; container.appendChild(div); }
 
         function aplicarFiltros() {
-            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.trim() : '';
+            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.toLowerCase() : '';
             const tipoEl = document.getElementById('filtroTipo'); const tipo = tipoEl ? tipoEl.value : '';
             const mesEl = document.getElementById('filtroMes'); const mes = mesEl ? mesEl.value : '';
             const fechaEl = document.getElementById('filtroFechaAct'); const fechaFiltro = fechaEl ? fechaEl.value : '';
@@ -1021,8 +1004,7 @@
             if (fechaFiltro) { let partes = fechaFiltro.split('-'); fechaFiltroFormat = partes[2] + '/' + partes[1] + '/' + partes[0]; }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
-                const t = txt.toLowerCase();
-                const matchTxt = !t || (String(v.CLIENTE || '').toLowerCase().includes(t) || String(v.DOC || '').toLowerCase().includes(t) || String(v.N_PORTAR || '').toLowerCase().includes(t) || String(v.ANI || '').toLowerCase().includes(t) || String(v.SEC || '').toLowerCase().includes(t));
+                const matchTxt = (String(v.CLIENTE || '').toLowerCase().indexOf(txt) !== -1 || String(v.DOC || '').toLowerCase().indexOf(txt) !== -1 || String(v.N_PORTAR || '').toLowerCase().indexOf(txt) !== -1 || String(v.ANI || '').toLowerCase().indexOf(txt) !== -1 || String(v.SEC || '').toLowerCase().indexOf(txt) !== -1);
                 let matchEst = true; if (estadosCheckbox.length > 0) { matchEst = estadosCheckbox.includes(v.ESTADO); }
                 const matchTipo = !tipo || v.TIPO_VENTA === tipo; const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; const matchAsesor = !asesorFiltro || v.ASESOR.toUpperCase() === asesorFiltro.toUpperCase();
                 let matchRevision = true; if (revFiltro) { if (revFiltro === "- Sin Revisión -") { matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; } else { matchRevision = v.REVISION === revFiltro; } }
@@ -1061,7 +1043,10 @@
             }
         }
 
-        function cambiarPagina(page) { currentPageVentas = page; renderTablePaginated(); }
+        function cambiarPagina(page) {
+            currentPageVentas = page;
+            renderTablePaginated();
+        }
 
         function loadVentas() {
             const tbody = document.getElementById('tablaCuerpo'); if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando ventas...</td></tr>';
