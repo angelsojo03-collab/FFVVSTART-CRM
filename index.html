@@ -328,7 +328,7 @@
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Paquete</label><select name="paquete" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="Chip">Chip</option><option value="Pack">Pack</option></select></div>
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Región</label><select name="region" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="" selected></option><option value="LIMA">LIMA</option><option value="NORTE">NORTE</option><option value="CENTRO">CENTRO</option><option value="SUR">SUR</option></select></div>
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Carruselero</label><select name="carruselero" id="formCarruselero" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="" selected></option><option value="HUMBERTO">HUMBERTO</option><option value="ANA">ANA</option><option value="SARA">SARA</option></select></div>
-                        </div>
+                            <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Fecha Activación (Opcional)</label><input type="date" name="fechaActivacion" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"></div>                        </div>
                         <div class="border-t border-slate-200 pt-6">
                             <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-black text-slate-800">Líneas a Registrar</h3><button type="button" onclick="addLinea()" class="text-sm bg-slate-800 hover:bg-slate-900 font-black px-4 py-2 rounded-lg text-white shadow-md flex items-center gap-2"><i class="fas fa-plus"></i> Añadir Línea</button></div>
                             <div id="lineasContainer" class="space-y-4"></div>
@@ -542,9 +542,33 @@
                                     
                                     // === EL RESTO DE METODOS CRUD Y BASE DITO ===
                                     else if (prop === 'saveVentasMultiples') {
-                                        const [d] = args; let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
-let inserts = d.lineasDetalle.map((l, idx) => ({ ID: Date.now().toString() + 'V' + idx, ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region, CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado, OBSERVACIONES: d.observaciones, ASESOR: d.asesor, N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana, FECHA_ACTIVACION: dateStr }));                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
-                                        if (error) throw error; result = { success: true, message: 'Ventas registradas correctamente' };
+                                        const [d] = args; 
+                                        let fechaFinalIns = d.fechaActivacionOpcional ? d.fechaActivacionOpcional : ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
+                                        
+                                        let inserts = d.lineasDetalle.map((l, idx) => ({ 
+                                            ID: Date.now().toString() + 'V' + idx, 
+                                            ANI: d.ani, 
+                                            CLIENTE: d.cliente, 
+                                            DOC: d.doc, 
+                                            PAQUETE: d.paquete, 
+                                            REGION: d.region, 
+                                            CARRUSELERO: d.carruselero, 
+                                            FORMA_ENTREGA: d.formaEntrega, 
+                                            ESTADO: d.estado, 
+                                            SUB_ESTADO: d.subEstado, 
+                                            OBSERVACIONES: d.observaciones, 
+                                            ASESOR: d.asesor, 
+                                            N_PORTAR: l.n_portar, 
+                                            SEC: l.sec, 
+                                            TIPO_VENTA: l.tipoVenta, 
+                                            OPERADOR: l.operador, 
+                                            CF: l.cf, 
+                                            CAMPANA: l.campana, 
+                                            FECHA_ACTIVACION: fechaFinalIns 
+                                        }));
+                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
+                                        if (error) throw error; 
+                                        result = { success: true, message: 'Ventas registradas correctamente' };
                                     }
                                     
                                     else if (prop === 'updateVentaInline') {
@@ -714,11 +738,55 @@ let inserts = d.lineasDetalle.map((l, idx) => ({ ID: Date.now().toString() + 'V'
             document.querySelectorAll('.nav-link').forEach(function(link) { link.onclick = function(e) { e.preventDefault(); if(link.dataset.view) cambiarVista(link.dataset.view); }; });
 
             const ventaForm = document.getElementById('ventaForm');
-            if(ventaForm) { ventaForm.onsubmit = function(e) { e.preventDefault(); const form = e.target; const formData = new FormData(form); const rows = form.querySelectorAll('.linea-row'); let lineasDetalle = []; rows.forEach(function(r) { lineasDetalle.push({ n_portar: r.querySelector('input[name="n_portar"]').value, sec: r.querySelector('input[name="sec"]').value, tipoVenta: r.querySelector('select[name="tipoVenta"]').value, operador: r.querySelector('select[name="operador"]').value, cf: r.querySelector('select[name="cf"]').value, campana: r.querySelector('select[name="campana"]').value }); }); const data = { ani: formData.get('ani'), cliente: formData.get('cliente'), doc: formData.get('doc'), paquete: formData.get('paquete'), region: formData.get('region'), carruselero: formData.get('carruselero'), formaEntrega: formData.get('formaEntrega'), estado: formData.get('estado'), subEstado: formData.get('subEstado'), observaciones: formData.get('observaciones'), asesor: formData.get('asesor'), lineasDetalle: lineasDetalle }; google.script.run.withSuccessHandler(function(res) { if(res && res.success) { form.reset(); showToast(res.message); cambiarVista('ventasList'); } }).saveVentasMultiples(data); }; }
-            const editForm = document.getElementById('editForm');
-            if(editForm) { editForm.onsubmit = function(e) { e.preventDefault(); const data = { ani: document.getElementById('editAni').value, n_portar: document.getElementById('editNPortar').value, cliente: document.getElementById('editCliente').value, doc: document.getElementById('editDoc').value, tipoVenta: document.getElementById('editTipoVenta').value, operador: document.getElementById('editOperador').value, region: document.getElementById('editRegion').value, carruselero: document.getElementById('editCarruselero').value, campana: document.getElementById('editCampana').value, fechaActivacion: document.getElementById('editFechaAct').value, cf: document.getElementById('editCf').value, estado: document.getElementById('editEstado').value, subEstado: document.getElementById('editSubEstado').value, observaciones: document.getElementById('editObservaciones').value, revision: document.getElementById('editRevision').value, sec: document.getElementById('editSec').value, formaEntrega: document.getElementById('editFormaEntrega').value }; const id = document.getElementById('editId').value; google.script.run.withSuccessHandler(function(res) { if(res && res.success) { closeModalEdit(); showToast(res.message); loadVentas(); } }).updateVentaCompleta(id, data); }; }
-            actualizarSubEstados('formEstado', 'formSubEstado'); if(typeof addLinea === 'function') addLinea(); if(typeof renderMovistarCycles === 'function') renderMovistarCycles();
-        });
+            if(ventaForm) { 
+                ventaForm.onsubmit = function(e) { 
+                    e.preventDefault(); 
+                    const form = e.target; 
+                    const formData = new FormData(form); 
+                    const rows = form.querySelectorAll('.linea-row'); 
+                    let lineasDetalle = []; 
+                    rows.forEach(function(r) { 
+                        lineasDetalle.push({ 
+                            n_portar: r.querySelector('input[name="n_portar"]').value, 
+                            sec: r.querySelector('input[name="sec"]').value, 
+                            tipoVenta: r.querySelector('select[name="tipoVenta"]').value, 
+                            operador: r.querySelector('select[name="operador"]').value, 
+                            cf: r.querySelector('select[name="cf"]').value, 
+                            campana: r.querySelector('select[name="campana"]').value 
+                        }); 
+                    }); 
+                    
+                    let rawFecha = formData.get('fechaActivacion');
+                    let fechaFormatted = '';
+                    if (rawFecha) {
+                        let parts = rawFecha.split('-');
+                        fechaFormatted = parts[2] + '/' + parts[1] + '/' + parts[0];
+                    }
+
+                    const data = { 
+                        ani: formData.get('ani'), 
+                        cliente: formData.get('cliente'), 
+                        doc: formData.get('doc'), 
+                        paquete: formData.get('paquete'), 
+                        region: formData.get('region'), 
+                        carruselero: formData.get('carruselero'), 
+                        formaEntrega: formData.get('formaEntrega'), 
+                        estado: formData.get('estado'), 
+                        subEstado: formData.get('subEstado'), 
+                        observaciones: formData.get('observaciones'), 
+                        asesor: formData.get('asesor'), 
+                        fechaActivacionOpcional: fechaFormatted,
+                        lineasDetalle: lineasDetalle 
+                    }; 
+                    google.script.run.withSuccessHandler(function(res) { 
+                        if(res && res.success) { 
+                            form.reset(); 
+                            showToast(res.message); 
+                            cambiarVista('ventasList'); 
+                        } 
+                    }).saveVentasMultiples(data); 
+                }; 
+            }
 
         function calculateClaroCycle() {
             const dateVal = document.getElementById('claroActDate').value; if(!dateVal) return;
