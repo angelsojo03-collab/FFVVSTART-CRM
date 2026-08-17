@@ -1351,13 +1351,15 @@
             const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
             if(tbCarr) { 
                 tbCarr.innerHTML = ''; 
-                const carrData = g.carruselerosDetalle || {};
+                // Extraemos el objeto de carruseleros de forma flexible para gerencia o grupal
+                const carrData = (dashboard && dashboard.carruselerosDetalle) ? dashboard.carruselerosDetalle : (g.carruselerosDetalle || {});
+                
                 Object.keys(carrData).forEach(function(cName) { 
                     let c = carrData[cName]; 
                     let ventasC = c.ventas || c[0] || 0;
                     let cfC = c.cf || c.CF || c[1] || 0;
                     
-                    // Cálculo directo seguro idéntico al que funcionó
+                    // Cálculo directo seguro del 2% real y su proyección
                     let comReal = Number(cfC) * 0.02;
                     let comProy = comReal * (getConfig().diasMes / (new Date().getDate() || 1));
 
