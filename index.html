@@ -543,8 +543,7 @@
                                     // === EL RESTO DE METODOS CRUD Y BASE DITO ===
                                     else if (prop === 'saveVentasMultiples') {
                                         const [d] = args; let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
-                                        let inserts = d.lineasDetalle.map(l => ({ ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region, CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado, OBSERVACIONES: d.observaciones, ASESOR: d.asesor, N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana, FECHA_ACTIVACION: dateStr }));
-                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
+let inserts = d.lineasDetalle.map((l, idx) => ({ ID: Date.now().toString() + 'V' + idx, ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region, CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado, OBSERVACIONES: d.observaciones, ASESOR: d.asesor, N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana, FECHA_ACTIVACION: dateStr }));                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
                                         if (error) throw error; result = { success: true, message: 'Ventas registradas correctamente' };
                                     }
                                     
