@@ -551,14 +551,14 @@
                                             carruselerosFinalMap[k] = { 
                                                 ventas: cData.ventas, 
                                                 cf: cData.cf, 
-                                                comision: isNaN(comReal) ? 0 : comReal,           // Para tabla Gerencia
-                                                comisionProy: isNaN(comProy) ? 0 : comProy,       // Para tabla Gerencia
-                                                Comision: isNaN(comReal) ? 0 : comReal,           // Compatibilidad extra
-                                                com: isNaN(comReal) ? 0 : comReal                 // Compatibilidad extra
+                                                comision: isNaN(comReal) ? 0 : comReal, 
+                                                comisionProy: isNaN(comProy) ? 0 : comProy 
                                             };
                                         });
+                                        
+                                        // Asignamos de forma idéntica para que tanto gerencia como el dash grupal lo lean sin errores
                                         dash.gerencia.carruselerosDetalle = carruselerosFinalMap;
-
+                                        dash.carruselerosDetalle = carruselerosFinalMap;
                                         dash.metaGlobal = Object.keys(aseMap).length * cloudConf.metaCuota;
                                         dash.totalCfGeneral = gCf; dash.totalVentasGeneral = gVent; dash.avanceGlobal = ((gCf / (dash.metaGlobal || 1)) * 100).toFixed(1);
                                         
