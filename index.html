@@ -1357,7 +1357,7 @@
                     let ventasC = c.ventas || c[0] || 0;
                     let cfC = c.cf || c.CF || c[1] || 0;
                     
-                    // Cálculo seguro directo para evitar cualquier NaN
+                    // Cálculo directo seguro idéntico al que funcionó
                     let comReal = Number(cfC) * 0.02;
                     let comProy = comReal * (getConfig().diasMes / (new Date().getDate() || 1));
 
