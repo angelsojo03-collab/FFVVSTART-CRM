@@ -778,56 +778,7 @@
                         fechaActivacionOpcional: fechaFormatted,
                         lineasDetalle: lineasDetalle 
                     }; 
-                    
-                    google.script.run.withSuccessHandler(function(res) { 
-                        if(res && res.success) { 
-                            form.reset(); 
-                            showToast(res.message); 
-                            cambiarVista('ventasList'); 
-                        } 
-                    }).saveVentasMultiples(data); 
-                }; 
-            }
-                    const data = { 
-                        ani: formData.get('ani'), 
-                        cliente: formData.get('cliente'), 
-                        doc: formData.get('doc'), 
-                        paquete: formData.get('paquete'), 
-                        region: formData.get('region'), 
-                        carruselero: formData.get('carruselero'), 
-                        formaEntrega: formData.get('formaEntrega'), 
-                        estado: formData.get('estado'), 
-                        subEstado: formData.get('subEstado'), 
-                        observaciones: formData.get('observaciones'), 
-                        asesor: formData.get('asesor'), 
-                        fechaActivacionOpcional: fechaFormatted,
-                        lineasDetalle: lineasDetalle 
-                    }; 
-                    
-                    google.script.run.withSuccessHandler(function(res) { 
-                        if(res && res.success) { 
-                            form.reset(); 
-                            showToast(res.message); 
-                            cambiarVista('ventasList'); 
-                        } 
-                    }).saveVentasMultiples(data); 
-                }; 
-            }
-                    const data = { 
-                        ani: formData.get('ani'), 
-                        cliente: formData.get('cliente'), 
-                        doc: formData.get('doc'), 
-                        paquete: formData.get('paquete'), 
-                        region: formData.get('region'), 
-                        carruselero: formData.get('carruselero'), 
-                        formaEntrega: formData.get('formaEntrega'), 
-                        estado: formData.get('estado'), 
-                        subEstado: formData.get('subEstado'), 
-                        observaciones: formData.get('observaciones'), 
-                        asesor: formData.get('asesor'), 
-                        fechaActivacionOpcional: fechaFormatted,
-                        lineasDetalle: lineasDetalle 
-                    }; 
+
                     google.script.run.withSuccessHandler(function(res) { 
                         if(res && res.success) { 
                             form.reset(); 
