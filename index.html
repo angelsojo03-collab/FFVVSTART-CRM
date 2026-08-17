@@ -1351,13 +1351,17 @@
             const tbCarr = document.getElementById('tablaGerenciaCarruseleros'); 
             if(tbCarr) { 
                 tbCarr.innerHTML = ''; 
-                Object.keys(g.carruselerosDetalle || {}).forEach(function(cName) { 
-                    let c = g.carruselerosDetalle[cName]; 
-                    // Mapeo seguro con lectura de comision y comisionProy
-                    let comVal = c.comision !== undefined ? c.comision : (c.comision || 0);
-                    let proyVal = c.comisionProy !== undefined ? c.comisionProy : (c.comisionProy || 0);
+                const carrData = g.carruselerosDetalle || {};
+                Object.keys(carrData).forEach(function(cName) { 
+                    let c = carrData[cName]; 
+                    let ventasC = c.ventas || c[0] || 0;
+                    let cfC = c.cf || c.CF || c[1] || 0;
                     
-                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${c.ventas}</td><td class="font-bold text-slate-500">S/ ${Number(c.cf || 0).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(comVal).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(proyVal).toFixed(2)}</td></tr>`; 
+                    // Cálculo directo por seguridad para evitar cualquier NaN o 0.00 erróneo
+                    let comReal = Number(cfC) * 0.02;
+                    let comProy = comReal * (getConfig().diasMes / (new Date().getDate() || 1));
+
+                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${ventasC}</td><td class="font-bold text-slate-500">S/ ${Number(cfC).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(comReal).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(comProy).toFixed(2)}</td></tr>`; 
                 }); 
             }
 
