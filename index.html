@@ -450,6 +450,7 @@
                                     else if (prop === 'getDashboardData') {
                                         const [rol, nombre] = args;
                                         
+                                        // Obtener Config de Nube
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
                                         if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
@@ -519,6 +520,7 @@
                                         result = { success: true, ventas: myVentas.sort((a,b)=>b.ID - a.ID), dashboard: dash };
                                     }
                                     
+                                    // === EL RESTO DE METODOS CRUD Y BASE DITO ===
                                     else if (prop === 'saveVentasMultiples') {
                                         const [d] = args; let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
                                         let inserts = d.lineasDetalle.map(l => ({ ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region, CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado, OBSERVACIONES: d.observaciones, ASESOR: d.asesor, N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana, FECHA_ACTIVACION: dateStr }));
@@ -602,7 +604,6 @@
                                                     v1 = String(v1).trim();
                                                     v2 = String(v2).trim();
 
-                                                    // FUERZA VACÍOS AL FINAL SIEMPRE
                                                     if (v1 === '' && v2 !== '') return 1;
                                                     if (v1 !== '' && v2 === '') return -1;
                                                     if (v1 === '' && v2 === '') continue;
@@ -619,7 +620,6 @@
                                                 return 0;
                                             });
                                         } else { 
-                                            // ORDEN DEFAULT COWORK: Nombre A-Z -> Meses DESC -> Ciclo ASC
                                             filtered.sort((a,b) => {
                                                 let n1 = String(a.NOMBRE_CLIENTE||'').trim().toLowerCase(); 
                                                 let n2 = String(b.NOMBRE_CLIENTE||'').trim().toLowerCase();
@@ -629,10 +629,10 @@
                                                 if (n1 !== n2) return n1 < n2 ? -1 : 1;
                                                 
                                                 let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
-                                                if(m1 !== m2) return m1 > m2 ? -1 : 1; // DESC
+                                                if(m1 !== m2) return m1 > m2 ? -1 : 1;
                                                 
                                                 let c1 = Number(a.CICLO||0); let c2 = Number(b.CICLO||0);
-                                                return c1 < c2 ? -1 : 1; // ASC
+                                                return c1 < c2 ? -1 : 1;
                                             });
                                         }
                                         
@@ -671,6 +671,7 @@
             }
         };
 
+        // ================= FUNCIONES DE RENDERIZADO Y LÓGICA DE UI =================
         function formatRangoText(rango) {
             let color = 'text-slate-500';
             if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
@@ -817,7 +818,7 @@
 
             const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc };
             const tbody = document.getElementById('tablaCuerpoBase');
-            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Base Dito y calculando duplicados...</td></tr>';
+            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Base Dito y calculando duplicados...</td></tr>';
 
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { 
@@ -828,9 +829,9 @@
                     }
                     if (!silencioso || txt !== '') { currentPageBase = 1; }
                     renderBaseTablePaginated(); 
-                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
+                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
             }).withFailureHandler(function(err) {
-                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
+                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
             }).obtenerBaseFiltrada(filtros);
         }
 
@@ -868,12 +869,7 @@
             }, 10000);
         }
 
-        function sortBase(columna) { 
-            // Si hacen clic simple en la cabecera, guardamos la configuración para afectar local y luego lo sincronizamos si queremos, o solo temporal
-            if (baseSortCol === columna) { baseSortAsc = !baseSortAsc; } else { baseSortCol = columna; baseSortAsc = true; } 
-            aplicarFiltrosBase(false); 
-        }
-
+        function sortBase(columna) { if (baseSortCol === columna) { baseSortAsc = !baseSortAsc; } else { baseSortCol = columna; baseSortAsc = true; } aplicarFiltrosBase(false); }
         function toggleCheckbox(id) { const chk = document.getElementById(id); chk.checked = !chk.checked; aplicarFiltrosBase(false); }
         
         function aplicarMultiSort() { 
@@ -889,7 +885,7 @@
         function renderBaseTable(lista) {
             try {
                 const tb = document.getElementById('tablaCuerpoBase'); if(!tb) return;
-                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
+                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
                 const rol = currentUser.rol; const isGerencia = (rol === 'GERENCIA' || rol === 'SUPERVISOR'); const isAsesor = (rol === 'ASESOR'); const isCarruselero = (rol === 'CARRUSELERO');
                 const blockVendedor = (!isGerencia && !isAsesor) ? 'disabled' : ''; const blockGestion = (!isGerencia && !isCarruselero && !isAsesor) ? 'disabled' : ''; 
                 let optVendedores = ['GEAN', 'ANGELICA', 'SUNNY']; let optEstados = ['INFORMADO', 'DNC', 'NO CONTESTA', 'NO INTERESADO', 'VENTA', 'WSP']; let optCarruseleros = ['SARA', 'ANA', 'HUMBERTO'];
@@ -920,16 +916,11 @@
             if (campo === 'GESTIONADO' && chk && chk.checked) { 
                 const tr = document.getElementById('row_base_' + id); 
                 if(tr) tr.remove(); 
-            } else {
-                renderBaseTablePaginated();
-            }
+            } else { renderBaseTablePaginated(); }
 
-            google.script.run.withSuccessHandler(function(res) { 
-                if(res && res.success) { showToast('Guardado en BD'); } 
-            }).updateBaseVentasInline(id, campo, valor);
+            google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
 
-        // ====== EJECUCIONES CON CHUNKS (BARRAS DE PROGRESO) ======
         async function ejecutarCargaMasiva() {
             let fileInput = document.getElementById('csvFileInput');
             if (!fileInput.files || fileInput.files.length === 0) { alert('Por favor selecciona un archivo CSV primero.'); return; }
@@ -1100,10 +1091,7 @@
             }
         }
 
-        function cambiarPagina(page) {
-            currentPageVentas = page;
-            renderTablePaginated();
-        }
+        function cambiarPagina(page) { currentPageVentas = page; renderTablePaginated(); }
 
         function loadVentas() {
             const tbody = document.getElementById('tablaCuerpo'); if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando ventas...</td></tr>';
@@ -1131,6 +1119,231 @@
                 if(res && res.success) { ventasGlobal = res.ventas || []; actualizarDashboardCard(res.dashboard); if (res.dashboard && res.dashboard.gerencia) { renderGerenciaDashboard(res.dashboard.gerencia); renderDashGrupal(res.dashboard); } } 
             }).getDashboardData(currentUser.rol, currentUser.nombre);
         }
+
+        function actualizarDashboardCard(d) {
+            if (!d) return;
+            const isAdmin = (currentUser.rol === 'GERENCIA' || currentUser.rol === 'SUPERVISOR');
+            let conf = getConfig();
+
+            if(isAdmin) {
+                const elMeta = document.getElementById('dashMetaCf'); if(elMeta) elMeta.textContent = 'S/ ' + Number(d.metaGlobal || 20000).toLocaleString('es-PE');
+                const elCf = document.getElementById('dashCfVendido'); if(elCf) elCf.textContent = 'S/ ' + Number(d.totalCfGeneral || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                const elPort = document.getElementById('dashPortas'); if(elPort) elPort.textContent = d.totalVentasGeneral || 0;
+                const elPorc = document.getElementById('dashPorcentaje'); if(elPorc) elPorc.textContent = (d.avanceGlobal || 0) + '%';
+                
+                const trReal = document.getElementById('tarjetaRangoReal'); if(trReal) trReal.classList.add('hidden');
+                const tcReal = document.getElementById('tarjetaComReal'); if(tcReal) tcReal.classList.add('hidden');
+                const panelSup = document.getElementById('panelReales'); if(panelSup) panelSup.className = 'grid grid-cols-2 md:grid-cols-4 gap-6 mb-6';
+            } else {
+                const elMeta = document.getElementById('dashMetaCf'); if(elMeta) elMeta.textContent = 'S/ ' + Number(conf.metaCuota || 4000).toLocaleString('es-PE');
+                const elCf = document.getElementById('dashCfVendido'); if(elCf) elCf.textContent = 'S/ ' + Number(d.cfVendidoTotal || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                const elPort = document.getElementById('dashPortas'); if(elPort) elPort.textContent = d.totalVentasAsesor || 0;
+                const elPorc = document.getElementById('dashPorcentaje'); if(elPorc) elPorc.textContent = (d.porcentajeAvance || 0) + '%';
+                
+                const elRangReal = document.getElementById('dashRangoReal'); if(elRangReal) elRangReal.innerHTML = formatRangoText(d.rangoReal || 'SIN RANGO');
+                const elComReal = document.getElementById('dashComReal'); if(elComReal) elComReal.textContent = 'S/ ' + Number(d.comisionReal || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                
+                const trReal = document.getElementById('tarjetaRangoReal'); if(trReal) trReal.classList.remove('hidden');
+                const tcReal = document.getElementById('tarjetaComReal'); if(tcReal) tcReal.classList.remove('hidden');
+                const panelSup = document.getElementById('panelReales'); if(panelSup) panelSup.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-6';
+            }
+
+            if (isAdmin) {
+                 const panelProy = document.getElementById('panelProyectadas'); if(panelProy) panelProy.classList.add('hidden');
+            } else {
+                 const panelProy = document.getElementById('panelProyectadas'); if(panelProy) panelProy.classList.remove('hidden');
+                 const elCfProy = document.getElementById('dashCfProy'); if(elCfProy) elCfProy.textContent = 'S/ ' + Number(d.cfProyectado || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                 const elVentProy = document.getElementById('dashVentProy'); if(elVentProy) elVentProy.textContent = Math.round(d.ventasProyectadas || 0);
+                 const elPorcProy = document.getElementById('dashPorcProy'); if(elPorcProy) elPorcProy.textContent = (d.avanceProyectado || 0) + '%';
+                 const elRangProy = document.getElementById('dashRangoProy'); if(elRangProy) elRangProy.innerHTML = formatRangoText(d.rangoProyectado || 'SIN RANGO');
+                 const elComProy = document.getElementById('dashComProy'); if(elComProy) elComProy.textContent = 'S/ ' + Number(d.comisionProyectada || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                 const elBonoRest = document.getElementById('dashBonoRestante'); if(elBonoRest) elBonoRest.textContent = 'S/ ' + Number(d.bonoRestante || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                 const elBonoEst = document.getElementById('dashBonoEstado'); if(elBonoEst) { if(d.bonoGanado) { elBonoEst.innerHTML = '<span class="text-green-600 font-bold">¡GANASTE S/ 200! 🎉</span>'; } else { elBonoEst.innerHTML = '<span class="text-slate-500 font-black">Aún no llegas a la meta</span>'; } }
+            }
+        }
+
+        function renderGerenciaDashboard(g) {
+            if(!g) return;
+            let conf = getConfig();
+            const regLima = document.getElementById('dashRegLima'); if(regLima) regLima.textContent = g.regionesPorcentaje.LIMA || '0%';
+            const regNorte = document.getElementById('dashRegNorte'); if(regNorte) regNorte.textContent = g.regionesPorcentaje.NORTE || '0%';
+            const regCentro = document.getElementById('dashRegCentro'); if(regCentro) regCentro.textContent = g.regionesPorcentaje.CENTRO || '0%';
+            const regSur = document.getElementById('dashRegSur'); if(regSur) regSur.textContent = g.regionesPorcentaje.SUR || '0%';
+
+            const tbVentasAsesor = document.getElementById('tablaGerenciaVentasAsesor');
+            if(tbVentasAsesor) { 
+                tbVentasAsesor.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    tbVentasAsesor.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold">${a.totalVentas}</td><td class="font-bold">S/ ${Number(a.cf).toFixed(2)}</td><td class="text-green-600 font-bold">S/ ${Number(a.comision).toFixed(2)}</td><td>${formatRangoText(a.rango)}</td></tr>`; 
+                }); 
+            }
+
+            const tbAsesores = document.getElementById('tablaGerenciaAsesores'); 
+            if(tbAsesores) { 
+                tbAsesores.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    tbAsesores.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold text-slate-500">S/ ${Number(a.cfProyectado).toFixed(2)}</td><td class="text-emerald-600 font-bold">S/ ${Number(a.comisionProyectada).toFixed(2)}</td><td>${formatRangoText(a.rangoProyectado)}</td></tr>`; 
+                }); 
+            }
+
+            const tbCarr = document.getElementById('tablaGerenciaCarruseleros'); 
+            if(tbCarr) { 
+                tbCarr.innerHTML = ''; 
+                Object.keys(g.carruselerosDetalle || {}).forEach(function(cName) { 
+                    let c = g.carruselerosDetalle[cName]; 
+                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${c.ventas}</td><td class="font-bold text-slate-500">S/ ${Number(c.cf).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(c.comision).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(c.comisionProy).toFixed(2)}</td></tr>`; 
+                }); 
+            }
+
+            const tbBono = document.getElementById('tablaGerenciaBono'); 
+            if(tbBono) { 
+                tbBono.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    let ganoBono = a.cf >= conf.bonoMeta ? '<span class="text-green-600 font-bold">S/ 200.00</span>' : '<span class="text-slate-400 font-black">S/ 0.00</span>'; 
+                    tbBono.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="text-slate-500 font-bold">S/ ${conf.bonoMeta}</td><td class="text-slate-800 font-bold">S/ ${Number(a.cf).toFixed(2)}</td><td class="text-yellow-600 font-black">S/ ${Number(a.bonoRestante).toFixed(2)}</td><td>${ganoBono}</td></tr>`; 
+                }); 
+            }
+
+            const ctxDiasEl = document.getElementById('chartDias');
+            if (ctxDiasEl) {
+                if (chartDiasInstance) chartDiasInstance.destroy();
+                let labelsDias = []; let dataDias = []; g.diasOrdenados.forEach(function(d) { labelsDias.push('Día ' + d.dia); dataDias.push(d.cantidad); });
+                chartDiasInstance = new Chart(ctxDiasEl.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: labelsDias, datasets: [{ label: 'Ventas Entregadas', data: dataDias, backgroundColor: '#dc2626', borderRadius: 4 }] }, 
+                    plugins: [ChartDataLabels],
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { color: '#ffffff', anchor: 'center', align: 'center', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value > 0 ? value : ''; } } 
+                        }, 
+                        scales: { x:{ticks:{color:'#64748b'}}, y:{ticks:{color:'#64748b', precision:0}} } 
+                    } 
+                });
+            }
+
+            const ctxAsesoresEl = document.getElementById('chartAsesores');
+            if (ctxAsesoresEl) {
+                if (chartAsesoresInstance) chartAsesoresInstance.destroy();
+                let labelsAse = []; let dataAse = []; let maxAse = 0;
+                g.asesoresDetalle.forEach(function(a) { labelsAse.push(a.nombre); dataAse.push(a.avance); if(parseFloat(a.avance) > maxAse) maxAse = parseFloat(a.avance); });
+                chartAsesoresInstance = new Chart(ctxAsesoresEl.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: labelsAse, datasets: [{ label: '% Avance Cuota', data: dataAse, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
+                    plugins: [ChartDataLabels],
+                    options: { 
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { color: '#ffffff', anchor: 'end', align: 'start', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value + '%'; } }
+                        }, 
+                        scales: { x: { ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, min: 0, max: maxAse + 20 }, y: { ticks: { color: '#64748b', font: { weight: 'bold'} } } } 
+                    } 
+                });
+            }
+        }
+
+        function renderDashGrupal(dashboard) {
+            if(!dashboard || !dashboard.gerencia) return;
+            let g = dashboard.gerencia;
+            let conf = getConfig();
+            
+            const regLima = document.getElementById('dashRegLimaGrupal'); if(regLima) regLima.textContent = g.regionesPorcentaje.LIMA || '0%';
+            const regNorte = document.getElementById('dashRegNorteGrupal'); if(regNorte) regNorte.textContent = g.regionesPorcentaje.NORTE || '0%';
+            const regCentro = document.getElementById('dashRegCentroGrupal'); if(regCentro) regCentro.textContent = g.regionesPorcentaje.CENTRO || '0%';
+            const regSur = document.getElementById('dashRegSurGrupal'); if(regSur) regSur.textContent = g.regionesPorcentaje.SUR || '0%';
+
+            const elMeta = document.getElementById('dashMetaCfGrupal'); if(elMeta) elMeta.textContent = 'S/ ' + Number(dashboard.metaGlobal || 0).toLocaleString('es-PE');
+            const elCf = document.getElementById('dashCfVendidoGrupal'); if(elCf) elCf.textContent = 'S/ ' + Number(dashboard.totalCfGeneral || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+            const elPort = document.getElementById('dashPortasGrupal'); if(elPort) elPort.textContent = dashboard.totalVentasGeneral || 0;
+            const elPorc = document.getElementById('dashPorcentajeGrupal'); if(elPorc) elPorc.textContent = (dashboard.avanceGlobal || 0) + '%';
+
+            const tbVentasAsesor = document.getElementById('tablaGrupalVentasAsesor');
+            if(tbVentasAsesor) { 
+                tbVentasAsesor.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    tbVentasAsesor.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold">${a.totalVentas}</td><td class="font-bold">S/ ${Number(a.cf).toFixed(2)}</td><td class="text-green-600 font-bold">S/ ${Number(a.comision).toFixed(2)}</td><td>${formatRangoText(a.rango)}</td></tr>`; 
+                }); 
+            }
+
+            const tbAsesores = document.getElementById('tablaGrupalAsesores'); 
+            if(tbAsesores) { 
+                tbAsesores.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    tbAsesores.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold text-slate-500">S/ ${Number(a.cfProyectado).toFixed(2)}</td><td class="text-emerald-600 font-bold">S/ ${Number(a.comisionProyectada).toFixed(2)}</td><td>${formatRangoText(a.rangoProyectado)}</td></tr>`; 
+                }); 
+            }
+
+            const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
+            if(tbCarr) { 
+                tbCarr.innerHTML = ''; 
+                Object.keys(g.carruselerosDetalle || {}).forEach(function(cName) { 
+                    let c = g.carruselerosDetalle[cName]; 
+                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${c.ventas}</td><td class="font-bold text-slate-500">S/ ${Number(c.cf).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(c.comision).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(c.comisionProy).toFixed(2)}</td></tr>`; 
+                }); 
+            }
+
+            const tbBono = document.getElementById('tablaGrupalBono'); 
+            if(tbBono) { 
+                tbBono.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    let ganoBono = a.cf >= conf.bonoMeta ? '<span class="text-green-600 font-bold">S/ 200.00</span>' : '<span class="text-slate-400 font-black">S/ 0.00</span>'; 
+                    tbBono.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="text-slate-500 font-bold">S/ ${conf.bonoMeta}</td><td class="text-slate-800 font-bold">S/ ${Number(a.cf).toFixed(2)}</td><td class="text-yellow-600 font-black">S/ ${Number(a.bonoRestante).toFixed(2)}</td><td>${ganoBono}</td></tr>`; 
+                }); 
+            }
+
+            const ctxDiasEl = document.getElementById('chartDiasGrupal');
+            if (ctxDiasEl) {
+                if (chartDiasGrupalInstance) chartDiasGrupalInstance.destroy();
+                let labelsDias = []; let dataDias = []; g.diasOrdenados.forEach(function(d) { labelsDias.push('Día ' + d.dia); dataDias.push(d.cantidad); });
+                chartDiasGrupalInstance = new Chart(ctxDiasEl.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: labelsDias, datasets: [{ label: 'Ventas Entregadas', data: dataDias, backgroundColor: '#dc2626', borderRadius: 4 }] }, 
+                    plugins: [ChartDataLabels],
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { color: '#ffffff', anchor: 'center', align: 'center', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value > 0 ? value : ''; } } 
+                        }, 
+                        scales: { x:{ticks:{color:'#64748b'}}, y:{ticks:{color:'#64748b', precision:0}} } 
+                    } 
+                });
+            }
+
+            const ctxAsesoresEl = document.getElementById('chartAsesoresGrupal');
+            if (ctxAsesoresEl) {
+                if (chartAsesoresGrupalInstance) chartAsesoresGrupalInstance.destroy();
+                let labelsAse = []; let dataAse = []; let maxAse = 0;
+                g.asesoresDetalle.forEach(function(a) { labelsAse.push(a.nombre); dataAse.push(a.avance); if(parseFloat(a.avance) > maxAse) maxAse = parseFloat(a.avance); });
+                chartAsesoresGrupalInstance = new Chart(ctxAsesoresEl.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: labelsAse, datasets: [{ label: '% Avance Cuota', data: dataAse, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
+                    plugins: [ChartDataLabels],
+                    options: { 
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { color: '#ffffff', anchor: 'end', align: 'start', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value + '%'; } }
+                        }, 
+                        scales: { x: { ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, min: 0, max: maxAse + 20 }, y: { ticks: { color: '#64748b', font: { weight: 'bold'} } } } 
+                    } 
+                });
+            }
+        }
+
+        function abrirModalWhatsApp(cliente, campana, fechaActStr, ani) {
+            let saludos = ["¡Hola, " + cliente + "! 👋", "¡Qué tal, " + cliente + "!", "¡Hola que tal, " + cliente + "! 😊"]; let bienvenidillas = [ "¡Bienvenido(a) a *Claro*! Nos da muchísimo gusto que hayas decidido portar tu línea con nosotros. A partir de este momento, ya formas parte de nuestra gran familia. 📱✨", "¡Te damos la bienvenida a *Claro*! Estamos felices de que hayas traído tu línea con nosotros y ya pases a ser parte de nuestra familia. 🚀" ]; let cierres = ["Si tienes *cualquier duda* sobre tu plan, tu consumo o el funcionamiento de tu servicio, háznoslo saber respondiendo por este medio. ¡Estamos aquí para ayudarte! 🤝\n\n¡Que tengas un excelente día! 🚀"];
+            let fechaActivacion = fechaActStr || "13/08/2026";
+            let mensajeCompleto = saludo + "\n\n" + bienvenida + "\n\nPara que tengas todo bajo control desde el primer día, te compartimos los detalles clave:\n\n" + "📅 *Tu ciclo de facturación inicial:* Del " + fechaActivacion + " al 13/09/2026 y los demás meses siempre será del 14 al 13 de cada mes.\n" + "💳 *Tu primer pago:* Estará habilitado desde el 18/08/2026, teniendo como fecha de vencimiento el 31/08/2026.\n\n" + cierre;
+            const textEl = document.getElementById('wapTextContent'); if(textEl) textEl.value = mensajeCompleto;
+            const linkEl = document.getElementById('wapDirectLink'); if(linkEl) linkEl.href = "https://wa.me/51" + ani;
+            const modalEl = document.getElementById('modalWap'); if(modalEl) modalEl.classList.remove('hidden');
+        }
+
+        function closeModalWap() { const m = document.getElementById('modalWap'); if(m) m.classList.add('hidden'); }
+        function copiarTextoWap() { let area = document.getElementById('wapTextContent'); if(area) { area.select(); document.execCommand('copy'); showToast('¡Texto copiado al portapapeles!'); } }
 
         function renderTable(ventas) {
             try {
