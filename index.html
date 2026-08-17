@@ -675,6 +675,26 @@
             return `<span class="font-black ${color}">${rango}</span>`;
         }
 
+        // SEGURIDAD PARA FORMATOS DE HORA Y FECHA
+        function safeTimeFormat(timeStr) {
+            if (!timeStr) return '';
+            let s = String(timeStr).trim();
+            if (s.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)) return s;
+            if (s.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/)) return s.substring(0, 5);
+            return '';
+        }
+
+        function safeDateFormat(dateStr) {
+            if (!dateStr) return '';
+            let s = String(dateStr).trim();
+            if (s.match(/^\d{4}-\d{2}-\d{2}$/)) return s;
+            if (s.includes('/')) {
+                let parts = s.split('/');
+                if(parts.length === 3 && parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+            }
+            return '';
+        }
+
         let currentUser = null; let ventasGlobal = []; let baseVentasGlobal = []; let chartDiasInstance = null; let chartAsesoresInstance = null; let chartDiasGrupalInstance = null; let chartAsesoresGrupalInstance = null; let baseSortCol = ''; let baseSortAsc = true; let baseAutoSortInterval = null;
         let ventasFiltradasGlobal = []; let currentPageVentas = 1; const itemsPerPageVentas = 15;
         let currentPageBase = 1; const itemsPerPageBase = 50;
@@ -792,7 +812,6 @@
                     const m = document.getElementById('confMeta'); if(m) m.value = res.metaCuota;
                     const d = document.getElementById('confDias'); if(d) d.value = res.diasMes;
                     const b = document.getElementById('confBono'); if(b) b.value = res.bonoMeta;
-                    if(res.globalSort) { let c = getConfig(); c.globalSort = res.globalSort; localStorage.setItem('ffvv_config', JSON.stringify(c)); }
                 }
             }).obtenerConfiguracion();
         }
@@ -916,10 +935,12 @@
                         let htmlCarr = '<option value=""></option>'; for(let k=0; k<optCarruseleros.length; k++) { let sel = v.CARRUSELERO === optCarruseleros[k] ? 'selected' : ''; htmlCarr += '<option value="' + optCarruseleros[k] + '" ' + sel + '>' + optCarruseleros[k] + '</option>'; }
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
 
-                        // LÓGICA DE COLOR DE DUPLICADO
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '"><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-white/50" ' + blockVendedor + '>' + htmlVend + '</select></td><td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td><td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td><td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit text-[10px] font-black rounded bg-white/50 \' + this.options[this.selectedIndex].className;" class="inline-edit text-[10px] font-black rounded bg-white/50 ' + classEstado + '" ' + blockGestion + '>' + htmlEstado + '</select></td><td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-white/50" ' + blockGestion + '></td><td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit text-purple-700 font-black bg-white/50" ' + blockGestion + '>' + htmlCarr + '</select></td><td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td><td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td></tr>';
+                        let safeHora = safeTimeFormat(v.HORA);
+                        let safeFecha = safeDateFormat(v.FV);
+
+                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '"><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-white/50" ' + blockVendedor + '>' + htmlVend + '</select></td><td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td><td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td><td class="px-3 py-2"><input type="date" onchange="inlineUpdateBase(\'' + v.ID + '\', \'FV\', this.value)" value="' + safeFecha + '" class="inline-edit text-slate-800 font-bold bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit text-[10px] font-black rounded bg-white/50 \' + this.options[this.selectedIndex].className;" class="inline-edit text-[10px] font-black rounded bg-white/50 ' + classEstado + '" ' + blockGestion + '>' + htmlEstado + '</select></td><td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + safeHora + '" class="inline-edit text-slate-800 font-bold w-24 bg-white/50" ' + blockGestion + '></td><td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit text-purple-700 font-black bg-white/50" ' + blockGestion + '>' + htmlCarr + '</select></td><td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td><td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td></tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
                 tb.innerHTML = htmlTemp;
@@ -935,8 +956,7 @@
                 const tr = document.getElementById('row_base_' + id); 
                 if(tr) tr.remove(); 
             } 
-            // ELIMINAMOS renderBaseTablePaginated() para evitar que el usuario pierda el cursor al escribir.
-
+            
             google.script.run.withSuccessHandler(function(res) { 
                 if(res && res.success) { showToast('Guardado en BD'); } 
             }).updateBaseVentasInline(id, campo, valor);
@@ -1031,7 +1051,6 @@
             let ejemplo = "SUNNY;12345678;JUAN PEREZ;15/04/2026;3;PORTA;APROBADO;VENTA;10:00;obs prueba;FALSE;HUMBERTO;17;999888777;abril;CLARO;15/04/2026\n";
             let blob = new Blob([headers + ejemplo], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); let url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "plantilla_base_dito.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
-        
         function ejecutarBusquedaCliente() {
             const inputEl = document.getElementById('inputBusquedaCliente'); let val = inputEl.value.trim(); if(!val) { showToast('Ingrese un DNI o Celular'); return; }
             if (val.length > 0 && val.length < 8 && !isNaN(val)) { val = val.padStart(8, '0'); inputEl.value = val; }
@@ -1113,7 +1132,10 @@
             }
         }
 
-        function cambiarPagina(page) { currentPageVentas = page; renderTablePaginated(); }
+        function cambiarPagina(page) {
+            currentPageVentas = page;
+            renderTablePaginated();
+        }
 
         function loadVentas() {
             const tbody = document.getElementById('tablaCuerpo'); if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando ventas...</td></tr>';
