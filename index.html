@@ -358,7 +358,7 @@
                 </form>
             </div>
         </div>
-     const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
+    const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
         const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
         // ================= CONEXIÓN NATIVA SUPABASE =================
@@ -366,11 +366,19 @@
         const SUPABASE_KEY = 'sb_publishable_1co4uYVkYwVPClzHxSSYCw_JVLBTU5k';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // CONFIGURACIONES GLOBALES Y LOCALES
         function getConfig() { return JSON.parse(localStorage.getItem('ffvv_config')) || { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, globalSort: [] }; }
         function saveConfig(e) { 
             e.preventDefault(); 
-            const c = { metaCuota: parseFloat(document.getElementById('confMeta').value) || 4000, diasMes: parseInt(document.getElementById('confDias').value) || 30, bonoMeta: parseFloat(document.getElementById('confBono').value) || 7000, globalSort: getConfig().globalSort }; 
-            localStorage.setItem('ffvv_config', JSON.stringify(c)); showToast("Configuración Guardada localmente"); loadVentas(); 
+            const c = { 
+                metaCuota: parseFloat(document.getElementById('confMeta').value) || 4000, 
+                diasMes: parseInt(document.getElementById('confDias').value) || 30, 
+                bonoMeta: parseFloat(document.getElementById('confBono').value) || 7000, 
+                globalSort: getConfig().globalSort 
+            }; 
+            localStorage.setItem('ffvv_config', JSON.stringify(c)); 
+            showToast("Configuración Guardada localmente"); 
+            loadVentas(); 
             google.script.run.withSuccessHandler(()=>showToast('Sincronizado a toda la empresa')).guardarConfiguracion(c);
         }
         function loadConfigUI() { 
@@ -380,6 +388,7 @@
             const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; 
         }
 
+        // MOTOR DE DESCARGA TOTAL (Para saltar límite de 1000 de Supabase)
         async function fetchAllRecords(table) {
             let all = [];
             for (let i = 0; i < 100000; i += 1000) {
@@ -391,13 +400,38 @@
             return all;
         }
 
+        // ESCUDOS CONTRA ERRORES AMARILLOS DE CHROME (Fechas y Horas)
+        function safeTimeFormat(val) {
+            if(!val) return '';
+            let s = String(val).trim();
+            if (/^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/.test(s)) return s.substring(0,5);
+            return '';
+        }
+        function safeDateFormat(val) {
+            if(!val) return '';
+            let s = String(val).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            if (s.includes('/')) {
+                let p = s.split('/');
+                if(p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+            }
+            return '';
+        }
+        function formatRangoText(rango) {
+            let color = 'text-slate-500';
+            if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
+            return `<span class="font-black ${color}">${rango}</span>`;
+        }
         window.google = {
             script: {
                 get run() {
                     const ctx = { successCb: null, failureCb: null, withSuccessHandler: function(cb) { this.successCb = cb; return this; }, withFailureHandler: function(cb) { this.failureCb = cb; return this; } };
                     return new Proxy(ctx, {
                         get: function(target, prop) {
+                            // Si la propiedad existe en el contexto (como withSuccessHandler), devuélvela
                             if (prop in target) return target[prop];
+                            
+                            // Si es una llamada a función remota, captúrala y ejecútala asíncronamente
                             return async function(...args) {
                                 try {
                                     let result = null; let conf = getConfig();
@@ -406,9 +440,14 @@
                                         const [email, pass] = args;
                                         const { data, error } = await _supabase.from('CREDENCIALES').select('*').eq('EMAIL', email).eq('PASSWORD', pass).eq('ESTADO', 'Activo');
                                         if (error) throw error;
-                                        if (data && data.length > 0) { result = { success: true, user: { nombre: data[0].NOMBRE, correo: data[0].EMAIL, rol: data[0].ROL } }; } else { result = { success: false, message: 'Credenciales inválidas' }; }
+                                        if (data && data.length > 0) { 
+                                            result = { success: true, user: { nombre: data[0].NOMBRE, correo: data[0].EMAIL, rol: data[0].ROL } }; 
+                                        } else { 
+                                            result = { success: false, message: 'Credenciales inválidas' }; 
+                                        }
                                     }
                                     
+                                    // === CONFIGURACIÓN GLOBAL NUBE ===
                                     else if (prop === 'obtenerConfiguracion') {
                                         const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
@@ -434,8 +473,11 @@
                                         result = { success: true };
                                     }
                                     
+                                    // === OBTENER VENTAS Y DASHBOARD ===
                                     else if (prop === 'getDashboardData') {
                                         const [rol, nombre] = args;
+                                        
+                                        // Obtener Config de Nube
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
                                         if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
@@ -505,6 +547,7 @@
                                         result = { success: true, ventas: myVentas.sort((a,b)=>b.ID - a.ID), dashboard: dash };
                                     }
                                     
+                                    // === OPERACIONES CRUD VENTAS ===
                                     else if (prop === 'saveVentasMultiples') {
                                         const [d] = args; let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
                                         let inserts = d.lineasDetalle.map(l => ({ ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region, CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado, OBSERVACIONES: d.observaciones, ASESOR: d.asesor, N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana, FECHA_ACTIVACION: dateStr }));
@@ -527,8 +570,10 @@
                                         const [id] = args; let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
+                                    // === BASE DITO (COWORK Y ORDENAMIENTO DE CERO ERRORES) ===
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
+                                        
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { vistaDito: null, globalSort: [] };
                                         if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
