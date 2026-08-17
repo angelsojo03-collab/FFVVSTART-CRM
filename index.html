@@ -301,27 +301,15 @@
         // ================= POLYFILL DE GOOGLE SCRIPT RUN PARA VERCEL =================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeggsbjtLfDEZWCdA9THWvfhDyzHDKr0IuqhB2mrZz2ysnyUptibxQZl9OsemObey-1g/exec";
 
-        class ScriptRunMock {
-            constructor() {
-                this.successCb = null;
-                this.failureCb = null;
-            }
-            withSuccessHandler(cb) {
-                this.successCb = cb;
-                return this;
-            }
-            withFailureHandler(cb) {
-                this.failureCb = cb;
-                return this;
-            }
-        }
-
         window.google = {
             script: {
-                run: new Proxy(new ScriptRunMock(), {
-                    get(target, prop) {
-                        if (prop === 'withSuccessHandler' || prop === 'withFailureHandler') {
-                            return target[prop].bind(target);
+                run: new Proxy({}, {
+                    get: function(target, prop) {
+                        if (prop === 'withSuccessHandler') {
+                            return function(cb) { target.successCb = cb; return window.google.script.run; };
+                        }
+                        if (prop === 'withFailureHandler') {
+                            return function(cb) { target.failureCb = cb; return window.google.script.run; };
                         }
                         return async function(...args) {
                             try {
@@ -331,17 +319,11 @@
                                     body: JSON.stringify({ action: prop, args: args })
                                 });
                                 const result = await response.json();
-                                if (target.successCb) {
-                                    target.successCb(result);
-                                }
-                                target.successCb = null;
-                                target.failureCb = null;
+                                if (target.successCb) target.successCb(result);
                             } catch (err) {
-                                if (target.failureCb) {
-                                    target.failureCb(err);
-                                } else {
-                                    console.error("Error en llamada API:", err);
-                                }
+                                if (target.failureCb) target.failureCb(err);
+                                else console.error("Error de API:", err);
+                            } finally {
                                 target.successCb = null;
                                 target.failureCb = null;
                             }
