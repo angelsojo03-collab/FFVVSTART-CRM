@@ -107,7 +107,7 @@
                     </div>
                 </div>
 
-                <!-- ================= VISTA: BUSCADOR ================= -->
+                <!-- ================= VISTA: BUSCADOR DE CLIENTES ================= -->
                 <div id="busquedaClienteView" class="content-view view-hidden space-y-6 w-full">
                     <div class="bg-white p-4 md:p-6 rounded-2xl shadow-md border-t-4 border-blue-600 space-y-4 w-full">
                         <h1 class="text-xl md:text-2xl font-black text-slate-800"><i class="fas fa-search text-blue-600 mr-2"></i>Buscar Cliente</h1>
@@ -221,7 +221,7 @@
                     </div>
                 </div>
 
-                <!-- ================= VISTA: BASE DITO (PAGINADA Y CON DUPLICADOS) ================= -->
+                <!-- ================= VISTA: BASE DITO ================= -->
                 <div id="baseVentasView" class="content-view view-hidden space-y-6 w-full">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 md:p-6 rounded-2xl shadow-md border border-slate-200 w-full">
                         <div><h1 class="text-xl md:text-2xl font-black text-slate-800"><i class="fas fa-database text-red-600 mr-2"></i>Base Dito Asignada</h1><p class="text-xs md:text-sm font-bold text-slate-500 mt-1">Los clientes con más de una línea se resaltan en <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded">color lila</span> automáticamente.</p></div>
@@ -318,7 +318,7 @@
                         </div>
                         <input type="hidden" name="asesor" id="ventaAsesor">
                         <div class="pt-4 border-t border-slate-200 flex justify-end">
-                            <button type="submit" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black py-3 px-8 rounded-lg transition shadow-lg text-lg flex items-center justify-center gap-2"><i class="fas fa-save"></i> Guardar Venta Completada</button>
+                            <button type="submit" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black py-3 px-8 rounded-lg transition shadow-lg text-lg flex items-center justify-center gap-2"><i class="fas fa-save"></i> Guardar Venta</button>
                         </div>
                     </form>
                 </div>
@@ -329,9 +329,9 @@
             <div class="bg-white border border-slate-200 rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h2 class="text-2xl font-black text-red-600"><i class="fas fa-sort-amount-down mr-2"></i>Orden Múltiple</h2><button onclick="document.getElementById('modalMultiSort').classList.add('hidden')" class="text-slate-400 hover:text-red-600 text-xl"><i class="fas fa-times"></i></button></div>
                 <div class="space-y-5 pt-2">
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 1</label><div class="flex gap-3"><select id="sortCol1" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="MES">Mes</option><option value="OPERADOR">Operador</option></select><select id="sortDir1" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 2</label><div class="flex gap-3"><select id="sortCol2" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="MES">Mes</option><option value="OPERADOR">Operador</option></select><select id="sortDir2" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 3</label><div class="flex gap-3"><select id="sortCol3" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="MES">Mes</option><option value="OPERADOR">Operador</option></select><select id="sortDir3" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 1</label><div class="flex gap-3"><select id="sortCol1" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir1" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 2</label><div class="flex gap-3"><select id="sortCol2" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir2" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 3</label><div class="flex gap-3"><select id="sortCol3" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir3" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
                 </div>
                 <div class="pt-6 border-t border-slate-100 flex justify-end"><button onclick="aplicarMultiSort()" class="bg-red-600 hover:bg-red-700 text-white py-3 px-8 rounded-lg font-black text-sm transition shadow-lg w-full">Aplicar Filtros</button></div>
             </div>
@@ -450,7 +450,6 @@
                                     else if (prop === 'getDashboardData') {
                                         const [rol, nombre] = args;
                                         
-                                        // Obtener Config de Nube
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
                                         if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
@@ -569,7 +568,6 @@
                                         if (ciclos.length > 0) { filtered = filtered.filter(v => ciclos.includes(String(v.CICLO))); }
                                         if (meses.length > 0) { filtered = filtered.filter(v => meses.includes(String(v.MES).toLowerCase())); }
                                         
-                                        // LOGICA COLOR DUPLICADOS SEGURA
                                         let dniMap = {};
                                         filtered.forEach(v => { 
                                             if(!v.DNI || String(v.DNI).trim() === '') return; 
@@ -584,31 +582,57 @@
                                         });
 
                                         let globalSort = cloudConf.globalSort || [];
+                                        let finalSortConfigs = [];
+
                                         if (globalSort.length > 0) {
+                                            finalSortConfigs = globalSort;
+                                        } else if (f.sortCol) {
+                                            finalSortConfigs = [{col: f.sortCol, dir: f.sortAsc ? 'asc' : 'desc'}];
+                                        }
+
+                                        if (finalSortConfigs.length > 0) {
                                             filtered.sort((a,b) => {
-                                                for(let i=0; i<globalSort.length; i++) {
-                                                    let col = globalSort[i].col; let dir = globalSort[i].dir === 'asc' ? 1 : -1;
+                                                for(let i=0; i<finalSortConfigs.length; i++) {
+                                                    let col = finalSortConfigs[i].col; let dir = finalSortConfigs[i].dir === 'asc' ? 1 : -1;
                                                     let v1 = a[col]; let v2 = b[col];
                                                     
                                                     if (v1 === null || v1 === undefined) v1 = ''; 
                                                     if (v2 === null || v2 === undefined) v2 = '';
                                                     
-                                                    v1 = String(v1).trim().toLowerCase();
-                                                    v2 = String(v2).trim().toLowerCase();
+                                                    v1 = String(v1).trim();
+                                                    v2 = String(v2).trim();
 
-                                                    if (v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); }
-                                                    if (v1 < v2) return -1 * dir; if (v1 > v2) return 1 * dir;
+                                                    // FUERZA VACÍOS AL FINAL SIEMPRE
+                                                    if (v1 === '' && v2 !== '') return 1;
+                                                    if (v1 !== '' && v2 === '') return -1;
+                                                    if (v1 === '' && v2 === '') continue;
+
+                                                    if (!isNaN(v1) && !isNaN(v2)) { 
+                                                        v1 = Number(v1); v2 = Number(v2); 
+                                                    } else {
+                                                        v1 = v1.toLowerCase(); v2 = v2.toLowerCase();
+                                                    }
+                                                    
+                                                    if (v1 < v2) return -1 * dir; 
+                                                    if (v1 > v2) return 1 * dir;
                                                 }
                                                 return 0;
                                             });
                                         } else { 
+                                            // ORDEN DEFAULT COWORK: Nombre A-Z -> Meses DESC -> Ciclo ASC
                                             filtered.sort((a,b) => {
-                                                let n1 = String(a.NOMBRE_CLIENTE||'').toLowerCase(); let n2 = String(b.NOMBRE_CLIENTE||'').toLowerCase();
-                                                if(n1 !== n2) return n1 < n2 ? -1 : 1;
+                                                let n1 = String(a.NOMBRE_CLIENTE||'').trim().toLowerCase(); 
+                                                let n2 = String(b.NOMBRE_CLIENTE||'').trim().toLowerCase();
+                                                
+                                                if (n1 === '' && n2 !== '') return 1;
+                                                if (n1 !== '' && n2 === '') return -1;
+                                                if (n1 !== n2) return n1 < n2 ? -1 : 1;
+                                                
                                                 let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
-                                                if(m1 !== m2) return m1 > m2 ? -1 : 1;
+                                                if(m1 !== m2) return m1 > m2 ? -1 : 1; // DESC
+                                                
                                                 let c1 = Number(a.CICLO||0); let c2 = Number(b.CICLO||0);
-                                                return c1 < c2 ? -1 : 1;
+                                                return c1 < c2 ? -1 : 1; // ASC
                                             });
                                         }
                                         
@@ -844,7 +868,12 @@
             }, 10000);
         }
 
-        function sortBase(columna) { if (baseSortCol === columna) { baseSortAsc = !baseSortAsc; } else { baseSortCol = columna; baseSortAsc = true; } aplicarFiltrosBase(false); }
+        function sortBase(columna) { 
+            // Si hacen clic simple en la cabecera, guardamos la configuración para afectar local y luego lo sincronizamos si queremos, o solo temporal
+            if (baseSortCol === columna) { baseSortAsc = !baseSortAsc; } else { baseSortCol = columna; baseSortAsc = true; } 
+            aplicarFiltrosBase(false); 
+        }
+
         function toggleCheckbox(id) { const chk = document.getElementById(id); chk.checked = !chk.checked; aplicarFiltrosBase(false); }
         
         function aplicarMultiSort() { 
@@ -860,7 +889,7 @@
         function renderBaseTable(lista) {
             try {
                 const tb = document.getElementById('tablaCuerpoBase'); if(!tb) return;
-                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
+                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
                 const rol = currentUser.rol; const isGerencia = (rol === 'GERENCIA' || rol === 'SUPERVISOR'); const isAsesor = (rol === 'ASESOR'); const isCarruselero = (rol === 'CARRUSELERO');
                 const blockVendedor = (!isGerencia && !isAsesor) ? 'disabled' : ''; const blockGestion = (!isGerencia && !isCarruselero && !isAsesor) ? 'disabled' : ''; 
                 let optVendedores = ['GEAN', 'ANGELICA', 'SUNNY']; let optEstados = ['INFORMADO', 'DNC', 'NO CONTESTA', 'NO INTERESADO', 'VENTA', 'WSP']; let optCarruseleros = ['SARA', 'ANA', 'HUMBERTO'];
@@ -891,11 +920,16 @@
             if (campo === 'GESTIONADO' && chk && chk.checked) { 
                 const tr = document.getElementById('row_base_' + id); 
                 if(tr) tr.remove(); 
-            } else { renderBaseTablePaginated(); }
+            } else {
+                renderBaseTablePaginated();
+            }
 
-            google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
+            google.script.run.withSuccessHandler(function(res) { 
+                if(res && res.success) { showToast('Guardado en BD'); } 
+            }).updateBaseVentasInline(id, campo, valor);
         }
 
+        // ====== EJECUCIONES CON CHUNKS (BARRAS DE PROGRESO) ======
         async function ejecutarCargaMasiva() {
             let fileInput = document.getElementById('csvFileInput');
             if (!fileInput.files || fileInput.files.length === 0) { alert('Por favor selecciona un archivo CSV primero.'); return; }
@@ -1010,7 +1044,7 @@
         function addLinea() { const container = document.getElementById('lineasContainer'); if(!container) return; const div = document.createElement('div'); div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 linea-row'; div.innerHTML = '<div><label class="block text-[10px] text-slate-600 font-bold">N° a Portar</label><input type="text" name="n_portar" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: 999888777" required></div><div><label class="block text-[10px] text-slate-600 font-bold">N° SEC</label><input type="text" name="sec" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: SEC-123"></div><div><label class="block text-[10px] text-slate-600 font-bold">Tipo de Venta</label><select name="tipoVenta" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" onchange="actualizarOpRow(this)"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovación</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Operador</label><select name="operador" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Plan (CF S/)</label><select name="cf" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-green-700 text-sm font-bold focus:outline-none focus:border-red-600"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Campaña</label><select name="campana" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div><div class="col-span-1 md:col-span-6 flex justify-end"><button type="button" onclick="this.closest(\'.linea-row\').remove()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded text-xs transition">Eliminar Línea</button></div>'; container.appendChild(div); }
 
         function aplicarFiltros() {
-            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.toLowerCase() : '';
+            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.trim() : '';
             const tipoEl = document.getElementById('filtroTipo'); const tipo = tipoEl ? tipoEl.value : '';
             const mesEl = document.getElementById('filtroMes'); const mes = mesEl ? mesEl.value : '';
             const fechaEl = document.getElementById('filtroFechaAct'); const fechaFiltro = fechaEl ? fechaEl.value : '';
@@ -1026,7 +1060,8 @@
             if (fechaFiltro) { let partes = fechaFiltro.split('-'); fechaFiltroFormat = partes[2] + '/' + partes[1] + '/' + partes[0]; }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
-                const matchTxt = (String(v.CLIENTE || '').toLowerCase().indexOf(txt) !== -1 || String(v.DOC || '').toLowerCase().indexOf(txt) !== -1 || String(v.N_PORTAR || '').toLowerCase().indexOf(txt) !== -1 || String(v.ANI || '').toLowerCase().indexOf(txt) !== -1 || String(v.SEC || '').toLowerCase().indexOf(txt) !== -1);
+                const t = txt.toLowerCase();
+                const matchTxt = !t || (String(v.CLIENTE || '').toLowerCase().includes(t) || String(v.DOC || '').toLowerCase().includes(t) || String(v.N_PORTAR || '').toLowerCase().includes(t) || String(v.ANI || '').toLowerCase().includes(t) || String(v.SEC || '').toLowerCase().includes(t));
                 let matchEst = true; if (estadosCheckbox.length > 0) { matchEst = estadosCheckbox.includes(v.ESTADO); }
                 const matchTipo = !tipo || v.TIPO_VENTA === tipo; const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; const matchAsesor = !asesorFiltro || v.ASESOR.toUpperCase() === asesorFiltro.toUpperCase();
                 let matchRevision = true; if (revFiltro) { if (revFiltro === "- Sin Revisión -") { matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; } else { matchRevision = v.REVISION === revFiltro; } }
