@@ -358,9 +358,7 @@
                 </form>
             </div>
         </div>
-        <!-- SCRIPTS CORE -->
-    <script>
-        const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
+     const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
         const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
         // ================= CONEXIÓN NATIVA SUPABASE =================
@@ -569,7 +567,7 @@
                                             } else { v.isDuplicate = false; } 
                                         });
                                         
-                                        result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal }; 
+                                        result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal, cloudSort: cloudConf.globalSort || [] }; 
                                     }
                                     
                                     else if (prop === 'updateBaseVentasInline') {
@@ -603,7 +601,7 @@
                 }
             }
         };
-        // ================= UI HELPERS Y MOTOR DE ORDENAMIENTO EN MEMORIA =================
+// ================= UI HELPERS Y MOTOR DE ORDENAMIENTO EN MEMORIA =================
         function sortDataInMemory() {
             let conf = getConfig();
             let globalSort = conf.globalSort || [];
@@ -622,16 +620,40 @@
                     // REGLA UNIVERSAL: Vacíos siempre al final sin importar ASC o DESC
                     if (v1 === '' && v2 !== '') return 1;
                     if (v1 !== '' && v2 === '') return -1;
+                    if (v1 === '' && v2 === '') return 0;
                     
-                    if (v1 !== '' && v2 !== '') {
+                    if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); }
+                    else { v1 = String(v1).toLowerCase(); v2 = String(v2).toLowerCase(); }
+                    
+                    if (v1 < v2) return -1 * dir;
+                    if (v1 > v2) return 1 * dir;
+                    return 0;
+                }
+                
+                // PRIORIDAD 2: ORDEN MÚLTIPLE GLOBAL (GERENCIA)
+                if (globalSort.length > 0) {
+                    for(let i=0; i<globalSort.length; i++) {
+                        let col = globalSort[i].col; let dir = globalSort[i].dir === 'asc' ? 1 : -1;
+                        let v1 = a[col]; let v2 = b[col];
+                        
+                        if (v1 === null || v1 === undefined) v1 = ''; 
+                        if (v2 === null || v2 === undefined) v2 = '';
+                        
+                        v1 = String(v1).trim(); v2 = String(v2).trim();
+
+                        if (v1 === '' && v2 !== '') return 1;
+                        if (v1 !== '' && v2 === '') return -1;
+                        if (v1 === '' && v2 === '') continue;
+
                         if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); }
-                        else { v1 = v1.toLowerCase(); v2 = v2.toLowerCase(); }
-                        if (v1 < v2) return -1 * dir;
+                        else { v1 = String(v1).toLowerCase(); v2 = String(v2).toLowerCase(); }
+                        
+                        if (v1 < v2) return -1 * dir; 
                         if (v1 > v2) return 1 * dir;
                     }
                 }
-                
-                // PRIORIDAD 2: DEFAULT UNIVERSAL (Coworking: A-Z Cliente -> Meses Mayor a Menor -> Ciclo)
+
+                // PRIORIDAD 3: DEFAULT UNIVERSAL COWORK (Cliente A-Z -> Meses DESC -> Ciclo ASC)
                 let n1 = String(a.NOMBRE_CLIENTE||'').trim().toLowerCase(); 
                 let n2 = String(b.NOMBRE_CLIENTE||'').trim().toLowerCase();
                 
@@ -640,10 +662,10 @@
                 if (n1 !== n2) return n1 < n2 ? -1 : 1; 
                 
                 let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
-                if(m1 !== m2) return m1 > m2 ? -1 : 1; // Mayor a menor
+                if(m1 !== m2) return m1 > m2 ? -1 : 1; 
                 
                 let c1 = Number(a.CICLO||0); let c2 = Number(b.CICLO||0);
-                return c1 < c2 ? -1 : 1; // A a Z
+                return c1 < c2 ? -1 : 1; 
             });
         }
 
@@ -770,6 +792,7 @@
                     const m = document.getElementById('confMeta'); if(m) m.value = res.metaCuota;
                     const d = document.getElementById('confDias'); if(d) d.value = res.diasMes;
                     const b = document.getElementById('confBono'); if(b) b.value = res.bonoMeta;
+                    if(res.globalSort) { let c = getConfig(); c.globalSort = res.globalSort; localStorage.setItem('ffvv_config', JSON.stringify(c)); }
                 }
             }).obtenerConfiguracion();
         }
@@ -1008,6 +1031,7 @@
             let ejemplo = "SUNNY;12345678;JUAN PEREZ;15/04/2026;3;PORTA;APROBADO;VENTA;10:00;obs prueba;FALSE;HUMBERTO;17;999888777;abril;CLARO;15/04/2026\n";
             let blob = new Blob([headers + ejemplo], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); let url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "plantilla_base_dito.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
+        
         function ejecutarBusquedaCliente() {
             const inputEl = document.getElementById('inputBusquedaCliente'); let val = inputEl.value.trim(); if(!val) { showToast('Ingrese un DNI o Celular'); return; }
             if (val.length > 0 && val.length < 8 && !isNaN(val)) { val = val.padStart(8, '0'); inputEl.value = val; }
@@ -1089,10 +1113,7 @@
             }
         }
 
-        function cambiarPagina(page) {
-            currentPageVentas = page;
-            renderTablePaginated();
-        }
+        function cambiarPagina(page) { currentPageVentas = page; renderTablePaginated(); }
 
         function loadVentas() {
             const tbody = document.getElementById('tablaCuerpo'); if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando ventas...</td></tr>';
