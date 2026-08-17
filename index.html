@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>FFVV START | CRM Call Center</title>
     <script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.1.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -15,6 +14,7 @@
         .chart-container { position: relative; height: 350px; width: 100%; }
         .opt-INFORMADO { background-color: #0891b2; color: white; } .opt-DNC { background-color: #dc2626; color: white; } .opt-NOCONTESTA { background-color: #ea580c; color: white; } .opt-NOINTERESADO { background-color: #9333ea; color: white; } .opt-VENTA { background-color: #16a34a; color: white; } .opt-WSP { background-color: #eab308; color: black; }
         .table-header { padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; text-align: center; } .table-cell { padding: 4px 8px; border: 1px solid #f1f5f9; text-align: center; }
+        
         /* Nuevos colores para carruseleros */
         .carr-SARA, .carr-ANA { color: #db2777 !important; font-weight: 900 !important; } /* Rosa femenino */
         .carr-HUMBERTO { color: #2563eb !important; font-weight: 900 !important; } /* Azul masculino */
@@ -129,8 +129,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- ================= VISTA: DASH GRUPAL ================= -->
+<!-- ================= VISTA: DASH GRUPAL ================= -->
                 <div id="dashGrupalView" class="content-view view-hidden space-y-6 w-full">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                         <div class="bg-white border-t-4 border-blue-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">Meta Cuota Global</p><p class="text-2xl md:text-3xl font-black text-blue-600 truncate" id="dashMetaCfGrupal">S/ 0</p></div>
@@ -504,7 +503,7 @@
                                             metaCf: cloudConf.metaCuota, cfVendidoTotal: cfVendido, totalVentasAsesor: ventasEntregadas, porcentajeAvance: ((cfVendido / cloudConf.metaCuota) * 100).toFixed(1),
                                             rangoReal: calcReal.rango, comisionReal: calcReal.comision, cfProyectado: cfProy, ventasProyectadas: ventasEntregadas * factorProy, avanceProyectado: ((cfProy / cloudConf.metaCuota) * 100).toFixed(1),
                                             rangoProyectado: calcProy.rango, comisionProyectada: calcProy.comision, bonoRestante: Math.max(0, cloudConf.bonoMeta - cfVendido), bonoGanado: cfVendido >= cloudConf.bonoMeta,
-                                            gerencia: { regionesPorcentaje: {LIMA:'0%', NORTE:'0%', CENTRO:'0%', SUR:'0%'}, asesoresDetalle: [], carruselerosDetalle: {}, diasOrdenados: [] }
+                                            gerencia: { regionesPorcentaje: {LIMA:'0%', NORTE:'0%', CENTRO:'0%', SUR:'0%'}, asesoresDetalle: [], carruselerosDetalle: [], diasOrdenados: [] }
                                         };
 
                                         let gCf = 0; let gVent = 0; let aseMap = {}; let carrMap = {}; let regMap = {LIMA:0, NORTE:0, CENTRO:0, SUR:0}; let totalReg = 0; let diasMap = {};
@@ -534,7 +533,7 @@
                                             dash.gerencia.asesoresDetalle.push({ nombre: a.nombre, totalVentas: a.ventas, cf: a.cf, comision: cR.comision, rango: cR.rango, cfProyectado: cfP, comisionProyectada: cP.comision, rangoProyectado: cP.rango, bonoRestante: Math.max(0, cloudConf.bonoMeta - a.cf), avance: ((a.cf/cloudConf.metaCuota)*100).toFixed(1) });
                                         });
                                         dash.gerencia.asesoresDetalle.sort((a,b) => b.cf - a.cf);
-                                        Object.keys(carrMap).forEach(k => { dash.gerencia.carruselerosDetalle[k] = { ventas: carrMap[k].ventas, cf: carrMap[k].cf, comision: carrMap[k].cf * 0.02, comisionProy: (carrMap[k].cf * factorProy) * 0.02 }; });
+                                        dash.gerencia.carruselerosDetalle = carrMap; 
                                         Object.keys(diasMap).sort().forEach(d => { dash.gerencia.diasOrdenados.push({dia: d, cantidad: diasMap[d]}); });
 
                                         result = { success: true, ventas: myVentas.sort((a,b)=>b.ID - a.ID), dashboard: dash };
@@ -659,23 +658,6 @@
                                                 return 0;
                                             });
                                         }
-                                             
-                                        } else { 
-                                            filtered.sort((a,b) => {
-                                                let n1 = String(a.NOMBRE_CLIENTE||'').trim().toLowerCase(); 
-                                                let n2 = String(b.NOMBRE_CLIENTE||'').trim().toLowerCase();
-                                                
-                                                if (n1 === '' && n2 !== '') return 1;
-                                                if (n1 !== '' && n2 === '') return -1;
-                                                if (n1 !== n2) return n1 < n2 ? -1 : 1;
-                                                
-                                                let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
-                                                if(m1 !== m2) return m1 > m2 ? -1 : 1;
-                                                
-                                                let c1 = Number(a.CICLO||0); let c2 = Number(b.CICLO||0);
-                                                return c1 < c2 ? -1 : 1;
-                                            });
-                                        }
                                         
                                         result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal }; 
                                     }
@@ -711,8 +693,7 @@
                 }
             }
         };
-
-        // ================= FUNCIONES DE RENDERIZADO Y LÓGICA DE UI =================
+// ================= FUNCIONES DE RENDERIZADO Y LÓGICA DE UI =================
         function formatRangoText(rango) {
             let color = 'text-slate-500';
             if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
@@ -1406,8 +1387,15 @@
         }
 
         function abrirModalWhatsApp(cliente, campana, fechaActStr, ani) {
-            let saludos = ["¡Hola, " + cliente + "! 👋", "¡Qué tal, " + cliente + "!", "¡Hola que tal, " + cliente + "! 😊"]; let bienvenidillas = [ "¡Bienvenido(a) a *Claro*! Nos da muchísimo gusto que hayas decidido portar tu línea con nosotros. A partir de este momento, ya formas parte de nuestra gran familia. 📱✨", "¡Te damos la bienvenida a *Claro*! Estamos felices de que hayas traído tu línea con nosotros y ya pases a ser parte de nuestra familia. 🚀" ]; let cierres = ["Si tienes *cualquier duda* sobre tu plan, tu consumo o el funcionamiento de tu servicio, háznoslo saber respondiendo por este medio. ¡Estamos aquí para ayudarte! 🤝\n\n¡Que tengas un excelente día! 🚀"];
+            let saludos = ["¡Hola, " + cliente + "! 👋", "¡Qué tal, " + cliente + "!", "¡Hola que tal, " + cliente + "! 😊"]; 
+            let bienvenidillas = [ "¡Bienvenido(a) a *Claro*! Nos da muchísimo gusto que hayas decidido portar tu línea con nosotros. A partir de este momento, ya formas parte de nuestra gran familia. 📱✨", "¡Te damos la bienvenida a *Claro*! Estamos felices de que hayas traído tu línea con nosotros y ya pases a ser parte de nuestra familia. 🚀" ]; 
+            let cierres = ["Si tienes *cualquier duda* sobre tu plan, tu consumo o el funcionamiento de tu servicio, háznoslo saber respondiendo por este medio. ¡Estamos aquí para ayudarte! 🤝\n\n¡Que tengas un excelente día! 🚀"];
+            
+            let saludo = saludos[0];
+            let bienvenida = bienvenidillas[0];
+            let cierre = cierres[0];
             let fechaActivacion = fechaActStr || "13/08/2026";
+            
             let mensajeCompleto = saludo + "\n\n" + bienvenida + "\n\nPara que tengas todo bajo control desde el primer día, te compartimos los detalles clave:\n\n" + "📅 *Tu ciclo de facturación inicial:* Del " + fechaActivacion + " al 13/09/2026 y los demás meses siempre será del 14 al 13 de cada mes.\n" + "💳 *Tu primer pago:* Estará habilitado desde el 18/08/2026, teniendo como fecha de vencimiento el 31/08/2026.\n\n" + cierre;
             const textEl = document.getElementById('wapTextContent'); if(textEl) textEl.value = mensajeCompleto;
             const linkEl = document.getElementById('wapDirectLink'); if(linkEl) linkEl.href = "https://wa.me/51" + ani;
