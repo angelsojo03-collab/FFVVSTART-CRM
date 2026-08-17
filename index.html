@@ -1582,9 +1582,28 @@
             actualizarSubEstadosModal(); document.getElementById('editSubEstado').value = v.SUB_ESTADO || ''; document.getElementById('editObservaciones').value = v.OBSERVACIONES || ''; document.getElementById('modalEdit').classList.remove('hidden');
         }
 
-        function closeModalEdit() { document.getElementById('modalEdit').classList.add('hidden'); }
-        function eliminarVenta(id) { if(confirm('¿Estás seguro de eliminar este registro?')) { google.script.run.withSuccessHandler(function(res) { if(res.success) loadVentas(); }).deleteVenta(id); } }
-        function showToast(msg) { const t = document.getElementById('toastSync'); const tm = document.getElementById('toastMsg'); if(!t || !tm) return; tm.textContent = msg; t.classList.remove('hidden'); setTimeout(function() { t.classList.add('hidden'); }, 2500); }
+        function closeModalEdit() { 
+            document.getElementById('modalEdit').classList.add('hidden'); 
+        }
+        
+        function eliminarVenta(id) { 
+            if(confirm('¿Estás seguro de eliminar este registro?')) { 
+                google.script.run.withSuccessHandler(function(res) { 
+                    if(res.success) loadVentas(); 
+                }).deleteVenta(id); 
+            } 
+        }
+        
+        function showToast(msg) { 
+            const t = document.getElementById('toastSync'); 
+            const tm = document.getElementById('toastMsg'); 
+            if(!t || !tm) return; 
+            tm.textContent = msg; 
+            t.classList.remove('hidden'); 
+            setTimeout(function() { 
+                t.classList.add('hidden'); 
+            }, 2500); 
+        }
     </script>
 </body>
 </html>
