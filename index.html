@@ -929,8 +929,14 @@
                         let estadoClave = (v.ESTADO || '').replace(/\s+/g, ''); // Remueve espacios para coincidir con CSS
                         let selectEstadoClass = v.ESTADO ? 'opt-' + estadoClave : 'bg-white text-slate-800';
                         let htmlEstado = '<option value="" class="bg-white text-slate-800"></option>'; 
-                        for(let j=0; j<optEstados.length; j++) { let o = optEstados[j]; let sel = v.ESTADO === o ? 'selected' : ''; htmlEstado += '<option value="' + o + '" class="bg-white text-slate-800" ' + sel + '>' + o + '</option>'; }
                         
+                        // Inyección de colores nativos a cada <option> del menú desplegable
+                        for(let j=0; j<optEstados.length; j++) { 
+                            let o = optEstados[j]; 
+                            let sel = v.ESTADO === o ? 'selected' : ''; 
+                            let optColorClass = 'opt-' + o.replace(/\s+/g, ''); // Genera: opt-INFORMADO, opt-DNC, opt-NOCONTESTA, etc.
+                            htmlEstado += '<option value="' + o + '" class="' + optColorClass + ' font-bold" ' + sel + '>&nbsp;&nbsp;' + o + '</option>'; 
+                        }
                         // Procesar color de CARRUSELERO por género
                         let carrColorClass = '';
                         if(v.CARRUSELERO === 'SARA' || v.CARRUSELERO === 'ANA') carrColorClass = 'carr-SARA';
