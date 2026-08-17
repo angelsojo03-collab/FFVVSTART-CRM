@@ -542,6 +542,7 @@
                                             }
                                         });
 
+                                        // Definimos ambas estructuras de propiedades para satisfacer a las dos tablas del sistema
                                         let carruselerosFinalMap = {};
                                         Object.keys(carrMap).forEach(k => {
                                             let cData = carrMap[k];
@@ -550,8 +551,10 @@
                                             carruselerosFinalMap[k] = { 
                                                 ventas: cData.ventas, 
                                                 cf: cData.cf, 
-                                                comision: isNaN(comReal) ? 0 : comReal, 
-                                                comisionProy: isNaN(comProy) ? 0 : comProy 
+                                                comision: isNaN(comReal) ? 0 : comReal,           // Para tabla Gerencia
+                                                comisionProy: isNaN(comProy) ? 0 : comProy,       // Para tabla Gerencia
+                                                Comision: isNaN(comReal) ? 0 : comReal,           // Compatibilidad extra
+                                                com: isNaN(comReal) ? 0 : comReal                 // Compatibilidad extra
                                             };
                                         });
                                         dash.gerencia.carruselerosDetalle = carruselerosFinalMap;
