@@ -493,12 +493,23 @@
                                         let cfVendido = 0; let ventasEntregadas = 0; let pPorta = 0; let pAlta = 0; let pReno = 0;
 
                                         myVentas.forEach(v => {
-                                            let val = parseFloat(v.CF || 0); let tipo = (v.TIPO_VENTA || '').toUpperCase();
-                                            if (v.ESTADO === 'ENTREGADO') { cfVendido += val; ventasEntregadas++; if(tipo.includes('PORTA')) pPorta++; else if(tipo.includes('ALTA')) pAlta++; else if(tipo.includes('RENO')) pReno++; }
+                                            let val = parseFloat(v.CF || 0); 
+                                            let tipo = (v.TIPO_VENTA || '').toUpperCase();
+                                            let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
+                                            
+                                            // REGLA ESTRICTA: Solo sumar y contabilizar si el estado es exactamente ENTREGADO
+                                            if (estadoVenta === 'ENTREGADO') { 
+                                                cfVendido += val; 
+                                                ventasEntregadas++; 
+                                                if(tipo.includes('PORTA')) pPorta++; 
+                                                else if(tipo.includes('ALTA')) pAlta++; 
+                                                else if(tipo.includes('RENO')) pReno++; 
+                                            }
                                         });
 
                                         let calcReal = calculateComision(cfVendido, pPorta, pAlta, pReno);
-                                        let cfProy = cfVendido * factorProy; let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
+                                        let cfProy = cfVendido * factorProy; 
+                                        let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
 
                                         let dash = {
                                             metaCf: cloudConf.metaCuota, cfVendidoTotal: cfVendido, totalVentasAsesor: ventasEntregadas, porcentajeAvance: ((cfVendido / cloudConf.metaCuota) * 100).toFixed(1),
@@ -1279,7 +1290,8 @@
                  const panelProy = document.getElementById('panelProyectadas'); if(panelProy) panelProy.classList.add('hidden');
             } else {
                  const panelProy = document.getElementById('panelProyectadas'); if(panelProy) panelProy.classList.remove('hidden');
-                 const elCfProy = document.getElementById('dashCfProy'); if(elCfProy) elCfProy.textContent = 'S/ ' + Number(d.cfProyectado || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                 const elCfProy = document.getElementById('dashCfProy'); 
+                 if(elCfProy) elCfProy.textContent = 'S/ ' + Number(d.cfProyectado || 0).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                  const elVentProy = document.getElementById('dashVentProy'); if(elVentProy) elVentProy.textContent = Math.round(d.ventasProyectadas || 0);
                  const elPorcProy = document.getElementById('dashPorcProy'); if(elPorcProy) elPorcProy.textContent = (d.avanceProyectado || 0) + '%';
                  const elRangProy = document.getElementById('dashRangoProy'); if(elRangProy) elRangProy.innerHTML = formatRangoText(d.rangoProyectado || 'SIN RANGO');
