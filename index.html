@@ -1581,8 +1581,7 @@
             const secEl = document.getElementById('editSec'); if(secEl) secEl.value = v.SEC || ''; const formEl = document.getElementById('editFormaEntrega'); if(formEl) formEl.value = v.FORMA_ENTREGA || 'DELIVERY';
             actualizarSubEstadosModal(); document.getElementById('editSubEstado').value = v.SUB_ESTADO || ''; document.getElementById('editObservaciones').value = v.OBSERVACIONES || ''; document.getElementById('modalEdit').classList.remove('hidden');
         }
-
-        function closeModalEdit() { 
+         function closeModalEdit() { 
             document.getElementById('modalEdit').classList.add('hidden'); 
         }
         
@@ -1604,6 +1603,7 @@
                 t.classList.add('hidden'); 
             }, 2500); 
         }
+    }); // <-- Asegúrate de que este cierre de DOMContentLoaded esté presente
     </script>
 </body>
 </html>
