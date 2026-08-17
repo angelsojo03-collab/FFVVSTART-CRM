@@ -358,7 +358,9 @@
                 </form>
             </div>
         </div>
-    const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
+   <!-- SCRIPTS CORE -->
+    <script>
+        const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
         const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
         // ================= CONEXIÓN NATIVA SUPABASE =================
@@ -366,7 +368,7 @@
         const SUPABASE_KEY = 'sb_publishable_1co4uYVkYwVPClzHxSSYCw_JVLBTU5k';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // CONFIGURACIONES GLOBALES Y LOCALES
+        // CONFIGURACIONES GLOBALES POR LOCALSTORAGE
         function getConfig() { return JSON.parse(localStorage.getItem('ffvv_config')) || { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, globalSort: [] }; }
         function saveConfig(e) { 
             e.preventDefault(); 
@@ -388,7 +390,7 @@
             const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; 
         }
 
-        // MOTOR DE DESCARGA TOTAL (Para saltar límite de 1000 de Supabase)
+        // MOTOR DE DESCARGA TOTAL SIN LÍMITES
         async function fetchAllRecords(table) {
             let all = [];
             for (let i = 0; i < 100000; i += 1000) {
@@ -400,38 +402,13 @@
             return all;
         }
 
-        // ESCUDOS CONTRA ERRORES AMARILLOS DE CHROME (Fechas y Horas)
-        function safeTimeFormat(val) {
-            if(!val) return '';
-            let s = String(val).trim();
-            if (/^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/.test(s)) return s.substring(0,5);
-            return '';
-        }
-        function safeDateFormat(val) {
-            if(!val) return '';
-            let s = String(val).trim();
-            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-            if (s.includes('/')) {
-                let p = s.split('/');
-                if(p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
-            }
-            return '';
-        }
-        function formatRangoText(rango) {
-            let color = 'text-slate-500';
-            if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
-            return `<span class="font-black ${color}">${rango}</span>`;
-        }
         window.google = {
             script: {
                 get run() {
                     const ctx = { successCb: null, failureCb: null, withSuccessHandler: function(cb) { this.successCb = cb; return this; }, withFailureHandler: function(cb) { this.failureCb = cb; return this; } };
                     return new Proxy(ctx, {
                         get: function(target, prop) {
-                            // Si la propiedad existe en el contexto (como withSuccessHandler), devuélvela
                             if (prop in target) return target[prop];
-                            
-                            // Si es una llamada a función remota, captúrala y ejecútala asíncronamente
                             return async function(...args) {
                                 try {
                                     let result = null; let conf = getConfig();
@@ -440,11 +417,7 @@
                                         const [email, pass] = args;
                                         const { data, error } = await _supabase.from('CREDENCIALES').select('*').eq('EMAIL', email).eq('PASSWORD', pass).eq('ESTADO', 'Activo');
                                         if (error) throw error;
-                                        if (data && data.length > 0) { 
-                                            result = { success: true, user: { nombre: data[0].NOMBRE, correo: data[0].EMAIL, rol: data[0].ROL } }; 
-                                        } else { 
-                                            result = { success: false, message: 'Credenciales inválidas' }; 
-                                        }
+                                        if (data && data.length > 0) { result = { success: true, user: { nombre: data[0].NOMBRE, correo: data[0].EMAIL, rol: data[0].ROL } }; } else { result = { success: false, message: 'Credenciales inválidas' }; }
                                     }
                                     
                                     // === CONFIGURACIÓN GLOBAL NUBE ===
@@ -547,7 +520,7 @@
                                         result = { success: true, ventas: myVentas.sort((a,b)=>b.ID - a.ID), dashboard: dash };
                                     }
                                     
-                                    // === OPERACIONES CRUD VENTAS ===
+                                    // === EL RESTO DE METODOS CRUD Y BASE DITO ===
                                     else if (prop === 'saveVentasMultiples') {
                                         const [d] = args; let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
                                         let inserts = d.lineasDetalle.map(l => ({ ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region, CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado, OBSERVACIONES: d.observaciones, ASESOR: d.asesor, N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana, FECHA_ACTIVACION: dateStr }));
@@ -570,10 +543,8 @@
                                         const [id] = args; let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
-                                    // === BASE DITO (COWORK Y ORDENAMIENTO DE CERO ERRORES) ===
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
-                                        
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { vistaDito: null, globalSort: [] };
                                         if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
@@ -611,8 +582,61 @@
                                                 v.isDuplicate = true; 
                                             } else { v.isDuplicate = false; } 
                                         });
+
+                                        let globalSort = cloudConf.globalSort || [];
+                                        let finalSortConfigs = [];
+
+                                        if (globalSort.length > 0) {
+                                            finalSortConfigs = globalSort;
+                                        } else if (f.sortCol) {
+                                            finalSortConfigs = [{col: f.sortCol, dir: f.sortAsc ? 'asc' : 'desc'}];
+                                        }
+
+                                        if (finalSortConfigs.length > 0) {
+                                            filtered.sort((a,b) => {
+                                                for(let i=0; i<finalSortConfigs.length; i++) {
+                                                    let col = finalSortConfigs[i].col; let dir = finalSortConfigs[i].dir === 'asc' ? 1 : -1;
+                                                    let v1 = a[col]; let v2 = b[col];
+                                                    
+                                                    if (v1 === null || v1 === undefined) v1 = ''; 
+                                                    if (v2 === null || v2 === undefined) v2 = '';
+                                                    
+                                                    v1 = String(v1).trim();
+                                                    v2 = String(v2).trim();
+
+                                                    if (v1 === '' && v2 !== '') return 1;
+                                                    if (v1 !== '' && v2 === '') return -1;
+                                                    if (v1 === '' && v2 === '') continue;
+
+                                                    if (!isNaN(v1) && !isNaN(v2)) { 
+                                                        v1 = Number(v1); v2 = Number(v2); 
+                                                    } else {
+                                                        v1 = v1.toLowerCase(); v2 = v2.toLowerCase();
+                                                    }
+                                                    
+                                                    if (v1 < v2) return -1 * dir; 
+                                                    if (v1 > v2) return 1 * dir;
+                                                }
+                                                return 0;
+                                            });
+                                        } else { 
+                                            filtered.sort((a,b) => {
+                                                let n1 = String(a.NOMBRE_CLIENTE||'').trim().toLowerCase(); 
+                                                let n2 = String(b.NOMBRE_CLIENTE||'').trim().toLowerCase();
+                                                
+                                                if (n1 === '' && n2 !== '') return 1;
+                                                if (n1 !== '' && n2 === '') return -1;
+                                                if (n1 !== n2) return n1 < n2 ? -1 : 1;
+                                                
+                                                let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
+                                                if(m1 !== m2) return m1 > m2 ? -1 : 1;
+                                                
+                                                let c1 = Number(a.CICLO||0); let c2 = Number(b.CICLO||0);
+                                                return c1 < c2 ? -1 : 1;
+                                            });
+                                        }
                                         
-                                        result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal, cloudSort: cloudConf.globalSort || [] }; 
+                                        result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal }; 
                                     }
                                     
                                     else if (prop === 'updateBaseVentasInline') {
@@ -646,75 +670,15 @@
                 }
             }
         };
-// ================= UI HELPERS Y MOTOR DE ORDENAMIENTO EN MEMORIA =================
-        function sortDataInMemory() {
-            let conf = getConfig();
-            let globalSort = conf.globalSort || [];
 
-            baseVentasGlobal.sort((a,b) => {
-                // PRIORIDAD 1: ORDEN DE COLUMNA CLICK EN PANTALLA (Eje: OBS)
-                if (baseSortCol) {
-                    let col = baseSortCol; let dir = baseSortAsc ? 1 : -1;
-                    let v1 = a[col]; let v2 = b[col];
-                    
-                    if (v1 === null || v1 === undefined) v1 = ''; 
-                    if (v2 === null || v2 === undefined) v2 = '';
-                    
-                    v1 = String(v1).trim(); v2 = String(v2).trim();
-
-                    // REGLA UNIVERSAL: Vacíos siempre al final sin importar ASC o DESC
-                    if (v1 === '' && v2 !== '') return 1;
-                    if (v1 !== '' && v2 === '') return -1;
-                    if (v1 === '' && v2 === '') return 0;
-                    
-                    if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); }
-                    else { v1 = String(v1).toLowerCase(); v2 = String(v2).toLowerCase(); }
-                    
-                    if (v1 < v2) return -1 * dir;
-                    if (v1 > v2) return 1 * dir;
-                    return 0;
-                }
-                
-                // PRIORIDAD 2: ORDEN MÚLTIPLE GLOBAL (GERENCIA)
-                if (globalSort.length > 0) {
-                    for(let i=0; i<globalSort.length; i++) {
-                        let col = globalSort[i].col; let dir = globalSort[i].dir === 'asc' ? 1 : -1;
-                        let v1 = a[col]; let v2 = b[col];
-                        
-                        if (v1 === null || v1 === undefined) v1 = ''; 
-                        if (v2 === null || v2 === undefined) v2 = '';
-                        
-                        v1 = String(v1).trim(); v2 = String(v2).trim();
-
-                        if (v1 === '' && v2 !== '') return 1;
-                        if (v1 !== '' && v2 === '') return -1;
-                        if (v1 === '' && v2 === '') continue;
-
-                        if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); }
-                        else { v1 = String(v1).toLowerCase(); v2 = String(v2).toLowerCase(); }
-                        
-                        if (v1 < v2) return -1 * dir; 
-                        if (v1 > v2) return 1 * dir;
-                    }
-                }
-
-                // PRIORIDAD 3: DEFAULT UNIVERSAL COWORK (Cliente A-Z -> Meses DESC -> Ciclo ASC)
-                let n1 = String(a.NOMBRE_CLIENTE||'').trim().toLowerCase(); 
-                let n2 = String(b.NOMBRE_CLIENTE||'').trim().toLowerCase();
-                
-                if (n1 === '' && n2 !== '') return 1;
-                if (n1 !== '' && n2 === '') return -1;
-                if (n1 !== n2) return n1 < n2 ? -1 : 1; 
-                
-                let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
-                if(m1 !== m2) return m1 > m2 ? -1 : 1; 
-                
-                let c1 = Number(a.CICLO||0); let c2 = Number(b.CICLO||0);
-                return c1 < c2 ? -1 : 1; 
-            });
+        // ================= FUNCIONES DE RENDERIZADO Y LÓGICA DE UI =================
+        function formatRangoText(rango) {
+            let color = 'text-slate-500';
+            if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
+            return `<span class="font-black ${color}">${rango}</span>`;
         }
 
-        let currentUser = null; let ventasGlobal = []; let baseVentasGlobal = []; let chartDiasInstance = null; let chartAsesoresInstance = null; let chartDiasGrupalInstance = null; let chartAsesoresGrupalInstance = null; let baseSortCol = ''; let baseSortAsc = true; let baseAutoSortInterval = null;
+        let currentUser = null; let ventasGlobal = []; let baseVentasGlobal = []; let chartDiasInstance = null; let chartAsesoresInstance = null; let chartDiasGrupalInstance = null; let chartAsesoresGrupalInstance = null; let baseSortCol = ''; let baseSortAsc = true; let baseSyncInterval = null;
         let ventasFiltradasGlobal = []; let currentPageVentas = 1; const itemsPerPageVentas = 15;
         let currentPageBase = 1; const itemsPerPageBase = 50;
 
@@ -831,7 +795,6 @@
                     const m = document.getElementById('confMeta'); if(m) m.value = res.metaCuota;
                     const d = document.getElementById('confDias'); if(d) d.value = res.diasMes;
                     const b = document.getElementById('confBono'); if(b) b.value = res.bonoMeta;
-                    if(res.globalSort) { let c = getConfig(); c.globalSort = res.globalSort; localStorage.setItem('ffvv_config', JSON.stringify(c)); }
                 }
             }).obtenerConfiguracion();
         }
@@ -855,7 +818,7 @@
 
             const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc };
             const tbody = document.getElementById('tablaCuerpoBase');
-            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Base Dito y calculando duplicados...</td></tr>';
+            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Base Dito y calculando duplicados...</td></tr>';
 
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { 
@@ -864,13 +827,11 @@
                         let vg = res.vistaGlobal;
                         if(chkOcultar && vg.ocultarCheck !== undefined) chkOcultar.checked = vg.ocultarCheck;
                     }
-                    
-                    sortDataInMemory(); 
-                    if (!silencioso && txt === '') { currentPageBase = 1; }
+                    if (!silencioso || txt !== '') { currentPageBase = 1; }
                     renderBaseTablePaginated(); 
-                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
+                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
             }).withFailureHandler(function(err) {
-                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
+                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
             }).obtenerBaseFiltrada(filtros);
         }
 
@@ -901,31 +862,14 @@
 
         function loadBaseVentas() {
             aplicarFiltrosBase(false);
-            
-            // AUTO-SORT CADA 5 MINUTOS
-            if(baseAutoSortInterval) clearInterval(baseAutoSortInterval);
-            baseAutoSortInterval = setInterval(function() {
+            if(baseSyncInterval) clearInterval(baseSyncInterval);
+            baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
-                if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
-                    baseSortCol = ''; 
-                    showToast('Auto-ordenando base en tiempo real...');
-                    aplicarFiltrosBase(true); 
-                }
-            }, 300000); 
+                if (vistaBase && !vistaBase.classList.contains('view-hidden')) aplicarFiltrosBase(true);
+            }, 10000);
         }
 
-        function sortBase(columna) { 
-            const isGerencia = (currentUser.rol === 'GERENCIA' || currentUser.rol === 'SUPERVISOR');
-            if (!isGerencia && columna !== 'OBS') {
-                showToast('Permiso denegado: Solo Gerencia puede ordenar otras columnas.');
-                return;
-            }
-            if (baseSortCol === columna) { baseSortAsc = !baseSortAsc; } else { baseSortCol = columna; baseSortAsc = true; } 
-            
-            sortDataInMemory();
-            renderBaseTablePaginated();
-        }
-
+        function sortBase(columna) { if (baseSortCol === columna) { baseSortAsc = !baseSortAsc; } else { baseSortCol = columna; baseSortAsc = true; } aplicarFiltrosBase(false); }
         function toggleCheckbox(id) { const chk = document.getElementById(id); chk.checked = !chk.checked; aplicarFiltrosBase(false); }
         
         function aplicarMultiSort() { 
@@ -957,14 +901,7 @@
 
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        // ESCUDOS APLICADOS
-                        let safeHora = '';
-                        if(v.HORA) { let hs = String(v.HORA).trim(); if(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(hs)) safeHora = hs; else if(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(hs)) safeHora = hs.substring(0,5); }
-                        
-                        let safeFecha = '';
-                        if(v.FV) { let fs = String(v.FV).trim(); if(/^\d{4}-\d{2}-\d{2}$/.test(fs)) safeFecha = fs; else if(fs.includes('/')) { let parts = fs.split('/'); if(parts.length===3 && parts[2].length===4) safeFecha = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; } }
-
-                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '"><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-white/50" ' + blockVendedor + '>' + htmlVend + '</select></td><td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td><td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td><td class="px-3 py-2"><input type="date" onchange="inlineUpdateBase(\'' + v.ID + '\', \'FV\', this.value)" value="' + safeFecha + '" class="inline-edit text-slate-800 font-bold bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit text-[10px] font-black rounded bg-white/50 \' + this.options[this.selectedIndex].className;" class="inline-edit text-[10px] font-black rounded bg-white/50 ' + classEstado + '" ' + blockGestion + '>' + htmlEstado + '</select></td><td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + safeHora + '" class="inline-edit text-slate-800 font-bold w-24 bg-white/50" ' + blockGestion + '></td><td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit text-purple-700 font-black bg-white/50" ' + blockGestion + '>' + htmlCarr + '</select></td><td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td><td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td></tr>';
+                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '"><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-white/50" ' + blockVendedor + '>' + htmlVend + '</select></td><td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td><td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td><td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit text-[10px] font-black rounded bg-white/50 \' + this.options[this.selectedIndex].className;" class="inline-edit text-[10px] font-black rounded bg-white/50 ' + classEstado + '" ' + blockGestion + '>' + htmlEstado + '</select></td><td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-white/50" ' + blockGestion + '></td><td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit text-purple-700 font-black bg-white/50" ' + blockGestion + '>' + htmlCarr + '</select></td><td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td><td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td></tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
                 tb.innerHTML = htmlTemp;
@@ -979,11 +916,9 @@
             if (campo === 'GESTIONADO' && chk && chk.checked) { 
                 const tr = document.getElementById('row_base_' + id); 
                 if(tr) tr.remove(); 
-            } 
-            
-            google.script.run.withSuccessHandler(function(res) { 
-                if(res && res.success) { showToast('Guardado en BD'); } 
-            }).updateBaseVentasInline(id, campo, valor);
+            } else { renderBaseTablePaginated(); }
+
+            google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
 
         async function ejecutarCargaMasiva() {
@@ -1100,7 +1035,7 @@
         function addLinea() { const container = document.getElementById('lineasContainer'); if(!container) return; const div = document.createElement('div'); div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 linea-row'; div.innerHTML = '<div><label class="block text-[10px] text-slate-600 font-bold">N° a Portar</label><input type="text" name="n_portar" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: 999888777" required></div><div><label class="block text-[10px] text-slate-600 font-bold">N° SEC</label><input type="text" name="sec" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: SEC-123"></div><div><label class="block text-[10px] text-slate-600 font-bold">Tipo de Venta</label><select name="tipoVenta" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" onchange="actualizarOpRow(this)"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovación</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Operador</label><select name="operador" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Plan (CF S/)</label><select name="cf" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-green-700 text-sm font-bold focus:outline-none focus:border-red-600"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Campaña</label><select name="campana" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div><div class="col-span-1 md:col-span-6 flex justify-end"><button type="button" onclick="this.closest(\'.linea-row\').remove()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded text-xs transition">Eliminar Línea</button></div>'; container.appendChild(div); }
 
         function aplicarFiltros() {
-            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.toLowerCase() : '';
+            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.trim() : '';
             const tipoEl = document.getElementById('filtroTipo'); const tipo = tipoEl ? tipoEl.value : '';
             const mesEl = document.getElementById('filtroMes'); const mes = mesEl ? mesEl.value : '';
             const fechaEl = document.getElementById('filtroFechaAct'); const fechaFiltro = fechaEl ? fechaEl.value : '';
@@ -1116,7 +1051,8 @@
             if (fechaFiltro) { let partes = fechaFiltro.split('-'); fechaFiltroFormat = partes[2] + '/' + partes[1] + '/' + partes[0]; }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
-                const matchTxt = (String(v.CLIENTE || '').toLowerCase().indexOf(txt) !== -1 || String(v.DOC || '').toLowerCase().indexOf(txt) !== -1 || String(v.N_PORTAR || '').toLowerCase().indexOf(txt) !== -1 || String(v.ANI || '').toLowerCase().indexOf(txt) !== -1 || String(v.SEC || '').toLowerCase().indexOf(txt) !== -1);
+                const t = txt.toLowerCase();
+                const matchTxt = !t || (String(v.CLIENTE || '').toLowerCase().includes(t) || String(v.DOC || '').toLowerCase().includes(t) || String(v.N_PORTAR || '').toLowerCase().includes(t) || String(v.ANI || '').toLowerCase().includes(t) || String(v.SEC || '').toLowerCase().includes(t));
                 let matchEst = true; if (estadosCheckbox.length > 0) { matchEst = estadosCheckbox.includes(v.ESTADO); }
                 const matchTipo = !tipo || v.TIPO_VENTA === tipo; const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; const matchAsesor = !asesorFiltro || v.ASESOR.toUpperCase() === asesorFiltro.toUpperCase();
                 let matchRevision = true; if (revFiltro) { if (revFiltro === "- Sin Revisión -") { matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; } else { matchRevision = v.REVISION === revFiltro; } }
@@ -1155,10 +1091,7 @@
             }
         }
 
-        function cambiarPagina(page) {
-            currentPageVentas = page;
-            renderTablePaginated();
-        }
+        function cambiarPagina(page) { currentPageVentas = page; renderTablePaginated(); }
 
         function loadVentas() {
             const tbody = document.getElementById('tablaCuerpo'); if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando ventas...</td></tr>';
@@ -1186,6 +1119,231 @@
                 if(res && res.success) { ventasGlobal = res.ventas || []; actualizarDashboardCard(res.dashboard); if (res.dashboard && res.dashboard.gerencia) { renderGerenciaDashboard(res.dashboard.gerencia); renderDashGrupal(res.dashboard); } } 
             }).getDashboardData(currentUser.rol, currentUser.nombre);
         }
+
+        function actualizarDashboardCard(d) {
+            if (!d) return;
+            const isAdmin = (currentUser.rol === 'GERENCIA' || currentUser.rol === 'SUPERVISOR');
+            let conf = getConfig();
+
+            if(isAdmin) {
+                const elMeta = document.getElementById('dashMetaCf'); if(elMeta) elMeta.textContent = 'S/ ' + Number(d.metaGlobal || 20000).toLocaleString('es-PE');
+                const elCf = document.getElementById('dashCfVendido'); if(elCf) elCf.textContent = 'S/ ' + Number(d.totalCfGeneral || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                const elPort = document.getElementById('dashPortas'); if(elPort) elPort.textContent = d.totalVentasGeneral || 0;
+                const elPorc = document.getElementById('dashPorcentaje'); if(elPorc) elPorc.textContent = (d.avanceGlobal || 0) + '%';
+                
+                const trReal = document.getElementById('tarjetaRangoReal'); if(trReal) trReal.classList.add('hidden');
+                const tcReal = document.getElementById('tarjetaComReal'); if(tcReal) tcReal.classList.add('hidden');
+                const panelSup = document.getElementById('panelReales'); if(panelSup) panelSup.className = 'grid grid-cols-2 md:grid-cols-4 gap-6 mb-6';
+            } else {
+                const elMeta = document.getElementById('dashMetaCf'); if(elMeta) elMeta.textContent = 'S/ ' + Number(conf.metaCuota || 4000).toLocaleString('es-PE');
+                const elCf = document.getElementById('dashCfVendido'); if(elCf) elCf.textContent = 'S/ ' + Number(d.cfVendidoTotal || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                const elPort = document.getElementById('dashPortas'); if(elPort) elPort.textContent = d.totalVentasAsesor || 0;
+                const elPorc = document.getElementById('dashPorcentaje'); if(elPorc) elPorc.textContent = (d.porcentajeAvance || 0) + '%';
+                
+                const elRangReal = document.getElementById('dashRangoReal'); if(elRangReal) elRangReal.innerHTML = formatRangoText(d.rangoReal || 'SIN RANGO');
+                const elComReal = document.getElementById('dashComReal'); if(elComReal) elComReal.textContent = 'S/ ' + Number(d.comisionReal || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                
+                const trReal = document.getElementById('tarjetaRangoReal'); if(trReal) trReal.classList.remove('hidden');
+                const tcReal = document.getElementById('tarjetaComReal'); if(tcReal) tcReal.classList.remove('hidden');
+                const panelSup = document.getElementById('panelReales'); if(panelSup) panelSup.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-6';
+            }
+
+            if (isAdmin) {
+                 const panelProy = document.getElementById('panelProyectadas'); if(panelProy) panelProy.classList.add('hidden');
+            } else {
+                 const panelProy = document.getElementById('panelProyectadas'); if(panelProy) panelProy.classList.remove('hidden');
+                 const elCfProy = document.getElementById('dashCfProy'); if(elCfProy) elCfProy.textContent = 'S/ ' + Number(d.cfProyectado || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                 const elVentProy = document.getElementById('dashVentProy'); if(elVentProy) elVentProy.textContent = Math.round(d.ventasProyectadas || 0);
+                 const elPorcProy = document.getElementById('dashPorcProy'); if(elPorcProy) elPorcProy.textContent = (d.avanceProyectado || 0) + '%';
+                 const elRangProy = document.getElementById('dashRangoProy'); if(elRangProy) elRangProy.innerHTML = formatRangoText(d.rangoProyectado || 'SIN RANGO');
+                 const elComProy = document.getElementById('dashComProy'); if(elComProy) elComProy.textContent = 'S/ ' + Number(d.comisionProyectada || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                 const elBonoRest = document.getElementById('dashBonoRestante'); if(elBonoRest) elBonoRest.textContent = 'S/ ' + Number(d.bonoRestante || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+                 const elBonoEst = document.getElementById('dashBonoEstado'); if(elBonoEst) { if(d.bonoGanado) { elBonoEst.innerHTML = '<span class="text-green-600 font-bold">¡GANASTE S/ 200! 🎉</span>'; } else { elBonoEst.innerHTML = '<span class="text-slate-500 font-black">Aún no llegas a la meta</span>'; } }
+            }
+        }
+
+        function renderGerenciaDashboard(g) {
+            if(!g) return;
+            let conf = getConfig();
+            const regLima = document.getElementById('dashRegLima'); if(regLima) regLima.textContent = g.regionesPorcentaje.LIMA || '0%';
+            const regNorte = document.getElementById('dashRegNorte'); if(regNorte) regNorte.textContent = g.regionesPorcentaje.NORTE || '0%';
+            const regCentro = document.getElementById('dashRegCentro'); if(regCentro) regCentro.textContent = g.regionesPorcentaje.CENTRO || '0%';
+            const regSur = document.getElementById('dashRegSur'); if(regSur) regSur.textContent = g.regionesPorcentaje.SUR || '0%';
+
+            const tbVentasAsesor = document.getElementById('tablaGerenciaVentasAsesor');
+            if(tbVentasAsesor) { 
+                tbVentasAsesor.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    tbVentasAsesor.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold">${a.totalVentas}</td><td class="font-bold">S/ ${Number(a.cf).toFixed(2)}</td><td class="text-green-600 font-bold">S/ ${Number(a.comision).toFixed(2)}</td><td>${formatRangoText(a.rango)}</td></tr>`; 
+                }); 
+            }
+
+            const tbAsesores = document.getElementById('tablaGerenciaAsesores'); 
+            if(tbAsesores) { 
+                tbAsesores.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    tbAsesores.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold text-slate-500">S/ ${Number(a.cfProyectado).toFixed(2)}</td><td class="text-emerald-600 font-bold">S/ ${Number(a.comisionProyectada).toFixed(2)}</td><td>${formatRangoText(a.rangoProyectado)}</td></tr>`; 
+                }); 
+            }
+
+            const tbCarr = document.getElementById('tablaGerenciaCarruseleros'); 
+            if(tbCarr) { 
+                tbCarr.innerHTML = ''; 
+                Object.keys(g.carruselerosDetalle || {}).forEach(function(cName) { 
+                    let c = g.carruselerosDetalle[cName]; 
+                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${c.ventas}</td><td class="font-bold text-slate-500">S/ ${Number(c.cf).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(c.comision).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(c.comisionProy).toFixed(2)}</td></tr>`; 
+                }); 
+            }
+
+            const tbBono = document.getElementById('tablaGerenciaBono'); 
+            if(tbBono) { 
+                tbBono.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    let ganoBono = a.cf >= conf.bonoMeta ? '<span class="text-green-600 font-bold">S/ 200.00</span>' : '<span class="text-slate-400 font-black">S/ 0.00</span>'; 
+                    tbBono.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="text-slate-500 font-bold">S/ ${conf.bonoMeta}</td><td class="text-slate-800 font-bold">S/ ${Number(a.cf).toFixed(2)}</td><td class="text-yellow-600 font-black">S/ ${Number(a.bonoRestante).toFixed(2)}</td><td>${ganoBono}</td></tr>`; 
+                }); 
+            }
+
+            const ctxDiasEl = document.getElementById('chartDias');
+            if (ctxDiasEl) {
+                if (chartDiasInstance) chartDiasInstance.destroy();
+                let labelsDias = []; let dataDias = []; g.diasOrdenados.forEach(function(d) { labelsDias.push('Día ' + d.dia); dataDias.push(d.cantidad); });
+                chartDiasInstance = new Chart(ctxDiasEl.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: labelsDias, datasets: [{ label: 'Ventas Entregadas', data: dataDias, backgroundColor: '#dc2626', borderRadius: 4 }] }, 
+                    plugins: [ChartDataLabels],
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { color: '#ffffff', anchor: 'center', align: 'center', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value > 0 ? value : ''; } } 
+                        }, 
+                        scales: { x:{ticks:{color:'#64748b'}}, y:{ticks:{color:'#64748b', precision:0}} } 
+                    } 
+                });
+            }
+
+            const ctxAsesoresEl = document.getElementById('chartAsesores');
+            if (ctxAsesoresEl) {
+                if (chartAsesoresInstance) chartAsesoresInstance.destroy();
+                let labelsAse = []; let dataAse = []; let maxAse = 0;
+                g.asesoresDetalle.forEach(function(a) { labelsAse.push(a.nombre); dataAse.push(a.avance); if(parseFloat(a.avance) > maxAse) maxAse = parseFloat(a.avance); });
+                chartAsesoresInstance = new Chart(ctxAsesoresEl.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: labelsAse, datasets: [{ label: '% Avance Cuota', data: dataAse, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
+                    plugins: [ChartDataLabels],
+                    options: { 
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { color: '#ffffff', anchor: 'end', align: 'start', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value + '%'; } }
+                        }, 
+                        scales: { x: { ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, min: 0, max: maxAse + 20 }, y: { ticks: { color: '#64748b', font: { weight: 'bold'} } } } 
+                    } 
+                });
+            }
+        }
+
+        function renderDashGrupal(dashboard) {
+            if(!dashboard || !dashboard.gerencia) return;
+            let g = dashboard.gerencia;
+            let conf = getConfig();
+            
+            const regLima = document.getElementById('dashRegLimaGrupal'); if(regLima) regLima.textContent = g.regionesPorcentaje.LIMA || '0%';
+            const regNorte = document.getElementById('dashRegNorteGrupal'); if(regNorte) regNorte.textContent = g.regionesPorcentaje.NORTE || '0%';
+            const regCentro = document.getElementById('dashRegCentroGrupal'); if(regCentro) regCentro.textContent = g.regionesPorcentaje.CENTRO || '0%';
+            const regSur = document.getElementById('dashRegSurGrupal'); if(regSur) regSur.textContent = g.regionesPorcentaje.SUR || '0%';
+
+            const elMeta = document.getElementById('dashMetaCfGrupal'); if(elMeta) elMeta.textContent = 'S/ ' + Number(dashboard.metaGlobal || 0).toLocaleString('es-PE');
+            const elCf = document.getElementById('dashCfVendidoGrupal'); if(elCf) elCf.textContent = 'S/ ' + Number(dashboard.totalCfGeneral || 0).toLocaleString('es-PE', {minimumFractionDigits: 2});
+            const elPort = document.getElementById('dashPortasGrupal'); if(elPort) elPort.textContent = dashboard.totalVentasGeneral || 0;
+            const elPorc = document.getElementById('dashPorcentajeGrupal'); if(elPorc) elPorc.textContent = (dashboard.avanceGlobal || 0) + '%';
+
+            const tbVentasAsesor = document.getElementById('tablaGrupalVentasAsesor');
+            if(tbVentasAsesor) { 
+                tbVentasAsesor.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    tbVentasAsesor.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold">${a.totalVentas}</td><td class="font-bold">S/ ${Number(a.cf).toFixed(2)}</td><td class="text-green-600 font-bold">S/ ${Number(a.comision).toFixed(2)}</td><td>${formatRangoText(a.rango)}</td></tr>`; 
+                }); 
+            }
+
+            const tbAsesores = document.getElementById('tablaGrupalAsesores'); 
+            if(tbAsesores) { 
+                tbAsesores.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    tbAsesores.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold text-slate-500">S/ ${Number(a.cfProyectado).toFixed(2)}</td><td class="text-emerald-600 font-bold">S/ ${Number(a.comisionProyectada).toFixed(2)}</td><td>${formatRangoText(a.rangoProyectado)}</td></tr>`; 
+                }); 
+            }
+
+            const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
+            if(tbCarr) { 
+                tbCarr.innerHTML = ''; 
+                Object.keys(g.carruselerosDetalle || {}).forEach(function(cName) { 
+                    let c = g.carruselerosDetalle[cName]; 
+                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${c.ventas}</td><td class="font-bold text-slate-500">S/ ${Number(c.cf).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(c.comision).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(c.comisionProy).toFixed(2)}</td></tr>`; 
+                }); 
+            }
+
+            const tbBono = document.getElementById('tablaGrupalBono'); 
+            if(tbBono) { 
+                tbBono.innerHTML = ''; 
+                g.asesoresDetalle.forEach(function(a) { 
+                    let ganoBono = a.cf >= conf.bonoMeta ? '<span class="text-green-600 font-bold">S/ 200.00</span>' : '<span class="text-slate-400 font-black">S/ 0.00</span>'; 
+                    tbBono.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="text-slate-500 font-bold">S/ ${conf.bonoMeta}</td><td class="text-slate-800 font-bold">S/ ${Number(a.cf).toFixed(2)}</td><td class="text-yellow-600 font-black">S/ ${Number(a.bonoRestante).toFixed(2)}</td><td>${ganoBono}</td></tr>`; 
+                }); 
+            }
+
+            const ctxDiasEl = document.getElementById('chartDiasGrupal');
+            if (ctxDiasEl) {
+                if (chartDiasGrupalInstance) chartDiasGrupalInstance.destroy();
+                let labelsDias = []; let dataDias = []; g.diasOrdenados.forEach(function(d) { labelsDias.push('Día ' + d.dia); dataDias.push(d.cantidad); });
+                chartDiasGrupalInstance = new Chart(ctxDiasEl.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: labelsDias, datasets: [{ label: 'Ventas Entregadas', data: dataDias, backgroundColor: '#dc2626', borderRadius: 4 }] }, 
+                    plugins: [ChartDataLabels],
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { color: '#ffffff', anchor: 'center', align: 'center', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value > 0 ? value : ''; } } 
+                        }, 
+                        scales: { x:{ticks:{color:'#64748b'}}, y:{ticks:{color:'#64748b', precision:0}} } 
+                    } 
+                });
+            }
+
+            const ctxAsesoresEl = document.getElementById('chartAsesoresGrupal');
+            if (ctxAsesoresEl) {
+                if (chartAsesoresGrupalInstance) chartAsesoresGrupalInstance.destroy();
+                let labelsAse = []; let dataAse = []; let maxAse = 0;
+                g.asesoresDetalle.forEach(function(a) { labelsAse.push(a.nombre); dataAse.push(a.avance); if(parseFloat(a.avance) > maxAse) maxAse = parseFloat(a.avance); });
+                chartAsesoresGrupalInstance = new Chart(ctxAsesoresEl.getContext('2d'), { 
+                    type: 'bar', 
+                    data: { labels: labelsAse, datasets: [{ label: '% Avance Cuota', data: dataAse, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
+                    plugins: [ChartDataLabels],
+                    options: { 
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false }, 
+                            datalabels: { color: '#ffffff', anchor: 'end', align: 'start', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value + '%'; } }
+                        }, 
+                        scales: { x: { ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, min: 0, max: maxAse + 20 }, y: { ticks: { color: '#64748b', font: { weight: 'bold'} } } } 
+                    } 
+                });
+            }
+        }
+
+        function abrirModalWhatsApp(cliente, campana, fechaActStr, ani) {
+            let saludos = ["¡Hola, " + cliente + "! 👋", "¡Qué tal, " + cliente + "!", "¡Hola que tal, " + cliente + "! 😊"]; let bienvenidillas = [ "¡Bienvenido(a) a *Claro*! Nos da muchísimo gusto que hayas decidido portar tu línea con nosotros. A partir de este momento, ya formas parte de nuestra gran familia. 📱✨", "¡Te damos la bienvenida a *Claro*! Estamos felices de que hayas traído tu línea con nosotros y ya pases a ser parte de nuestra familia. 🚀" ]; let cierres = ["Si tienes *cualquier duda* sobre tu plan, tu consumo o el funcionamiento de tu servicio, háznoslo saber respondiendo por este medio. ¡Estamos aquí para ayudarte! 🤝\n\n¡Que tengas un excelente día! 🚀"];
+            let fechaActivacion = fechaActStr || "13/08/2026";
+            let mensajeCompleto = saludo + "\n\n" + bienvenida + "\n\nPara que tengas todo bajo control desde el primer día, te compartimos los detalles clave:\n\n" + "📅 *Tu ciclo de facturación inicial:* Del " + fechaActivacion + " al 13/09/2026 y los demás meses siempre será del 14 al 13 de cada mes.\n" + "💳 *Tu primer pago:* Estará habilitado desde el 18/08/2026, teniendo como fecha de vencimiento el 31/08/2026.\n\n" + cierre;
+            const textEl = document.getElementById('wapTextContent'); if(textEl) textEl.value = mensajeCompleto;
+            const linkEl = document.getElementById('wapDirectLink'); if(linkEl) linkEl.href = "https://wa.me/51" + ani;
+            const modalEl = document.getElementById('modalWap'); if(modalEl) modalEl.classList.remove('hidden');
+        }
+
+        function closeModalWap() { const m = document.getElementById('modalWap'); if(m) m.classList.add('hidden'); }
+        function copiarTextoWap() { let area = document.getElementById('wapTextContent'); if(area) { area.select(); document.execCommand('copy'); showToast('¡Texto copiado al portapapeles!'); } }
 
         function renderTable(ventas) {
             try {
