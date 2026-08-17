@@ -531,10 +531,30 @@
                                                 }
                                             }
                                             if(v.CARRUSELERO) {
-                                                let cK = v.CARRUSELERO.toUpperCase(); if(!carrMap[cK]) carrMap[cK] = {ventas:0, cf:0};
-                                                if(isEnt) { carrMap[cK].ventas++; carrMap[cK].cf += val; }
+                                                let cK = String(v.CARRUSELERO).toUpperCase().trim(); 
+                                                if(cK) {
+                                                    if(!carrMap[cK]) carrMap[cK] = { ventas: 0, cf: 0 };
+                                                    if(isEnt) { 
+                                                        carrMap[cK].ventas++; 
+                                                        carrMap[cK].cf += val; 
+                                                    }
+                                                }
                                             }
                                         });
+
+                                        let carruselerosFinalMap = {};
+                                        Object.keys(carrMap).forEach(k => {
+                                            let cData = carrMap[k];
+                                            let comReal = cData.cf * 0.02;
+                                            let comProy = (cData.cf * factorProy) * 0.02;
+                                            carruselerosFinalMap[k] = { 
+                                                ventas: cData.ventas, 
+                                                cf: cData.cf, 
+                                                comision: isNaN(comReal) ? 0 : comReal, 
+                                                comisionProy: isNaN(comProy) ? 0 : comProy 
+                                            };
+                                        });
+                                        dash.gerencia.carruselerosDetalle = carruselerosFinalMap;
 
                                         dash.metaGlobal = Object.keys(aseMap).length * cloudConf.metaCuota;
                                         dash.totalCfGeneral = gCf; dash.totalVentasGeneral = gVent; dash.avanceGlobal = ((gCf / (dash.metaGlobal || 1)) * 100).toFixed(1);
@@ -1330,7 +1350,7 @@
                 tbCarr.innerHTML = ''; 
                 Object.keys(g.carruselerosDetalle || {}).forEach(function(cName) { 
                     let c = g.carruselerosDetalle[cName]; 
-                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${c.ventas}</td><td class="font-bold text-slate-500">S/ ${Number(c.cf).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(c.comision).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(c.comisionProy).toFixed(2)}</td></tr>`; 
+                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${c.ventas}</td><td class="font-bold text-slate-500">S/ ${Number(c.cf || 0).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(c.comision || 0).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(c.comisionProy || 0).toFixed(2)}</td></tr>`; 
                 }); 
             }
 
