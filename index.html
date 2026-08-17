@@ -368,6 +368,28 @@
         const SUPABASE_KEY = 'sb_publishable_1co4uYVkYwVPClzHxSSYCw_JVLBTU5k';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // CONFIGURACIONES GLOBALES POR LOCALSTORAGE
+        function getConfig() { return JSON.parse(localStorage.getItem('ffvv_config')) || { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, globalSort: [] }; }
+        function saveConfig(e) { 
+            e.preventDefault(); 
+            const c = { 
+                metaCuota: parseFloat(document.getElementById('confMeta').value) || 4000, 
+                diasMes: parseInt(document.getElementById('confDias').value) || 30, 
+                bonoMeta: parseFloat(document.getElementById('confBono').value) || 7000, 
+                globalSort: getConfig().globalSort 
+            }; 
+            localStorage.setItem('ffvv_config', JSON.stringify(c)); 
+            showToast("Configuración Guardada localmente"); 
+            loadVentas(); 
+            google.script.run.withSuccessHandler(()=>showToast('Sincronizado a toda la empresa')).guardarConfiguracion(c);
+        }
+        function loadConfigUI() { 
+            let c = getConfig(); 
+            const m = document.getElementById('confMeta'); if(m) m.value = c.metaCuota; 
+            const d = document.getElementById('confDias'); if(d) d.value = c.diasMes; 
+            const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; 
+        }
+
         // MOTOR DE DESCARGA TOTAL SIN LÍMITES
         async function fetchAllRecords(table) {
             let all = [];
@@ -389,7 +411,7 @@
                             if (prop in target) return target[prop];
                             return async function(...args) {
                                 try {
-                                    let result = null; 
+                                    let result = null; let conf = getConfig();
                                     
                                     if (prop === 'loginUser') {
                                         const [email, pass] = args;
@@ -401,9 +423,9 @@
                                     // === CONFIGURACIÓN GLOBAL NUBE ===
                                     else if (prop === 'obtenerConfiguracion') {
                                         const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                        let conf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
-                                        if (data && data.length > 0 && data[0].CONFIG) { try { conf = { ...conf, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
-                                        result = conf;
+                                        let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
+                                        if (data && data.length > 0 && data[0].CONFIG) { try { c = { ...c, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
+                                        result = c;
                                     }
                                     else if (prop === 'guardarConfiguracion') {
                                         const [newConf] = args;
@@ -430,8 +452,8 @@
                                         
                                         // Obtener Config de Nube
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                        let conf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
-                                        if (cData && cData.length > 0 && cData[0].CONFIG) { try { conf = { ...conf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                        let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
+                                        if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
 
                                         const ventas = await fetchAllRecords('BASE DE VENTAS');
                                         const formattedVentas = ventas.map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
@@ -439,7 +461,7 @@
                                         if (rol === 'ASESOR') { myVentas = formattedVentas.filter(v => (v.ASESOR || '').toUpperCase() === (nombre || '').toUpperCase()); }
 
                                         function calculateComision(cf, countPorta, countAlta, countReno) {
-                                            if (cf < conf.metaCuota) return { rango: '< ' + conf.metaCuota, comision: cf * 0.277 }; // Pago BASICO al 27.7%
+                                            if (cf < cloudConf.metaCuota) return { rango: '< ' + cloudConf.metaCuota, comision: cf * 0.277 };
                                             if (cf >= 4000 && cf <= 4300) return { rango: 'COBRE', comision: (countAlta * 1.5) + (countReno * 1.5) + (countPorta * 3.0) };
                                             if (cf >= 4301 && cf <= 4600) return { rango: 'PLATA', comision: (countAlta * 2.0) + (countReno * 2.0) + (countPorta * 5.0) };
                                             if (cf >= 4601 && cf <= 5000) return { rango: 'ORO', comision: (countAlta * 3.5) + (countReno * 2.5) + (countPorta * 6.0) };
@@ -447,165 +469,94 @@
                                             return { rango: 'SIN RANGO', comision: 0 };
                                         }
 
-                                        // Extrapolación de días para proyección matemática pura
-                                        let currentDay = new Date().getDate() || 1;
-                                        if (currentDay > conf.diasMes) currentDay = conf.diasMes;
-                                        const factorProy = conf.diasMes / currentDay;
-
-                                        let cfVendido = 0; let ventasEntregadas = 0;
-                                        let pPorta = 0; let pAlta = 0; let pReno = 0;
+                                        let currentDay = new Date().getDate() || 1; if (currentDay > cloudConf.diasMes) currentDay = cloudConf.diasMes; const factorProy = cloudConf.diasMes / currentDay;
+                                        let cfVendido = 0; let ventasEntregadas = 0; let pPorta = 0; let pAlta = 0; let pReno = 0;
 
                                         myVentas.forEach(v => {
-                                            let val = parseFloat(v.CF || 0);
-                                            let tipo = (v.TIPO_VENTA || '').toUpperCase();
-                                            
-                                            if (v.ESTADO === 'ENTREGADO') { 
-                                                cfVendido += val; ventasEntregadas++; 
-                                                if(tipo.includes('PORTA')) pPorta++; else if(tipo.includes('ALTA')) pAlta++; else if(tipo.includes('RENO')) pReno++;
-                                            }
+                                            let val = parseFloat(v.CF || 0); let tipo = (v.TIPO_VENTA || '').toUpperCase();
+                                            if (v.ESTADO === 'ENTREGADO') { cfVendido += val; ventasEntregadas++; if(tipo.includes('PORTA')) pPorta++; else if(tipo.includes('ALTA')) pAlta++; else if(tipo.includes('RENO')) pReno++; }
                                         });
 
                                         let calcReal = calculateComision(cfVendido, pPorta, pAlta, pReno);
-                                        let cfProy = cfVendido * factorProy;
-                                        let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
+                                        let cfProy = cfVendido * factorProy; let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
 
                                         let dash = {
-                                            metaCf: conf.metaCuota, cfVendidoTotal: cfVendido, totalVentasAsesor: ventasEntregadas,
-                                            porcentajeAvance: ((cfVendido / conf.metaCuota) * 100).toFixed(1),
-                                            rangoReal: calcReal.rango, comisionReal: calcReal.comision,
-                                            cfProyectado: cfProy, ventasProyectadas: ventasEntregadas * factorProy, 
-                                            avanceProyectado: ((cfProy / conf.metaCuota) * 100).toFixed(1),
-                                            rangoProyectado: calcProy.rango, comisionProyectada: calcProy.comision,
-                                            bonoRestante: Math.max(0, conf.bonoMeta - cfVendido), bonoGanado: cfVendido >= conf.bonoMeta,
+                                            metaCf: cloudConf.metaCuota, cfVendidoTotal: cfVendido, totalVentasAsesor: ventasEntregadas, porcentajeAvance: ((cfVendido / cloudConf.metaCuota) * 100).toFixed(1),
+                                            rangoReal: calcReal.rango, comisionReal: calcReal.comision, cfProyectado: cfProy, ventasProyectadas: ventasEntregadas * factorProy, avanceProyectado: ((cfProy / cloudConf.metaCuota) * 100).toFixed(1),
+                                            rangoProyectado: calcProy.rango, comisionProyectada: calcProy.comision, bonoRestante: Math.max(0, cloudConf.bonoMeta - cfVendido), bonoGanado: cfVendido >= cloudConf.bonoMeta,
                                             gerencia: { regionesPorcentaje: {LIMA:'0%', NORTE:'0%', CENTRO:'0%', SUR:'0%'}, asesoresDetalle: [], carruselerosDetalle: {}, diasOrdenados: [] }
                                         };
 
-                                        // 📊 DASH GRUPAL UNIVERSAL (Calcula para la empresa entera)
-                                        let gCf = 0; let gVent = 0;
-                                        let aseMap = {}; let carrMap = {}; let regMap = {LIMA:0, NORTE:0, CENTRO:0, SUR:0}; let totalReg = 0;
-                                        let diasMap = {};
-                                        
+                                        let gCf = 0; let gVent = 0; let aseMap = {}; let carrMap = {}; let regMap = {LIMA:0, NORTE:0, CENTRO:0, SUR:0}; let totalReg = 0; let diasMap = {};
                                         formattedVentas.forEach(v => {
                                             let val = parseFloat(v.CF || 0); let isEnt = (v.ESTADO === 'ENTREGADO'); let tipo = (v.TIPO_VENTA || '').toUpperCase();
-                                            
                                             if(v.ASESOR) {
-                                                let aK = v.ASESOR.toUpperCase();
-                                                if(!aseMap[aK]) aseMap[aK] = {nombre: v.ASESOR, ventas:0, cf:0, pP:0, pA:0, pR:0};
-                                                
+                                                let aK = v.ASESOR.toUpperCase(); if(!aseMap[aK]) aseMap[aK] = {nombre: v.ASESOR, ventas:0, cf:0, pP:0, pA:0, pR:0};
                                                 if(isEnt) { 
                                                     aseMap[aK].ventas++; aseMap[aK].cf += val; gCf += val; gVent++; 
                                                     if(tipo.includes('PORTA')) aseMap[aK].pP++; else if(tipo.includes('ALTA')) aseMap[aK].pA++; else if(tipo.includes('RENO')) aseMap[aK].pR++;
                                                     if(v.REGION && regMap[v.REGION]!==undefined) {regMap[v.REGION]++; totalReg++;}
-                                                    
-                                                    if(v.FECHA_ACTIVACION) {
-                                                        let fStr = String(v.FECHA_ACTIVACION); let diaStr = fStr.includes('/') ? fStr.split('/')[0] : fStr.split('-')[2];
-                                                        if(diaStr) { if(!diasMap[diaStr]) diasMap[diaStr] = 0; diasMap[diaStr]++; }
-                                                    }
+                                                    if(v.FECHA_ACTIVACION) { let fStr = String(v.FECHA_ACTIVACION); let diaStr = fStr.includes('/') ? fStr.split('/')[0] : fStr.split('-')[2]; if(diaStr) { if(!diasMap[diaStr]) diasMap[diaStr] = 0; diasMap[diaStr]++; } }
                                                 }
                                             }
                                             if(v.CARRUSELERO) {
-                                                let cK = v.CARRUSELERO.toUpperCase();
-                                                if(!carrMap[cK]) carrMap[cK] = {ventas:0, cf:0};
+                                                let cK = v.CARRUSELERO.toUpperCase(); if(!carrMap[cK]) carrMap[cK] = {ventas:0, cf:0};
                                                 if(isEnt) { carrMap[cK].ventas++; carrMap[cK].cf += val; }
                                             }
                                         });
 
-                                        dash.metaGlobal = Object.keys(aseMap).length * conf.metaCuota; // Meta Dinámica Real
+                                        dash.metaGlobal = Object.keys(aseMap).length * cloudConf.metaCuota;
                                         dash.totalCfGeneral = gCf; dash.totalVentasGeneral = gVent; dash.avanceGlobal = ((gCf / (dash.metaGlobal || 1)) * 100).toFixed(1);
                                         
-                                        if(totalReg>0) {
-                                            dash.gerencia.regionesPorcentaje = {
-                                                LIMA: ((regMap.LIMA/totalReg)*100).toFixed(0)+'%', NORTE: ((regMap.NORTE/totalReg)*100).toFixed(0)+'%',
-                                                CENTRO: ((regMap.CENTRO/totalReg)*100).toFixed(0)+'%', SUR: ((regMap.SUR/totalReg)*100).toFixed(0)+'%'
-                                            };
-                                        }
+                                        if(totalReg>0) { dash.gerencia.regionesPorcentaje = { LIMA: ((regMap.LIMA/totalReg)*100).toFixed(0)+'%', NORTE: ((regMap.NORTE/totalReg)*100).toFixed(0)+'%', CENTRO: ((regMap.CENTRO/totalReg)*100).toFixed(0)+'%', SUR: ((regMap.SUR/totalReg)*100).toFixed(0)+'%' }; }
                                         Object.values(aseMap).forEach(a => {
-                                            let cR = calculateComision(a.cf, a.pP, a.pA, a.pR); 
-                                            let cfP = a.cf * factorProy; let cP = calculateComision(cfP, a.pP * factorProy, a.pA * factorProy, a.pR * factorProy);
-                                            dash.gerencia.asesoresDetalle.push({ nombre: a.nombre, totalVentas: a.ventas, cf: a.cf, comision: cR.comision, rango: cR.rango, cfProyectado: cfP, comisionProyectada: cP.comision, rangoProyectado: cP.rango, bonoRestante: Math.max(0, conf.bonoMeta - a.cf), avance: ((a.cf/conf.metaCuota)*100).toFixed(1) });
+                                            let cR = calculateComision(a.cf, a.pP, a.pA, a.pR); let cfP = a.cf * factorProy; let cP = calculateComision(cfP, a.pP * factorProy, a.pA * factorProy, a.pR * factorProy);
+                                            dash.gerencia.asesoresDetalle.push({ nombre: a.nombre, totalVentas: a.ventas, cf: a.cf, comision: cR.comision, rango: cR.rango, cfProyectado: cfP, comisionProyectada: cP.comision, rangoProyectado: cP.rango, bonoRestante: Math.max(0, cloudConf.bonoMeta - a.cf), avance: ((a.cf/cloudConf.metaCuota)*100).toFixed(1) });
                                         });
-                                        dash.gerencia.asesoresDetalle.sort((a,b) => b.cf - a.cf); // Ordenar mejores arriba
-                                        
-                                        Object.keys(carrMap).forEach(k => {
-                                            dash.gerencia.carruselerosDetalle[k] = { ventas: carrMap[k].ventas, cf: carrMap[k].cf, comision: carrMap[k].cf * 0.02, comisionProy: (carrMap[k].cf * factorProy) * 0.02 };
-                                        });
+                                        dash.gerencia.asesoresDetalle.sort((a,b) => b.cf - a.cf);
+                                        Object.keys(carrMap).forEach(k => { dash.gerencia.carruselerosDetalle[k] = { ventas: carrMap[k].ventas, cf: carrMap[k].cf, comision: carrMap[k].cf * 0.02, comisionProy: (carrMap[k].cf * factorProy) * 0.02 }; });
                                         Object.keys(diasMap).sort().forEach(d => { dash.gerencia.diasOrdenados.push({dia: d, cantidad: diasMap[d]}); });
 
                                         result = { success: true, ventas: myVentas.sort((a,b)=>b.ID - a.ID), dashboard: dash };
                                     }
                                     
-                                    // === EL RESTO DE METODOS CRUD Y BASE DITO ===
                                     else if (prop === 'saveVentasMultiples') {
-                                        const [d] = args;
-                                        let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
-                                        let inserts = d.lineasDetalle.map(l => ({
-                                            ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region,
-                                            CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado,
-                                            OBSERVACIONES: d.observaciones, ASESOR: d.asesor,
-                                            N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana,
-                                            FECHA_ACTIVACION: dateStr
-                                        }));
+                                        const [d] = args; let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
+                                        let inserts = d.lineasDetalle.map(l => ({ ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region, CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado, OBSERVACIONES: d.observaciones, ASESOR: d.asesor, N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana, FECHA_ACTIVACION: dateStr }));
                                         const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
-                                        if (error) throw error;
-                                        result = { success: true, message: 'Ventas registradas correctamente' };
+                                        if (error) throw error; result = { success: true, message: 'Ventas registradas correctamente' };
                                     }
                                     
                                     else if (prop === 'updateVentaInline') {
-                                        const [id, campo, valor] = args;
-                                        let obj = {}; obj[campo] = valor;
-                                        if (campo === 'ESTADO') {
-                                            let subs = window.DEP_ESTADOS ? window.DEP_ESTADOS[valor] : [];
-                                            obj['SUB_ESTADO'] = subs && subs.length > 0 ? subs[0] : '';
-                                        }
-                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id);
-                                        if (error && error.code === '42703') { 
-                                            let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); 
-                                            if (res2.error) throw res2.error;
-                                        } else if (error) throw error;
-                                        result = { success: true };
+                                        const [id, campo, valor] = args; let obj = {}; obj[campo] = valor;
+                                        if (campo === 'ESTADO') { let subs = window.DEP_ESTADOS ? window.DEP_ESTADOS[valor] : []; obj['SUB_ESTADO'] = subs && subs.length > 0 ? subs[0] : ''; }
+                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
                                     else if (prop === 'updateVentaCompleta') {
-                                        const [id, data] = args;
-                                        let obj = {
-                                            ANI: data.ani, N_PORTAR: data.n_portar, CLIENTE: data.cliente, DOC: data.doc, TIPO_VENTA: data.tipoVenta, OPERADOR: data.operador, REGION: data.region, CARRUSELERO: data.carruselero, CAMPANA: data.campana, FECHA_ACTIVACION: data.fechaActivacion, CF: data.cf, ESTADO: data.estado, SUB_ESTADO: data.subEstado, OBSERVACIONES: data.observaciones, REVISION: data.revision, SEC: data.sec, FORMA_ENTREGA: data.formaEntrega
-                                        };
-                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id);
-                                        if (error && error.code === '42703') { 
-                                            let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); 
-                                            if (res2.error) throw res2.error;
-                                        } else if (error) throw error;
-                                        result = { success: true, message: 'Venta actualizada' };
+                                        const [id, data] = args; let obj = { ANI: data.ani, N_PORTAR: data.n_portar, CLIENTE: data.cliente, DOC: data.doc, TIPO_VENTA: data.tipoVenta, OPERADOR: data.operador, REGION: data.region, CARRUSELERO: data.carruselero, CAMPANA: data.campana, FECHA_ACTIVACION: data.fechaActivacion, CF: data.cf, ESTADO: data.estado, SUB_ESTADO: data.subEstado, OBSERVACIONES: data.observaciones, REVISION: data.revision, SEC: data.sec, FORMA_ENTREGA: data.formaEntrega };
+                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true, message: 'Venta actualizada' };
                                     }
                                     
                                     else if (prop === 'deleteVenta') {
-                                        const [id] = args;
-                                        let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id);
-                                        if (error && error.code === '42703') { 
-                                            let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); 
-                                            if (res2.error) throw res2.error;
-                                        } else if (error) throw error;
-                                        result = { success: true };
+                                        const [id] = args; let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
                                         
-                                        // Obtener Config Global y Base Pura
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                        let conf = { vistaDito: null, globalSort: [] };
-                                        if (cData && cData.length > 0 && cData[0].CONFIG) { try { conf = { ...conf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                        let cloudConf = { vistaDito: null, globalSort: [] };
+                                        if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
                                         
                                         const baseV = await fetchAllRecords('BASE DITO'); 
                                         let filtered = baseV.map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
                                         
-                                        // Aplicar sobreescritura de Gerencia
-                                        let vGlobal = conf.vistaDito || {};
+                                        let vGlobal = cloudConf.vistaDito || {};
                                         let ocultar = vGlobal.ocultarCheck !== undefined ? vGlobal.ocultarCheck : f.ocultarCheck;
                                         let ciclos = vGlobal.ciclos || f.ciclos || [];
                                         let meses = vGlobal.meses || f.meses || [];
                                         
-                                        // Filtros de Texto (Ese sí es local de cada asesor blindado como String)
                                         if (f.texto) { 
                                             let t = String(f.texto).toLowerCase().trim(); 
                                             filtered = filtered.filter(v => 
@@ -615,29 +566,15 @@
                                             ); 
                                         }
                                         
-                                        // Aplicar Filtros Globales
                                         if (ocultar) { filtered = filtered.filter(v => String(v.GESTIONADO).toUpperCase() !== 'TRUE'); }
                                         if (ciclos.length > 0) { filtered = filtered.filter(v => ciclos.includes(String(v.CICLO))); }
                                         if (meses.length > 0) { filtered = filtered.filter(v => meses.includes(String(v.MES).toLowerCase())); }
                                         
-                                        // Lógica Duplicados
                                         let dniMap = {};
-                                        filtered.forEach(v => { 
-                                            if(!v.DNI) return; 
-                                            let dniS = String(v.DNI); 
-                                            if(!dniMap[dniS]) dniMap[dniS] = new Set(); 
-                                            if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO)); 
-                                        });
-                                        filtered.forEach(v => { 
-                                            if(v.DNI && dniMap[String(v.DNI)] && dniMap[String(v.DNI)].size > 1) { 
-                                                v.isDuplicate = true; 
-                                            } else { 
-                                                v.isDuplicate = false; 
-                                            } 
-                                        });
+                                        filtered.forEach(v => { if(!v.DNI) return; let dniS = String(v.DNI); if(!dniMap[dniS]) dniMap[dniS] = new Set(); if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO)); });
+                                        filtered.forEach(v => { if(v.DNI && dniMap[String(v.DNI)] && dniMap[String(v.DNI)].size > 1) { v.isDuplicate = true; } else { v.isDuplicate = false; } });
 
-                                        // Orden Jerárquico Blindado contra vacíos/nulls
-                                        let globalSort = conf.globalSort || [];
+                                        let globalSort = cloudConf.globalSort || [];
                                         if (globalSort.length > 0) {
                                             filtered.sort((a,b) => {
                                                 for(let i=0; i<globalSort.length; i++) {
@@ -650,22 +587,17 @@
                                                     v1 = String(v1).trim().toLowerCase();
                                                     v2 = String(v2).trim().toLowerCase();
 
-                                                    if (v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2)) { 
-                                                        v1 = Number(v1); v2 = Number(v2); 
-                                                    }
-                                                    
-                                                    if (v1 < v2) return -1 * dir; 
-                                                    if (v1 > v2) return 1 * dir;
+                                                    if (v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); }
+                                                    if (v1 < v2) return -1 * dir; if (v1 > v2) return 1 * dir;
                                                 }
                                                 return 0;
                                             });
                                         } else { 
-                                            // Orden por Defecto Global Coworking (Nombre -> Mes -> Ciclo)
                                             filtered.sort((a,b) => {
                                                 let n1 = String(a.NOMBRE_CLIENTE||'').toLowerCase(); let n2 = String(b.NOMBRE_CLIENTE||'').toLowerCase();
                                                 if(n1 !== n2) return n1 < n2 ? -1 : 1;
                                                 let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
-                                                if(m1 !== m2) return m1 > m2 ? -1 : 1; // Mayor a menor
+                                                if(m1 !== m2) return m1 > m2 ? -1 : 1;
                                                 let c1 = Number(a.CICLO||0); let c2 = Number(b.CICLO||0);
                                                 return c1 < c2 ? -1 : 1;
                                             });
@@ -675,13 +607,11 @@
                                     }
                                     
                                     else if (prop === 'updateBaseVentasInline') {
-                                        const [id, campo, valor] = args; let obj = {}; obj[campo] = valor; let { error } = await _supabase.from('BASE DITO').update(obj).eq('id', id);
-                                        if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DITO').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
+                                        const [id, campo, valor] = args; let obj = {}; obj[campo] = valor; let { error } = await _supabase.from('BASE DITO').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DITO').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
                                     else if (prop === 'buscarClienteBase') {
-                                        const [val] = args; const { data, error } = await _supabase.from('BASE DITO').select('*').eq('DNI', val);
-                                        if (error) throw error;
+                                        const [val] = args; const { data, error } = await _supabase.from('BASE DITO').select('*').eq('DNI', val); if (error) throw error;
                                         let mapData = data.map(d => ({dni: d.DNI, nombre: d.NOMBRE_CLIENTE, celular: d.NUMERO, fv: d.FV, ciclo: d.CICLO, carruselero: d.CARRUSELERO})); result = { success: true, data: mapData };
                                     }
                                     
@@ -725,7 +655,6 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             if(typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
-            loadConfigUI();
             const saved = localStorage.getItem('ffvv_user'); if (saved) { try { currentUser = JSON.parse(saved); initApp(); } catch(e) { localStorage.removeItem('ffvv_user'); } }
             const loginForm = document.getElementById('loginForm'); if(loginForm) { loginForm.onsubmit = function(e) { e.preventDefault(); google.script.run.withSuccessHandler(function(res) { if(res && res.success) { localStorage.setItem('ffvv_user', JSON.stringify(res.user)); currentUser = res.user; initApp(); } else { const errEl = document.getElementById('loginError'); if(errEl) { errEl.textContent = res ? res.message : 'Error desconocido'; errEl.classList.remove('hidden'); } } }).loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); }; }
             const logoutBtn = document.getElementById('logoutBtn'); if(logoutBtn) { logoutBtn.onclick = function() { localStorage.removeItem('ffvv_user'); location.reload(); }; }
@@ -859,7 +788,7 @@
 
             const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc };
             const tbody = document.getElementById('tablaCuerpoBase');
-            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Cowork...</td></tr>';
+            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Base Dito y calculando duplicados...</td></tr>';
 
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { 
@@ -870,9 +799,9 @@
                     }
                     if (!silencioso || txt !== '') { currentPageBase = 1; }
                     renderBaseTablePaginated(); 
-                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
+                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
             }).withFailureHandler(function(err) {
-                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
+                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
             }).obtenerBaseFiltrada(filtros);
         }
 
@@ -920,13 +849,13 @@
                 let dir = document.getElementById('sortDir'+i).value;
                 if(col) sortArr.push({col: col, dir: dir});
             }
-            google.script.run.withSuccessHandler(() => { document.getElementById('modalMultiSort').classList.add('hidden'); showToast('Orden Múltiple aplicado al Cowork'); aplicarFiltrosBase(false); }).guardarVistaGlobal({ multiSort: sortArr });
+            google.script.run.withSuccessHandler(() => { document.getElementById('modalMultiSort').classList.add('hidden'); showToast('Orden Múltiple aplicado al Cowork'); aplicarFiltrosBase(false); }).guardarConfiguracion({ globalSort: sortArr });
         }
 
         function renderBaseTable(lista) {
             try {
                 const tb = document.getElementById('tablaCuerpoBase'); if(!tb) return;
-                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
+                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
                 const rol = currentUser.rol; const isGerencia = (rol === 'GERENCIA' || rol === 'SUPERVISOR'); const isAsesor = (rol === 'ASESOR'); const isCarruselero = (rol === 'CARRUSELERO');
                 const blockVendedor = (!isGerencia && !isAsesor) ? 'disabled' : ''; const blockGestion = (!isGerencia && !isCarruselero && !isAsesor) ? 'disabled' : ''; 
                 let optVendedores = ['GEAN', 'ANGELICA', 'SUNNY']; let optEstados = ['INFORMADO', 'DNC', 'NO CONTESTA', 'NO INTERESADO', 'VENTA', 'WSP']; let optCarruseleros = ['SARA', 'ANA', 'HUMBERTO'];
@@ -942,7 +871,7 @@
 
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '"><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-white/50" ' + blockVendedor + '>' + htmlVend + '</select></td><td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td><td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td><td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit text-[10px] font-black rounded bg-white/50 \' + this.options[this.selectedIndex].className;" class="inline-edit text-[10px] font-black rounded bg-white/50 ' + classEstado + '" ' + blockGestion + '>' + htmlEstado + '</select></td><td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-white/50" ' + blockGestion + '></td><td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit text-purple-700 font-black bg-white/50" ' + blockGestion + '>' + htmlCarr + '</select></td><td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td><td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td></tr>';
+                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '"><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-white/50" ' + blockVendedor + '>' + htmlVend + '</select></td><td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td><td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td><td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.OPERACION || '') + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.SISACT || '') + '</td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit text-[10px] font-black rounded bg-white/50 \' + this.options[this.selectedIndex].className;" class="inline-edit text-[10px] font-black rounded bg-white/50 ' + classEstado + '" ' + blockGestion + '>' + htmlEstado + '</select></td><td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-white/50" ' + blockGestion + '></td><td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit text-purple-700 font-black bg-white/50" ' + blockGestion + '>' + htmlCarr + '</select></td><td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td><td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td></tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
                 tb.innerHTML = htmlTemp;
@@ -962,7 +891,6 @@
             google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
 
-        // ====== EJECUCIONES CON CHUNKS (BARRAS DE PROGRESO) ======
         async function ejecutarCargaMasiva() {
             let fileInput = document.getElementById('csvFileInput');
             if (!fileInput.files || fileInput.files.length === 0) { alert('Por favor selecciona un archivo CSV primero.'); return; }
@@ -1065,7 +993,6 @@
             }).withFailureHandler(function(err){ showToast('Error: ' + err.message); }).buscarClienteBase(val);
         }
 
-        // ======================= VENTAS CRM Y DASHBOARD =======================
         function descargarPlantilla() {
             let headers = "ANI;N_PORTAR;ASESOR;CLIENTE;DOC;ESTADO;SUB_ESTADO;FECHA_ACTIVACION;OPERADOR;TIPO_VENTA;PAQUETE;CF;REGION;CARRUSELERO;CAMPANA;OBSERVACIONES;REVISION;SEC;FORMA_ENTREGA\n";
             let ejemplo = "987654321;999888777;SUNNY;Carlos Perez;12345678;P.ENTREGA;ASIGNADO CADENA;;MOVISTAR;Portabilidad;Chip;79.90;LIMA;HUMBERTO;REGULAR;Ejemplo obs;EN REPORTE;SEC-001;DELIVERY\n";
