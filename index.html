@@ -1445,25 +1445,19 @@
                     tbAsesores.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold text-slate-500">S/ ${Number(a.cfProyectado).toFixed(2)}</td><td class="text-emerald-600 font-bold">S/ ${Number(a.comisionProyectada).toFixed(2)}</td><td>${formatRangoText(a.rangoProyectado)}</td></tr>`; 
                 }); 
             }
-
-            const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
+const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
             if(tbCarr) { 
                 tbCarr.innerHTML = ''; 
-                // Leemos con seguridad tanto si viene de gerencia como del objeto global
-                const carrData = (dashboard && dashboard.carruselerosDetalle) ? dashboard.carruselerosDetalle : (g.carruselerosDetalle || {});
+                const carrData = (dashboard && dashboard.gerencia && dashboard.gerencia.carruselerosDetalle) ? dashboard.gerencia.carruselerosDetalle : (g.carruselerosDetalle || {});
                 
                 Object.keys(carrData).forEach(function(cName) { 
                     let c = carrData[cName]; 
                     let ventasC = c.ventas || c[0] || 0;
-                    let cfC = c.cf || c.CF || c[1] || 0;
+                    let cfC = parseFloat(c.cf || c.CF || c[1] || 0);
                     
-                    // Cálculo directo seguro del 2% real y su proyección con 2 decimales
-                    let comReal = Number(cfC) * 0.02;
+                    // Cálculo directo seguro del 2% real y su proyección
+                    let comReal = cfC * 0.02;
                     let comProy = comReal * (getConfig().diasMes / (new Date().getDate() || 1));
-
-                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${ventasC}</td><td class="font-bold text-slate-500">S/ ${Number(cfC).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(comReal).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(comProy).toFixed(2)}</td></tr>`; 
-                }); 
-            }
 
                     tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${ventasC}</td><td class="font-bold text-slate-500">S/ ${Number(cfC).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(comReal).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(comProy).toFixed(2)}</td></tr>`; 
                 }); 
