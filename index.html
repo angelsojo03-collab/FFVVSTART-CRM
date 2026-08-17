@@ -60,7 +60,7 @@
                 <div id="configView" class="content-view view-hidden space-y-6 w-full">
                     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-md border-t-4 border-slate-800 max-w-3xl mx-auto w-full">
                         <h2 class="text-2xl font-black text-slate-800 mb-2"><i class="fas fa-cogs text-red-600 mr-2"></i>Configuración Global</h2>
-                        <p class="text-sm text-slate-500 font-bold mb-6 border-b border-slate-100 pb-4">Los parámetros guardados aquí se aplicarán a toda la empresa.</p>
+                        <p class="text-sm text-slate-500 font-bold mb-6 border-b border-slate-100 pb-4">Ajusta los parámetros de proyecciones y comisiones.</p>
                         
                         <form onsubmit="saveConfig(event)" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -68,7 +68,7 @@
                                 <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Días del Mes (Proyección)</label><input type="number" id="confDias" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner" placeholder="Ej: 30 o 31" required></div>
                                 <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Meta Bono KT (S/)</label><input type="number" id="confBono" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner" placeholder="Ej: 7000" required></div>
                             </div>
-                            <div class="pt-4 border-t border-slate-200"><button type="submit" class="w-full md:w-auto bg-slate-800 hover:bg-slate-900 text-white font-black py-3 px-8 rounded-lg transition shadow-lg flex items-center justify-center gap-2"><i class="fas fa-save"></i> Guardar en BD</button></div>
+                            <div class="pt-4 border-t border-slate-200"><button type="submit" class="w-full md:w-auto bg-slate-800 hover:bg-slate-900 text-white font-black py-3 px-8 rounded-lg transition shadow-lg flex items-center justify-center gap-2"><i class="fas fa-save"></i> Guardar Configuraciones</button></div>
                         </form>
                     </div>
                 </div>
@@ -126,10 +126,10 @@
                 <!-- ================= VISTA: DASH GRUPAL ================= -->
                 <div id="dashGrupalView" class="content-view view-hidden space-y-6 w-full">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                        <div class="bg-white border-t-4 border-blue-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">Meta Cuota Global</p><p class="text-2xl md:text-3xl font-black text-blue-600 truncate" id="dashMetaCfGrupal">S/ 0</p></div>
-                        <div class="bg-white border-t-4 border-green-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">CF Vendido Global</p><p class="text-2xl md:text-3xl font-black text-green-600 truncate" id="dashCfVendidoGrupal">S/ 0.00</p></div>
-                        <div class="bg-white border-t-4 border-yellow-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">Ventas Globales</p><p class="text-2xl md:text-3xl font-black text-yellow-600 truncate" id="dashPortasGrupal">0</p></div>
-                        <div class="bg-white border-t-4 border-purple-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">Avance Global %</p><p class="text-2xl md:text-3xl font-black text-purple-600 truncate" id="dashPorcentajeGrupal">0%</p></div>
+                        <div class="bg-white border-t-4 border-blue-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">Meta Cuota Global</p><p class="text-2xl md:text-3xl font-black text-blue-600" id="dashMetaCfGrupal">S/ 0</p></div>
+                        <div class="bg-white border-t-4 border-green-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">CF Vendido Global</p><p class="text-2xl md:text-3xl font-black text-green-600" id="dashCfVendidoGrupal">S/ 0.00</p></div>
+                        <div class="bg-white border-t-4 border-yellow-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">Ventas Globales</p><p class="text-2xl md:text-3xl font-black text-yellow-600" id="dashPortasGrupal">0</p></div>
+                        <div class="bg-white border-t-4 border-purple-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">Avance Global %</p><p class="text-2xl md:text-3xl font-black text-purple-600" id="dashPorcentajeGrupal">0%</p></div>
                     </div>
                     
                     <div class="space-y-6 bg-white p-4 md:p-6 rounded-2xl shadow-md border border-slate-200 overflow-hidden w-full">
@@ -247,7 +247,7 @@
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left border-collapse whitespace-nowrap text-[11px] min-w-max">
                                 <thead class="bg-slate-100 text-slate-500 border-b border-slate-200 uppercase tracking-widest font-black">
-                                    <tr><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px]" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('OPERACION')">Operación <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('SISACT')">Sisact <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i></th></tr>
+                                    <tr><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px]" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th><th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i></th></tr>
                                 </thead>
                                 <tbody id="tablaCuerpoBase" class="divide-y divide-slate-100 bg-white font-semibold w-full"></tbody>
                             </table>
@@ -318,7 +318,7 @@
                         </div>
                         <input type="hidden" name="asesor" id="ventaAsesor">
                         <div class="pt-4 border-t border-slate-200 flex justify-end">
-                            <button type="submit" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black py-3 px-8 rounded-lg transition shadow-lg text-lg flex items-center justify-center gap-2"><i class="fas fa-save"></i> Guardar Venta</button>
+                            <button type="submit" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-black py-3 px-8 rounded-lg transition shadow-lg text-lg flex items-center justify-center gap-2"><i class="fas fa-save"></i> Guardar Venta Completada</button>
                         </div>
                     </form>
                 </div>
@@ -329,9 +329,9 @@
             <div class="bg-white border border-slate-200 rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h2 class="text-2xl font-black text-red-600"><i class="fas fa-sort-amount-down mr-2"></i>Orden Múltiple</h2><button onclick="document.getElementById('modalMultiSort').classList.add('hidden')" class="text-slate-400 hover:text-red-600 text-xl"><i class="fas fa-times"></i></button></div>
                 <div class="space-y-5 pt-2">
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 1</label><div class="flex gap-3"><select id="sortCol1" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="MES">Mes</option><option value="OPERADOR">Operador</option></select><select id="sortDir1" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 2</label><div class="flex gap-3"><select id="sortCol2" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="MES">Mes</option><option value="OPERADOR">Operador</option></select><select id="sortDir2" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 3</label><div class="flex gap-3"><select id="sortCol3" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="MES">Mes</option><option value="OPERADOR">Operador</option></select><select id="sortDir3" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 1</label><div class="flex gap-3"><select id="sortCol1" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir1" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 2</label><div class="flex gap-3"><select id="sortCol2" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir2" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 3</label><div class="flex gap-3"><select id="sortCol3" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir3" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc">Z-A</option></select></div></div>
                 </div>
                 <div class="pt-6 border-t border-slate-100 flex justify-end"><button onclick="aplicarMultiSort()" class="bg-red-600 hover:bg-red-700 text-white py-3 px-8 rounded-lg font-black text-sm transition shadow-lg w-full">Aplicar Filtros</button></div>
             </div>
@@ -439,7 +439,7 @@
                                         if (rol === 'ASESOR') { myVentas = formattedVentas.filter(v => (v.ASESOR || '').toUpperCase() === (nombre || '').toUpperCase()); }
 
                                         function calculateComision(cf, countPorta, countAlta, countReno) {
-                                            if (cf < conf.metaCuota) return { rango: '< ' + conf.metaCuota, comision: cf * 0.277 };
+                                            if (cf < conf.metaCuota) return { rango: '< ' + conf.metaCuota, comision: cf * 0.277 }; // Pago BASICO al 27.7%
                                             if (cf >= 4000 && cf <= 4300) return { rango: 'COBRE', comision: (countAlta * 1.5) + (countReno * 1.5) + (countPorta * 3.0) };
                                             if (cf >= 4301 && cf <= 4600) return { rango: 'PLATA', comision: (countAlta * 2.0) + (countReno * 2.0) + (countPorta * 5.0) };
                                             if (cf >= 4601 && cf <= 5000) return { rango: 'ORO', comision: (countAlta * 3.5) + (countReno * 2.5) + (countPorta * 6.0) };
@@ -447,58 +447,147 @@
                                             return { rango: 'SIN RANGO', comision: 0 };
                                         }
 
-                                        let currentDay = new Date().getDate() || 1; if (currentDay > conf.diasMes) currentDay = conf.diasMes; const factorProy = conf.diasMes / currentDay;
-                                        let cfVendido = 0; let ventasEntregadas = 0; let pPorta = 0; let pAlta = 0; let pReno = 0;
+                                        // Extrapolación de días para proyección matemática pura
+                                        let currentDay = new Date().getDate() || 1;
+                                        if (currentDay > conf.diasMes) currentDay = conf.diasMes;
+                                        const factorProy = conf.diasMes / currentDay;
+
+                                        let cfVendido = 0; let ventasEntregadas = 0;
+                                        let pPorta = 0; let pAlta = 0; let pReno = 0;
 
                                         myVentas.forEach(v => {
-                                            let val = parseFloat(v.CF || 0); let tipo = (v.TIPO_VENTA || '').toUpperCase();
-                                            if (v.ESTADO === 'ENTREGADO') { cfVendido += val; ventasEntregadas++; if(tipo.includes('PORTA')) pPorta++; else if(tipo.includes('ALTA')) pAlta++; else if(tipo.includes('RENO')) pReno++; }
+                                            let val = parseFloat(v.CF || 0);
+                                            let tipo = (v.TIPO_VENTA || '').toUpperCase();
+                                            
+                                            if (v.ESTADO === 'ENTREGADO') { 
+                                                cfVendido += val; ventasEntregadas++; 
+                                                if(tipo.includes('PORTA')) pPorta++; else if(tipo.includes('ALTA')) pAlta++; else if(tipo.includes('RENO')) pReno++;
+                                            }
                                         });
 
                                         let calcReal = calculateComision(cfVendido, pPorta, pAlta, pReno);
-                                        let cfProy = cfVendido * factorProy; let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
+                                        let cfProy = cfVendido * factorProy;
+                                        let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
 
                                         let dash = {
-                                            metaCf: conf.metaCuota, cfVendidoTotal: cfVendido, totalVentasAsesor: ventasEntregadas, porcentajeAvance: ((cfVendido / conf.metaCuota) * 100).toFixed(1),
-                                            rangoReal: calcReal.rango, comisionReal: calcReal.comision, cfProyectado: cfProy, ventasProyectadas: ventasEntregadas * factorProy, avanceProyectado: ((cfProy / conf.metaCuota) * 100).toFixed(1),
-                                            rangoProyectado: calcProy.rango, comisionProyectada: calcProy.comision, bonoRestante: Math.max(0, conf.bonoMeta - cfVendido), bonoGanado: cfVendido >= conf.bonoMeta,
+                                            metaCf: conf.metaCuota, cfVendidoTotal: cfVendido, totalVentasAsesor: ventasEntregadas,
+                                            porcentajeAvance: ((cfVendido / conf.metaCuota) * 100).toFixed(1),
+                                            rangoReal: calcReal.rango, comisionReal: calcReal.comision,
+                                            cfProyectado: cfProy, ventasProyectadas: ventasEntregadas * factorProy, 
+                                            avanceProyectado: ((cfProy / conf.metaCuota) * 100).toFixed(1),
+                                            rangoProyectado: calcProy.rango, comisionProyectada: calcProy.comision,
+                                            bonoRestante: Math.max(0, conf.bonoMeta - cfVendido), bonoGanado: cfVendido >= conf.bonoMeta,
                                             gerencia: { regionesPorcentaje: {LIMA:'0%', NORTE:'0%', CENTRO:'0%', SUR:'0%'}, asesoresDetalle: [], carruselerosDetalle: {}, diasOrdenados: [] }
                                         };
 
-                                        let gCf = 0; let gVent = 0; let aseMap = {}; let carrMap = {}; let regMap = {LIMA:0, NORTE:0, CENTRO:0, SUR:0}; let totalReg = 0; let diasMap = {};
+                                        // 📊 DASH GRUPAL UNIVERSAL (Calcula para la empresa entera)
+                                        let gCf = 0; let gVent = 0;
+                                        let aseMap = {}; let carrMap = {}; let regMap = {LIMA:0, NORTE:0, CENTRO:0, SUR:0}; let totalReg = 0;
+                                        let diasMap = {};
+                                        
                                         formattedVentas.forEach(v => {
                                             let val = parseFloat(v.CF || 0); let isEnt = (v.ESTADO === 'ENTREGADO'); let tipo = (v.TIPO_VENTA || '').toUpperCase();
+                                            
                                             if(v.ASESOR) {
-                                                let aK = v.ASESOR.toUpperCase(); if(!aseMap[aK]) aseMap[aK] = {nombre: v.ASESOR, ventas:0, cf:0, pP:0, pA:0, pR:0};
+                                                let aK = v.ASESOR.toUpperCase();
+                                                if(!aseMap[aK]) aseMap[aK] = {nombre: v.ASESOR, ventas:0, cf:0, pP:0, pA:0, pR:0};
+                                                
                                                 if(isEnt) { 
                                                     aseMap[aK].ventas++; aseMap[aK].cf += val; gCf += val; gVent++; 
                                                     if(tipo.includes('PORTA')) aseMap[aK].pP++; else if(tipo.includes('ALTA')) aseMap[aK].pA++; else if(tipo.includes('RENO')) aseMap[aK].pR++;
                                                     if(v.REGION && regMap[v.REGION]!==undefined) {regMap[v.REGION]++; totalReg++;}
-                                                    if(v.FECHA_ACTIVACION) { let fStr = String(v.FECHA_ACTIVACION); let diaStr = fStr.includes('/') ? fStr.split('/')[0] : fStr.split('-')[2]; if(diaStr) { if(!diasMap[diaStr]) diasMap[diaStr] = 0; diasMap[diaStr]++; } }
+                                                    
+                                                    if(v.FECHA_ACTIVACION) {
+                                                        let fStr = String(v.FECHA_ACTIVACION); let diaStr = fStr.includes('/') ? fStr.split('/')[0] : fStr.split('-')[2];
+                                                        if(diaStr) { if(!diasMap[diaStr]) diasMap[diaStr] = 0; diasMap[diaStr]++; }
+                                                    }
                                                 }
                                             }
                                             if(v.CARRUSELERO) {
-                                                let cK = v.CARRUSELERO.toUpperCase(); if(!carrMap[cK]) carrMap[cK] = {ventas:0, cf:0};
+                                                let cK = v.CARRUSELERO.toUpperCase();
+                                                if(!carrMap[cK]) carrMap[cK] = {ventas:0, cf:0};
                                                 if(isEnt) { carrMap[cK].ventas++; carrMap[cK].cf += val; }
                                             }
                                         });
 
-                                        dash.metaGlobal = Object.keys(aseMap).length * conf.metaCuota;
+                                        dash.metaGlobal = Object.keys(aseMap).length * conf.metaCuota; // Meta Dinámica Real
                                         dash.totalCfGeneral = gCf; dash.totalVentasGeneral = gVent; dash.avanceGlobal = ((gCf / (dash.metaGlobal || 1)) * 100).toFixed(1);
                                         
-                                        if(totalReg>0) { dash.gerencia.regionesPorcentaje = { LIMA: ((regMap.LIMA/totalReg)*100).toFixed(0)+'%', NORTE: ((regMap.NORTE/totalReg)*100).toFixed(0)+'%', CENTRO: ((regMap.CENTRO/totalReg)*100).toFixed(0)+'%', SUR: ((regMap.SUR/totalReg)*100).toFixed(0)+'%' }; }
+                                        if(totalReg>0) {
+                                            dash.gerencia.regionesPorcentaje = {
+                                                LIMA: ((regMap.LIMA/totalReg)*100).toFixed(0)+'%', NORTE: ((regMap.NORTE/totalReg)*100).toFixed(0)+'%',
+                                                CENTRO: ((regMap.CENTRO/totalReg)*100).toFixed(0)+'%', SUR: ((regMap.SUR/totalReg)*100).toFixed(0)+'%'
+                                            };
+                                        }
                                         Object.values(aseMap).forEach(a => {
-                                            let cR = calculateComision(a.cf, a.pP, a.pA, a.pR); let cfP = a.cf * factorProy; let cP = calculateComision(cfP, a.pP * factorProy, a.pA * factorProy, a.pR * factorProy);
+                                            let cR = calculateComision(a.cf, a.pP, a.pA, a.pR); 
+                                            let cfP = a.cf * factorProy; let cP = calculateComision(cfP, a.pP * factorProy, a.pA * factorProy, a.pR * factorProy);
                                             dash.gerencia.asesoresDetalle.push({ nombre: a.nombre, totalVentas: a.ventas, cf: a.cf, comision: cR.comision, rango: cR.rango, cfProyectado: cfP, comisionProyectada: cP.comision, rangoProyectado: cP.rango, bonoRestante: Math.max(0, conf.bonoMeta - a.cf), avance: ((a.cf/conf.metaCuota)*100).toFixed(1) });
                                         });
-                                        dash.gerencia.asesoresDetalle.sort((a,b) => b.cf - a.cf);
-                                        Object.keys(carrMap).forEach(k => { dash.gerencia.carruselerosDetalle[k] = { ventas: carrMap[k].ventas, cf: carrMap[k].cf, comision: carrMap[k].cf * 0.02, comisionProy: (carrMap[k].cf * factorProy) * 0.02 }; });
+                                        dash.gerencia.asesoresDetalle.sort((a,b) => b.cf - a.cf); // Ordenar mejores arriba
+                                        
+                                        Object.keys(carrMap).forEach(k => {
+                                            dash.gerencia.carruselerosDetalle[k] = { ventas: carrMap[k].ventas, cf: carrMap[k].cf, comision: carrMap[k].cf * 0.02, comisionProy: (carrMap[k].cf * factorProy) * 0.02 };
+                                        });
                                         Object.keys(diasMap).sort().forEach(d => { dash.gerencia.diasOrdenados.push({dia: d, cantidad: diasMap[d]}); });
 
                                         result = { success: true, ventas: myVentas.sort((a,b)=>b.ID - a.ID), dashboard: dash };
                                     }
                                     
-                                    // === BASE DITO (CARRUSEL) CON SINCRONIZACIÓN ===
+                                    // === EL RESTO DE METODOS CRUD Y BASE DITO ===
+                                    else if (prop === 'saveVentasMultiples') {
+                                        const [d] = args;
+                                        let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
+                                        let inserts = d.lineasDetalle.map(l => ({
+                                            ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region,
+                                            CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado,
+                                            OBSERVACIONES: d.observaciones, ASESOR: d.asesor,
+                                            N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana,
+                                            FECHA_ACTIVACION: dateStr
+                                        }));
+                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
+                                        if (error) throw error;
+                                        result = { success: true, message: 'Ventas registradas correctamente' };
+                                    }
+                                    
+                                    else if (prop === 'updateVentaInline') {
+                                        const [id, campo, valor] = args;
+                                        let obj = {}; obj[campo] = valor;
+                                        if (campo === 'ESTADO') {
+                                            let subs = window.DEP_ESTADOS ? window.DEP_ESTADOS[valor] : [];
+                                            obj['SUB_ESTADO'] = subs && subs.length > 0 ? subs[0] : '';
+                                        }
+                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id);
+                                        if (error && error.code === '42703') { 
+                                            let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); 
+                                            if (res2.error) throw res2.error;
+                                        } else if (error) throw error;
+                                        result = { success: true };
+                                    }
+                                    
+                                    else if (prop === 'updateVentaCompleta') {
+                                        const [id, data] = args;
+                                        let obj = {
+                                            ANI: data.ani, N_PORTAR: data.n_portar, CLIENTE: data.cliente, DOC: data.doc, TIPO_VENTA: data.tipoVenta, OPERADOR: data.operador, REGION: data.region, CARRUSELERO: data.carruselero, CAMPANA: data.campana, FECHA_ACTIVACION: data.fechaActivacion, CF: data.cf, ESTADO: data.estado, SUB_ESTADO: data.subEstado, OBSERVACIONES: data.observaciones, REVISION: data.revision, SEC: data.sec, FORMA_ENTREGA: data.formaEntrega
+                                        };
+                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id);
+                                        if (error && error.code === '42703') { 
+                                            let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); 
+                                            if (res2.error) throw res2.error;
+                                        } else if (error) throw error;
+                                        result = { success: true, message: 'Venta actualizada' };
+                                    }
+                                    
+                                    else if (prop === 'deleteVenta') {
+                                        const [id] = args;
+                                        let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id);
+                                        if (error && error.code === '42703') { 
+                                            let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); 
+                                            if (res2.error) throw res2.error;
+                                        } else if (error) throw error;
+                                        result = { success: true };
+                                    }
+                                    
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
                                         
@@ -516,8 +605,15 @@
                                         let ciclos = vGlobal.ciclos || f.ciclos || [];
                                         let meses = vGlobal.meses || f.meses || [];
                                         
-                                        // Filtros de Texto (Ese sí es local de cada asesor)
-                                        if (f.texto) { let t = String(f.texto).toLowerCase(); filtered = filtered.filter(v => (String(v.DNI||'')).toLowerCase().includes(t) || (String(v.NOMBRE_CLIENTE||'')).toLowerCase().includes(t) || (String(v.NUMERO||'')).includes(t)); }
+                                        // Filtros de Texto (Ese sí es local de cada asesor blindado como String)
+                                        if (f.texto) { 
+                                            let t = String(f.texto).toLowerCase().trim(); 
+                                            filtered = filtered.filter(v => 
+                                                (String(v.DNI||'')).toLowerCase().includes(t) || 
+                                                (String(v.NOMBRE_CLIENTE||'')).toLowerCase().includes(t) || 
+                                                (String(v.NUMERO||'')).toLowerCase().includes(t)
+                                            ); 
+                                        }
                                         
                                         // Aplicar Filtros Globales
                                         if (ocultar) { filtered = filtered.filter(v => String(v.GESTIONADO).toUpperCase() !== 'TRUE'); }
@@ -526,19 +622,40 @@
                                         
                                         // Lógica Duplicados
                                         let dniMap = {};
-                                        filtered.forEach(v => { if(!v.DNI) return; let dniS = String(v.DNI); if(!dniMap[dniS]) dniMap[dniS] = new Set(); if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO)); });
-                                        filtered.forEach(v => { if(v.DNI && dniMap[String(v.DNI)] && dniMap[String(v.DNI)].size > 1) { v.isDuplicate = true; } else { v.isDuplicate = false; } });
+                                        filtered.forEach(v => { 
+                                            if(!v.DNI) return; 
+                                            let dniS = String(v.DNI); 
+                                            if(!dniMap[dniS]) dniMap[dniS] = new Set(); 
+                                            if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO)); 
+                                        });
+                                        filtered.forEach(v => { 
+                                            if(v.DNI && dniMap[String(v.DNI)] && dniMap[String(v.DNI)].size > 1) { 
+                                                v.isDuplicate = true; 
+                                            } else { 
+                                                v.isDuplicate = false; 
+                                            } 
+                                        });
 
-                                        // Orden Jerárquico
+                                        // Orden Jerárquico Blindado contra vacíos/nulls
                                         let globalSort = conf.globalSort || [];
                                         if (globalSort.length > 0) {
                                             filtered.sort((a,b) => {
                                                 for(let i=0; i<globalSort.length; i++) {
                                                     let col = globalSort[i].col; let dir = globalSort[i].dir === 'asc' ? 1 : -1;
                                                     let v1 = a[col]; let v2 = b[col];
-                                                    if (v1 === null || v1 === undefined) v1 = ''; if (v2 === null || v2 === undefined) v2 = '';
-                                                    if (!isNaN(v1) && !isNaN(v2) && v1 !== '' && v2 !== '') { v1 = Number(v1); v2 = Number(v2); } else { v1 = String(v1).toLowerCase(); v2 = String(v2).toLowerCase(); }
-                                                    if (v1 < v2) return -1 * dir; if (v1 > v2) return 1 * dir;
+                                                    
+                                                    if (v1 === null || v1 === undefined) v1 = ''; 
+                                                    if (v2 === null || v2 === undefined) v2 = '';
+                                                    
+                                                    v1 = String(v1).trim().toLowerCase();
+                                                    v2 = String(v2).trim().toLowerCase();
+
+                                                    if (v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2)) { 
+                                                        v1 = Number(v1); v2 = Number(v2); 
+                                                    }
+                                                    
+                                                    if (v1 < v2) return -1 * dir; 
+                                                    if (v1 > v2) return 1 * dir;
                                                 }
                                                 return 0;
                                             });
@@ -557,36 +674,29 @@
                                         result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal }; 
                                     }
                                     
-                                    // === EL RESTO DE METODOS CRUD MANTIENEN SU LOGICA ORIGINAL ===
-                                    else if (prop === 'saveVentasMultiples') {
-                                        const [d] = args; let dateStr = ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
-                                        let inserts = d.lineasDetalle.map(l => ({ ANI: d.ani, CLIENTE: d.cliente, DOC: d.doc, PAQUETE: d.paquete, REGION: d.region, CARRUSELERO: d.carruselero, FORMA_ENTREGA: d.formaEntrega, ESTADO: d.estado, SUB_ESTADO: d.subEstado, OBSERVACIONES: d.observaciones, ASESOR: d.asesor, N_PORTAR: l.n_portar, SEC: l.sec, TIPO_VENTA: l.tipoVenta, OPERADOR: l.operador, CF: l.cf, CAMPANA: l.campana, FECHA_ACTIVACION: dateStr }));
-                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
-                                        if (error) throw error; result = { success: true, message: 'Ventas registradas correctamente' };
-                                    }
-                                    
-                                    else if (prop === 'updateVentaInline') {
-                                        const [id, campo, valor] = args; let obj = {}; obj[campo] = valor;
-                                        if (campo === 'ESTADO') { let subs = window.DEP_ESTADOS ? window.DEP_ESTADOS[valor] : []; obj['SUB_ESTADO'] = subs && subs.length > 0 ? subs[0] : ''; }
-                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
-                                    }
-                                    
-                                    else if (prop === 'updateVentaCompleta') {
-                                        const [id, data] = args; let obj = { ANI: data.ani, N_PORTAR: data.n_portar, CLIENTE: data.cliente, DOC: data.doc, TIPO_VENTA: data.tipoVenta, OPERADOR: data.operador, REGION: data.region, CARRUSELERO: data.carruselero, CAMPANA: data.campana, FECHA_ACTIVACION: data.fechaActivacion, CF: data.cf, ESTADO: data.estado, SUB_ESTADO: data.subEstado, OBSERVACIONES: data.observaciones, REVISION: data.revision, SEC: data.sec, FORMA_ENTREGA: data.formaEntrega };
-                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true, message: 'Venta actualizada' };
-                                    }
-                                    
-                                    else if (prop === 'deleteVenta') {
-                                        const [id] = args; let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
-                                    }
-
                                     else if (prop === 'updateBaseVentasInline') {
-                                        const [id, campo, valor] = args; let obj = {}; obj[campo] = valor; let { error } = await _supabase.from('BASE DITO').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DITO').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
+                                        const [id, campo, valor] = args; let obj = {}; obj[campo] = valor; let { error } = await _supabase.from('BASE DITO').update(obj).eq('id', id);
+                                        if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DITO').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
                                     else if (prop === 'buscarClienteBase') {
-                                        const [val] = args; const { data, error } = await _supabase.from('BASE DITO').select('*').eq('DNI', val); if (error) throw error;
+                                        const [val] = args; const { data, error } = await _supabase.from('BASE DITO').select('*').eq('DNI', val);
+                                        if (error) throw error;
                                         let mapData = data.map(d => ({dni: d.DNI, nombre: d.NOMBRE_CLIENTE, celular: d.NUMERO, fv: d.FV, ciclo: d.CICLO, carruselero: d.CARRUSELERO})); result = { success: true, data: mapData };
+                                    }
+                                    
+                                    else if (prop === 'procesarCargaMasiva') {
+                                        const [lines] = args; let headers = lines[0]; let inserts = [];
+                                        for(let i=1; i<lines.length; i++) { if(lines[i].length < 2) continue; let obj = {}; headers.forEach((h, idx) => { obj[h] = lines[i][idx] || null; }); inserts.push(obj); }
+                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
+                                        if (error) throw error; result = { success: true, message: 'Carga masiva completada', ventasCargadas: inserts };
+                                    }
+                                    
+                                    else if (prop === 'procesarCargaMasivaBase') {
+                                        const [lines] = args; let headers = lines[0]; let inserts = [];
+                                        for(let i=1; i<lines.length; i++) { if(lines[i].length < 2) continue; let obj = {}; headers.forEach((h, idx) => { obj[h] = lines[i][idx] || null; }); inserts.push(obj); }
+                                        const { error } = await _supabase.from('BASE DITO').insert(inserts);
+                                        if (error) throw error; result = { success: true, message: 'Base Dito cargada' };
                                     }
 
                                     if (target.successCb) target.successCb(result);
@@ -602,10 +712,10 @@
             }
         };
 
-        // ================= UI HELPERS =================
+        // UI HELPERS PARA RANGOS COLORIDOS
         function formatRangoText(rango) {
             let color = 'text-slate-500';
-            if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(rango.includes('<')) color = 'text-red-500';
+            if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
             return `<span class="font-black ${color}">${rango}</span>`;
         }
 
@@ -615,6 +725,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             if(typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
+            loadConfigUI();
             const saved = localStorage.getItem('ffvv_user'); if (saved) { try { currentUser = JSON.parse(saved); initApp(); } catch(e) { localStorage.removeItem('ffvv_user'); } }
             const loginForm = document.getElementById('loginForm'); if(loginForm) { loginForm.onsubmit = function(e) { e.preventDefault(); google.script.run.withSuccessHandler(function(res) { if(res && res.success) { localStorage.setItem('ffvv_user', JSON.stringify(res.user)); currentUser = res.user; initApp(); } else { const errEl = document.getElementById('loginError'); if(errEl) { errEl.textContent = res ? res.message : 'Error desconocido'; errEl.classList.remove('hidden'); } } }).loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); }; }
             const logoutBtn = document.getElementById('logoutBtn'); if(logoutBtn) { logoutBtn.onclick = function() { localStorage.removeItem('ffvv_user'); location.reload(); }; }
@@ -676,6 +787,7 @@
             
             if(viewId === 'ventasList' || viewId === 'dashGrupalView') loadVentas();
             if(viewId === 'baseVentasView') loadBaseVentas(); 
+            if(viewId === 'configView') loadConfigUI();
             
             if(window.innerWidth < 768) { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.add('sidebar-hidden'); if(mc) { mc.classList.remove('md:pl-64'); } }
         }
@@ -709,15 +821,16 @@
                 document.querySelectorAll('.nav-gerencia').forEach(function(l) { l.classList.remove('hidden'); });
                 document.getElementById('rolDisplaySidebar').textContent = 'ADMIN GERENCIA';
                 
-                // Boton Global Extra
                 const btnFijar = document.getElementById('btnFijarVista');
                 if (btnFijar) { btnFijar.classList.remove('hidden'); btnFijar.classList.add('flex'); }
                 
+                const menuCarga = document.getElementById('menuCargaMasiva'); if(menuCarga) menuCarga.classList.remove('hidden');
+                const gerenciaSec = document.getElementById('gerenciaDashboardSection'); if(gerenciaSec) gerenciaSec.classList.remove('hidden');
+                const divCargaBase = document.getElementById('divCargaBase'); if(divCargaBase) divCargaBase.classList.remove('hidden');
                 document.querySelectorAll('.gerencia-filter').forEach(function(el) { el.classList.remove('hidden'); });
                 cambiarVista('ventasList');
             }
             
-            // Cargar UI Configuration silently
             google.script.run.withSuccessHandler(res => {
                 if(res) {
                     const m = document.getElementById('confMeta'); if(m) m.value = res.metaCuota;
@@ -727,25 +840,16 @@
             }).obtenerConfiguracion();
         }
 
-        // ================= BASE DITO PAGINADA, CON DUPLICADOS Y ESPEJO GLOBAL =================
         function fijarVistaGlobal() {
             const chkOcultar = document.getElementById('chkOcultarGestionados');
             const cBoxes = document.querySelectorAll('.chk-ciclo:checked');
             const mBoxes = document.querySelectorAll('.chk-mes:checked');
-            
-            let vista = {
-                ocultarCheck: chkOcultar ? chkOcultar.checked : true,
-                ciclos: Array.from(cBoxes).map(cb => cb.value),
-                meses: Array.from(mBoxes).map(mb => mb.value)
-            };
-            
-            google.script.run.withSuccessHandler(() => {
-                showToast('Vista fijada para toda la empresa');
-            }).guardarVistaGlobal(vista);
+            let vista = { ocultarCheck: chkOcultar ? chkOcultar.checked : true, ciclos: Array.from(cBoxes).map(cb => cb.value), meses: Array.from(mBoxes).map(mb => mb.value) };
+            google.script.run.withSuccessHandler(() => { showToast('Vista fijada para toda la empresa'); }).guardarVistaGlobal(vista);
         }
 
         function aplicarFiltrosBase(silencioso = false) {
-            const txtEl = document.getElementById('filtroTextoBase'); const txt = txtEl ? txtEl.value.toLowerCase() : '';
+            const txtEl = document.getElementById('filtroTextoBase'); const txt = txtEl ? txtEl.value.trim() : '';
             const chkOcultar = document.getElementById('chkOcultarGestionados'); const ocultar = chkOcultar ? chkOcultar.checked : true;
             const cBoxes = document.querySelectorAll('.chk-ciclo:checked'); const ciclosCheckbox = Array.from(cBoxes).map(cb => cb.value);
             const mBoxes = document.querySelectorAll('.chk-mes:checked'); const mesesCheckbox = Array.from(mBoxes).map(mb => mb.value);
@@ -755,23 +859,20 @@
 
             const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc };
             const tbody = document.getElementById('tablaCuerpoBase');
-            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Cowork...</td></tr>';
+            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Cowork...</td></tr>';
 
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { 
                     baseVentasGlobal = res.baseVentas || []; 
-                    
-                    // Sincronizar UI local con Espejo Global solo si no es silencioso (o si lo necesita)
-                    if (res.vistaGlobal) {
+                    if (res.vistaGlobal && !silencioso) {
                         let vg = res.vistaGlobal;
                         if(chkOcultar && vg.ocultarCheck !== undefined) chkOcultar.checked = vg.ocultarCheck;
                     }
-                    
-                    if (!silencioso) { currentPageBase = 1; }
+                    if (!silencioso || txt !== '') { currentPageBase = 1; }
                     renderBaseTablePaginated(); 
-                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
+                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
             }).withFailureHandler(function(err) {
-                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
+                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
             }).obtenerBaseFiltrada(filtros);
         }
 
@@ -819,18 +920,13 @@
                 let dir = document.getElementById('sortDir'+i).value;
                 if(col) sortArr.push({col: col, dir: dir});
             }
-            
-            google.script.run.withSuccessHandler(() => {
-                document.getElementById('modalMultiSort').classList.add('hidden');
-                showToast('Orden Múltiple aplicado al Cowork');
-                aplicarFiltrosBase(false);
-            }).guardarVistaGlobal({ multiSort: sortArr });
+            google.script.run.withSuccessHandler(() => { document.getElementById('modalMultiSort').classList.add('hidden'); showToast('Orden Múltiple aplicado al Cowork'); aplicarFiltrosBase(false); }).guardarVistaGlobal({ multiSort: sortArr });
         }
 
         function renderBaseTable(lista) {
             try {
                 const tb = document.getElementById('tablaCuerpoBase'); if(!tb) return;
-                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
+                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
                 const rol = currentUser.rol; const isGerencia = (rol === 'GERENCIA' || rol === 'SUPERVISOR'); const isAsesor = (rol === 'ASESOR'); const isCarruselero = (rol === 'CARRUSELERO');
                 const blockVendedor = (!isGerencia && !isAsesor) ? 'disabled' : ''; const blockGestion = (!isGerencia && !isCarruselero && !isAsesor) ? 'disabled' : ''; 
                 let optVendedores = ['GEAN', 'ANGELICA', 'SUNNY']; let optEstados = ['INFORMADO', 'DNC', 'NO CONTESTA', 'NO INTERESADO', 'VENTA', 'WSP']; let optCarruseleros = ['SARA', 'ANA', 'HUMBERTO'];
@@ -846,7 +942,7 @@
 
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '"><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-white/50" ' + blockVendedor + '>' + htmlVend + '</select></td><td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td><td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td><td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.OPERACION || '') + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.SISACT || '') + '</td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit text-[10px] font-black rounded bg-white/50 \' + this.options[this.selectedIndex].className;" class="inline-edit text-[10px] font-black rounded bg-white/50 ' + classEstado + '" ' + blockGestion + '>' + htmlEstado + '</select></td><td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-white/50" ' + blockGestion + '></td><td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit text-purple-700 font-black bg-white/50" ' + blockGestion + '>' + htmlCarr + '</select></td><td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td><td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td></tr>';
+                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '"><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-white/50" ' + blockVendedor + '>' + htmlVend + '</select></td><td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td><td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td><td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td><td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit text-[10px] font-black rounded bg-white/50 \' + this.options[this.selectedIndex].className;" class="inline-edit text-[10px] font-black rounded bg-white/50 ' + classEstado + '" ' + blockGestion + '>' + htmlEstado + '</select></td><td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-white/50" ' + blockGestion + '></td><td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-white/50" ' + blockGestion + '></td><td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td><td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit text-purple-700 font-black bg-white/50" ' + blockGestion + '>' + htmlCarr + '</select></td><td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td><td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td></tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
                 tb.innerHTML = htmlTemp;
@@ -861,13 +957,9 @@
             if (campo === 'GESTIONADO' && chk && chk.checked) { 
                 const tr = document.getElementById('row_base_' + id); 
                 if(tr) tr.remove(); 
-            } else {
-                renderBaseTablePaginated();
-            }
+            } else { renderBaseTablePaginated(); }
 
-            google.script.run.withSuccessHandler(function(res) { 
-                if(res && res.success) { showToast('Guardado en BD'); } 
-            }).updateBaseVentasInline(id, campo, valor);
+            google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
 
         // ====== EJECUCIONES CON CHUNKS (BARRAS DE PROGRESO) ======
@@ -986,7 +1078,7 @@
         function addLinea() { const container = document.getElementById('lineasContainer'); if(!container) return; const div = document.createElement('div'); div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 linea-row'; div.innerHTML = '<div><label class="block text-[10px] text-slate-600 font-bold">N° a Portar</label><input type="text" name="n_portar" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: 999888777" required></div><div><label class="block text-[10px] text-slate-600 font-bold">N° SEC</label><input type="text" name="sec" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: SEC-123"></div><div><label class="block text-[10px] text-slate-600 font-bold">Tipo de Venta</label><select name="tipoVenta" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" onchange="actualizarOpRow(this)"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovación</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Operador</label><select name="operador" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Plan (CF S/)</label><select name="cf" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-green-700 text-sm font-bold focus:outline-none focus:border-red-600"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Campaña</label><select name="campana" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div><div class="col-span-1 md:col-span-6 flex justify-end"><button type="button" onclick="this.closest(\'.linea-row\').remove()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded text-xs transition">Eliminar Línea</button></div>'; container.appendChild(div); }
 
         function aplicarFiltros() {
-            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.toLowerCase() : '';
+            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.trim() : '';
             const tipoEl = document.getElementById('filtroTipo'); const tipo = tipoEl ? tipoEl.value : '';
             const mesEl = document.getElementById('filtroMes'); const mes = mesEl ? mesEl.value : '';
             const fechaEl = document.getElementById('filtroFechaAct'); const fechaFiltro = fechaEl ? fechaEl.value : '';
@@ -1002,7 +1094,8 @@
             if (fechaFiltro) { let partes = fechaFiltro.split('-'); fechaFiltroFormat = partes[2] + '/' + partes[1] + '/' + partes[0]; }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
-                const matchTxt = (String(v.CLIENTE||'')).toLowerCase().indexOf(txt) !== -1 || (String(v.DOC||'')).toLowerCase().indexOf(txt) !== -1 || String(v.N_PORTAR || '').toLowerCase().indexOf(txt) !== -1 || String(v.SEC || '').toLowerCase().indexOf(txt) !== -1;
+                const t = txt.toLowerCase();
+                const matchTxt = !t || (String(v.CLIENTE || '').toLowerCase().includes(t) || String(v.DOC || '').toLowerCase().includes(t) || String(v.N_PORTAR || '').toLowerCase().includes(t) || String(v.ANI || '').toLowerCase().includes(t) || String(v.SEC || '').toLowerCase().includes(t));
                 let matchEst = true; if (estadosCheckbox.length > 0) { matchEst = estadosCheckbox.includes(v.ESTADO); }
                 const matchTipo = !tipo || v.TIPO_VENTA === tipo; const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; const matchAsesor = !asesorFiltro || v.ASESOR.toUpperCase() === asesorFiltro.toUpperCase();
                 let matchRevision = true; if (revFiltro) { if (revFiltro === "- Sin Revisión -") { matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; } else { matchRevision = v.REVISION === revFiltro; } }
@@ -1103,6 +1196,9 @@
                         else if (v.ESTADO === 'P.ENTREGA') estadoColorText = 'text-yellow-700';
                         else if (v.ESTADO === 'REINGRESAR') estadoColorText = 'text-orange-700';
                         else if (v.ESTADO === 'NO DESEA') estadoColorText = 'text-red-700';
+
+                        let fActValue = '';
+                        if (v.FECHA_ACTIVACION) { let fStr = String(v.FECHA_ACTIVACION); fActValue = fStr.includes('/') ? fStr.split('/').reverse().join('-') : fStr; }
 
                         htmlTemp += '<tr class="transition text-xs border-b border-slate-200 ' + rowColor + '">' +
                             '<td class="px-5 py-4 align-top border-r border-slate-200/50">' +
