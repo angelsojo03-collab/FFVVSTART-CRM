@@ -1446,19 +1446,24 @@
                 }); 
             }
 
-            const tbCarr = document.getElementById('tablaGerenciaCarruseleros'); // (O tablaGrupalCarruseleros según la función)
+            const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
             if(tbCarr) { 
                 tbCarr.innerHTML = ''; 
-                const carrData = g.carruselerosDetalle || {};
+                // Leemos con seguridad tanto si viene de gerencia como del objeto global
+                const carrData = (dashboard && dashboard.carruselerosDetalle) ? dashboard.carruselerosDetalle : (g.carruselerosDetalle || {});
                 
                 Object.keys(carrData).forEach(function(cName) { 
                     let c = carrData[cName]; 
                     let ventasC = c.ventas || c[0] || 0;
                     let cfC = c.cf || c.CF || c[1] || 0;
                     
-                    // Cálculo directo del 2% real y su proyección
+                    // Cálculo directo seguro del 2% real y su proyección con 2 decimales
                     let comReal = Number(cfC) * 0.02;
                     let comProy = comReal * (getConfig().diasMes / (new Date().getDate() || 1));
+
+                    tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${ventasC}</td><td class="font-bold text-slate-500">S/ ${Number(cfC).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(comReal).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(comProy).toFixed(2)}</td></tr>`; 
+                }); 
+            }
 
                     tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${ventasC}</td><td class="font-bold text-slate-500">S/ ${Number(cfC).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(comReal).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(comProy).toFixed(2)}</td></tr>`; 
                 }); 
