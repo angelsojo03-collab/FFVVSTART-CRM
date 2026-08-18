@@ -1245,6 +1245,7 @@
             if(viewId === 'baseVentasView') loadBaseVentas(); 
             if(viewId === 'configView') loadConfigUI();
             if(viewId === 'newVenta') { const lc = document.getElementById('lineasContainer'); if(lc && lc.children.length === 0) addLinea(); }
+            if(viewId === 'ciclosView') renderMovistarCycles();
             
             if(window.innerWidth < 768) { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.add('sidebar-hidden'); if(mc) mc.classList.remove('md:pl-64'); }
         }
@@ -1261,6 +1262,8 @@
             const uName = document.getElementById('userName'); if(uName && currentUser) uName.textContent = currentUser.nombre;
             const uRol = document.getElementById('userRol'); if(uRol && currentUser) uRol.textContent = currentUser.rol;
             const vAsesor = document.getElementById('ventaAsesor'); if(vAsesor && currentUser) vAsesor.value = currentUser.nombre;
+            
+            renderMovistarCycles();
             
             let conf = getConfig();
             const elMes = document.getElementById('filtroMes'); 
