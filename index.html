@@ -1132,9 +1132,9 @@
                 '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">SEC</label><input type="text" name="sec" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"></div>' +
                 '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Tipo Venta</label><select name="tipoVenta" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovaci&oacute;n</option></select></div>' +
                 '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Operador</label><select name="operador" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div>' +
-                '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Plan (CF)</label><select name="cf" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-green-700 font-black focus:outline-none focus:border-red-600 shadow-inner"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90">79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div>' +
+                '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Plan (CF)</label><select name="cf" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-green-700 font-black focus:outline-none focus:border-red-600 shadow-inner"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div>' +
                 '<div class="flex items-end gap-2">' +
-                    '<div class="flex-1"><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Campa&ntilde;a</label><select name="campana" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL">DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div>' +
+                    '<div class="flex-1"><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Campa&ntilde;a</label><select name="campana" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div>' +
                     '<button type="button" onclick="eliminarLinea(this)" class="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg shadow-sm" title="Eliminar l\u00ednea"><i class="fas fa-trash"></i></button>' +
                 '</div>';
 
@@ -1328,6 +1328,15 @@
 
             resizer.classList.add('resizing');
 
+            // Bloquea el evento "click" de ordenamiento (sortBase) del <th> generado por el
+            // mousedown/mouseup del redimensionador, sin afectar el clic normal en el resto del encabezado.
+            function blockHeaderClick(clickEvent) {
+                clickEvent.stopImmediatePropagation();
+                clickEvent.preventDefault();
+                th.removeEventListener('click', blockHeaderClick, true);
+            }
+            th.addEventListener('click', blockHeaderClick, true);
+
             function onMouseMove(event) {
                 const currentWidth = startWidth + (event.clientX - startX);
                 if (currentWidth > 40) {
@@ -1339,6 +1348,7 @@
                 resizer.classList.remove('resizing');
                 document.removeEventListener('mousemove', onMouseMove);
                 document.removeEventListener('mouseup', onMouseUp);
+                setTimeout(function() { th.removeEventListener('click', blockHeaderClick, true); }, 0);
             }
 
             document.addEventListener('mousemove', onMouseMove);
@@ -1914,16 +1924,88 @@
         }
 
         function abrirModalWhatsApp(cliente, campana, fechaActStr, ani) {
-            let saludos = ["¡Hola, " + cliente + "! 👋", "¡Qué tal, " + cliente + "!", "¡Hola que tal, " + cliente + "! 😊"]; 
-            let bienvenidillas = [ "¡Bienvenido(a) a *Claro*! Nos da muchísimo gusto que hayas decidido portar tu línea con nosotros. A partir de este momento, ya formas parte de nuestra gran familia. 📱✨", "¡Te damos la bienvenida a *Claro*! Estamos felices de que hayas traído tu línea con nosotros y ya pases a ser parte de nuestra familia. 🚀" ]; 
-            let cierres = ["Si tienes *cualquier duda* sobre tu plan, tu consumo o el funcionamiento de tu servicio, háznoslo saber respondiendo por este medio. ¡Estamos aquí para ayudarte! 🤝\n\n¡Que tengas un excelente día! 🚀"];
-            
-            let saludo = saludos[0];
-            let bienvenida = bienvenidillas[0];
-            let cierre = cierres[0];
-            let fechaActivacion = fechaActStr || "13/08/2026";
-            
-            let mensajeCompleto = saludo + "\n\n" + bienvenida + "\n\nPara que tengas todo bajo control desde el primer día, te compartimos los detalles clave:\n\n" + "📅 *Tu ciclo de facturación inicial:* Del " + fechaActivacion + " al 13/09/2026 y los demás meses siempre será del 14 al 13 de cada mes.\n" + "💳 *Tu primer pago:* Estará habilitado desde el 18/08/2026, teniendo como fecha de vencimiento el 31/08/2026.\n\n" + cierre;
+            // ============ ARRAYS ALEATORIOS ANTI-SPAM (SALUDOS / BIENVENIDA / CIERRE) ============
+            let saludos = ["¡Hola, " + cliente + "! 👋", "¡Qué tal, " + cliente + "!", "¡Hola que tal, " + cliente + "! 😊", "¡Buen día, " + cliente + "! 🌟", "¡Hola " + cliente + ", un gusto saludarte! 👋"];
+            let bienvenidillas = [
+                "¡Bienvenido(a) a *Claro*! Nos da muchísimo gusto que hayas decidido portar tu línea con nosotros. A partir de este momento, ya formas parte de nuestra gran familia. 📱✨",
+                "¡Te damos la bienvenida a *Claro*! Estamos felices de que hayas traído tu línea con nosotros y ya pases a ser parte de nuestra familia. 🚀",
+                "¡Qué gusto darte la bienvenida a *Claro*! Desde hoy formas parte de nuestra comunidad y estaremos siempre atentos a apoyarte. 🙌",
+                "¡Bienvenido(a) a la familia *Claro*! Gracias por confiar en nosotros para tu servicio móvil. 📲✨"
+            ];
+            let cierres = [
+                "Si tienes *cualquier duda* sobre tu plan, tu consumo o el funcionamiento de tu servicio, háznoslo saber respondiendo por este medio. ¡Estamos aquí para ayudarte! 🤝\n\n¡Que tengas un excelente día! 🚀",
+                "Cualquier consulta sobre tu plan o servicio, escríbenos por este mismo chat, con gusto te atenderemos. 🤝\n\n¡Éxitos y buen día! 🙌",
+                "Quedamos atentos ante cualquier duda sobre tu nuevo servicio. ¡Gracias por confiar en nosotros! 🙏\n\n¡Excelente día! ☀️"
+            ];
+
+            let saludo = saludos[Math.floor(Math.random() * saludos.length)];
+            let bienvenida = bienvenidillas[Math.floor(Math.random() * bienvenidillas.length)];
+            let cierre = cierres[Math.floor(Math.random() * cierres.length)];
+
+            // ============ UTILIDADES DE FECHA (DOS DÍGITOS: DD/MM/AAAA) ============
+            function fmt2(n) { return String(n).padStart(2, '0'); }
+            function formatearFecha(d) { return fmt2(d.getDate()) + '/' + fmt2(d.getMonth() + 1) + '/' + d.getFullYear(); }
+
+            // ============ FECHA DE ACTIVACIÓN (PARSEO SEGURO DD/MM/AAAA) ============
+            let actDateObj;
+            if (fechaActStr && fechaActStr.indexOf('/') !== -1) {
+                let p = fechaActStr.split('/');
+                actDateObj = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+            } else {
+                actDateObj = new Date();
+            }
+            if (isNaN(actDateObj.getTime())) actDateObj = new Date();
+
+            // ============ CÁLCULO DE CICLO DE FACTURACIÓN (misma lógica de tramos de la Calculadora CLARO) ============
+            const day = actDateObj.getDate(); const month = actDateObj.getMonth(); const year = actDateObj.getFullYear();
+            let cicloDia = 0;
+            if (day >= 28) cicloDia = 1; else if (day >= 26) cicloDia = 28; else if (day >= 25) cicloDia = 26; else if (day >= 24) cicloDia = 25; else if (day >= 22) cicloDia = 24; else if (day >= 20) cicloDia = 22; else if (day >= 19) cicloDia = 20; else if (day >= 18) cicloDia = 19; else if (day >= 16) cicloDia = 18; else if (day >= 14) cicloDia = 16; else if (day >= 12) cicloDia = 14; else if (day >= 11) cicloDia = 12; else if (day >= 9) cicloDia = 11; else if (day >= 8) cicloDia = 9; else if (day >= 5) cicloDia = 8; else if (day >= 4) cicloDia = 5; else if (day >= 3) cicloDia = 4; else if (day >= 1) cicloDia = 3;
+
+            let inicioCiclo; if (day >= cicloDia) { inicioCiclo = new Date(year, month + 1, cicloDia); } else { inicioCiclo = new Date(year, month, cicloDia); }
+            let finCiclo = new Date(inicioCiclo.getFullYear(), inicioCiclo.getMonth() + 1, cicloDia); finCiclo.setDate(finCiclo.getDate() - 1);
+            let fechaPagoInicio = new Date(actDateObj); fechaPagoInicio.setDate(fechaPagoInicio.getDate() + 5);
+            let fechaVencimiento = new Date(actDateObj); fechaVencimiento.setDate(fechaVencimiento.getDate() + 18);
+
+            // Prorrateo: días entre la activación y el inicio del ciclo regular (nunca negativo)
+            let diffTime = inicioCiclo.getTime() - actDateObj.getTime();
+            let diasProrrateo = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diasProrrateo < 0) diasProrrateo = 0;
+
+            let fechaActivacionTexto = formatearFecha(actDateObj);
+            let fechaFinCicloTexto = formatearFecha(finCiclo);
+            let fechaPagoInicioTexto = formatearFecha(fechaPagoInicio);
+            let fechaVencimientoTexto = formatearFecha(fechaVencimiento);
+
+            // ============ BLOQUE DE DESCUENTO SEGÚN CAMPAÑA ============
+            let campanaNorm = String(campana || '').trim().toUpperCase();
+            let bloqueDescuento = '';
+            if (campanaNorm === 'DAC VIRTUAL') {
+                bloqueDescuento = "🎁 *Tu plazo de descuento:* Tu beneficio promocional del 50% estará activo durante 6 meses.";
+            } else if (campanaNorm === 'FC. ESPECIAL' || campanaNorm === 'FC ESPECIAL') {
+                bloqueDescuento = "🎁 *Tu plazo de descuento:* Tu beneficio promocional del 50% estará activo durante 12 meses (siempre que mantengas ambos servicios: móvil y hogar).";
+            } else if (campanaNorm === 'LÍNEA ADICIONAL' || campanaNorm === 'LINEA ADICIONAL') {
+                bloqueDescuento = "🎁 *Tu plazo de descuento:* Tu línea principal cuenta con descuento por 6 meses y tus líneas adicionales cuentan con el 50% por 12 meses.";
+            }
+
+            // ============ NOTA DE PRECAUCIÓN DEL OPERADOR ANTERIOR (OBLIGATORIA) ============
+            let notaOperadorAnterior = "⚠️ *Recuerda revisar si te quedó algún recibo o saldo pendiente de pago en tu operador anterior para evitar bloqueos o suspensiones externas en tu servicio actual.*";
+
+            // ============ BLOQUE DE PRORRATEO (SOLO SI ES MAYOR A 0) ============
+            let bloqueProrrateo = '';
+            if (diasProrrateo > 0) {
+                bloqueProrrateo = "⏱️ *Prorrateo:* Se te facturarán " + diasProrrateo + (diasProrrateo === 1 ? " día" : " días") + " proporcional" + (diasProrrateo === 1 ? "" : "es") + " correspondientes al periodo previo al inicio de tu ciclo regular.";
+            }
+
+            // ============ ARMADO FINAL DEL MENSAJE ============
+            let mensajeCompleto = saludo + "\n\n" + bienvenida +
+                "\n\nPara que tengas todo bajo control desde el primer día, te compartimos los detalles clave:\n\n" +
+                "📅 *Tu ciclo de facturación inicial:* Del " + fechaActivacionTexto + " al " + fechaFinCicloTexto + " y los demás meses siempre será del " + fmt2(cicloDia) + " al " + fmt2(finCiclo.getDate()) + " de cada mes.\n" +
+                "💳 *Tu primer pago:* Estará habilitado desde el " + fechaPagoInicioTexto + ", teniendo como fecha de vencimiento el " + fechaVencimientoTexto + "." +
+                (bloqueProrrateo ? "\n" + bloqueProrrateo : "") +
+                (bloqueDescuento ? "\n\n" + bloqueDescuento : "") +
+                "\n\n" + notaOperadorAnterior +
+                "\n\n" + cierre;
+
             const textEl = document.getElementById('wapTextContent'); if(textEl) textEl.value = mensajeCompleto;
             const linkEl = document.getElementById('wapDirectLink'); if(linkEl) linkEl.href = "https://wa.me/51" + ani;
             const modalEl = document.getElementById('modalWap'); if(modalEl) modalEl.classList.remove('hidden');
