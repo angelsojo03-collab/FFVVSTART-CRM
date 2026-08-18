@@ -1307,14 +1307,41 @@
         function cambiarPagina(page) { currentPageVentas = page; renderTablePaginated(); }
 
         function loadVentas() {
-            const tbody = document.getElementById('tablaCuerpo'); if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando ventas...</td></tr>';
+            const tbody = document.getElementById('tablaCuerpo'); 
+            if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando ventas...</td></tr>';
             if(!currentUser) return;
+            
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { 
-                    ventasGlobal = res.ventas || []; 
-                    aplicarFiltros(); actualizarDashboardCard(res.dashboard); 
-                    if (res.dashboard && res.dashboard.gerencia) { renderGerenciaDashboard(res.dashboard.gerencia); renderDashGrupal(res.dashboard); } 
-                } else { if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-600">Error: ' + (res ? res.message : 'Desconocido') + '</td></tr>'; }
+                    // Aseguramos que el ID se mantenga normalizado y ordenado desde el inicio
+                    ventasGlobal = (res.ventas || []).map(v => ({
+                        ...v, 
+                        ID: String(v.ID !== undefined ? v.ID : (v.id !== undefined ? v.id : Date.now()))
+                    }));
+                    
+                    // Ordenamos de inmediato: lo más nuevo arriba
+                    ventasGlobal.sort(function(a, b) {
+                        let idA = String(a.ID || '');
+                        let idB = String(b.ID || '');
+                        let numA = parseFloat(idA.replace(/[^0-9.]/g, '')) || 0;
+                        let numB = parseFloat(idB.replace(/[^0-9.]/g, '')) || 0;
+                        if(numA !== numB) return numB - numA;
+                        return idB.localeCompare(idA);
+                    });
+
+                    ventasFiltradasGlobal = [...ventasGlobal];
+                    aplicarFiltros(); 
+                    
+                    if(res.dashboard) {
+                        actualizarDashboardCard(res.dashboard); 
+                        if (res.dashboard.gerencia) { 
+                            renderGerenciaDashboard(res.dashboard.gerencia); 
+                            renderDashGrupal(res.dashboard); 
+                        } 
+                    }
+                } else { 
+                    if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-600">Error: ' + (res ? res.message : 'Desconocido') + '</td></tr>'; 
+                }
             }).withFailureHandler(function(err) { 
                 if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-600">Falla: ' + err.message + '</td></tr>'; 
             }).getDashboardData(currentUser.rol, currentUser.nombre);
