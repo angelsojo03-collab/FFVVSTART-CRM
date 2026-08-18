@@ -71,13 +71,23 @@
                 <div id="configView" class="content-view view-hidden space-y-6 w-full">
                     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-md border-t-4 border-slate-800 max-w-3xl mx-auto w-full">
                         <h2 class="text-2xl font-black text-slate-800 mb-2"><i class="fas fa-cogs text-red-600 mr-2"></i>Configuración Global</h2>
-                        <p class="text-sm text-slate-500 font-bold mb-6 border-b border-slate-100 pb-4">Ajusta los parámetros de proyecciones y comisiones.</p>
+                        <p class="text-sm text-slate-500 font-bold mb-6 border-b border-slate-100 pb-4">Ajusta los parámetros de proyecciones, comisiones y mes de gestión.</p>
                         
                         <form onsubmit="saveConfig(event)" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Meta CF x Asesor (S/)</label><input type="number" id="confMeta" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner" placeholder="Ej: 4000" required></div>
                                 <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Días del Mes (Proyección)</label><input type="number" id="confDias" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner" placeholder="Ej: 30 o 31" required></div>
                                 <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Meta Bono KT (S/)</label><input type="number" id="confBono" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner" placeholder="Ej: 7000" required></div>
+                                <div>
+                                    <label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Mes de Gestión por Defecto</label>
+                                    <select id="confMesGestion" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner">
+                                        <option value="">Todos los Meses</option>
+                                        <option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option>
+                                        <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
+                                        <option value="07">Julio</option><option value="08">Agosto</option><option value="09">Septiembre</option>
+                                        <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="pt-4 border-t border-slate-200"><button type="submit" class="w-full md:w-auto bg-slate-800 hover:bg-slate-900 text-white font-black py-3 px-8 rounded-lg transition shadow-lg flex items-center justify-center gap-2"><i class="fas fa-save"></i> Guardar Configuraciones</button></div>
                         </form>
@@ -168,7 +178,7 @@
                 </div>
 
                 <!-- ================= VISTA: GESTIÓN DE VENTAS CRM =============== -->
-                <div id="ventasList" class="content-view space-y-6 view-hidden w-full">
+                <div id="ventasList" class="content-view space-y-6 w-full">
                     <div id="panelReales" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-2">
                         <div class="bg-white border-t-4 border-blue-500 p-4 md:p-5 rounded-xl shadow-md"><p class="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">Meta Cuota</p><p class="text-xl md:text-2xl lg:text-3xl font-black text-blue-600 truncate" id="dashMetaCf">S/ 0</p></div>
                         <div class="bg-white border-t-4 border-green-500 p-4 md:p-5 rounded-xl shadow-md"><p class="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">CF Vendido</p><p class="text-xl md:text-2xl lg:text-3xl font-black text-green-600 truncate" id="dashCfVendido">S/ 0.00</p></div>
@@ -402,6 +412,7 @@
                 metaCuota: 4000, 
                 diasMes: 30, 
                 bonoMeta: 7000, 
+                mesGestion: String(new Date().getMonth() + 1).padStart(2, '0'),
                 cicloDefault: '20',
                 globalSort: [
                     { col: 'NOMBRE_CLIENTE', dir: 'asc' }, 
@@ -417,6 +428,7 @@
                 metaCuota: parseFloat(document.getElementById('confMeta').value) || 4000, 
                 diasMes: parseInt(document.getElementById('confDias').value) || 30, 
                 bonoMeta: parseFloat(document.getElementById('confBono').value) || 7000, 
+                mesGestion: document.getElementById('confMesGestion').value,
                 cicloDefault: '20',
                 globalSort: getConfig().globalSort 
             }; 
@@ -431,6 +443,7 @@
             const m = document.getElementById('confMeta'); if(m) m.value = c.metaCuota; 
             const d = document.getElementById('confDias'); if(d) d.value = c.diasMes; 
             const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; 
+            const mg = document.getElementById('confMesGestion'); if(mg) mg.value = c.mesGestion || '';
         }
         
         function aplicarFiltros() {
@@ -548,7 +561,7 @@
                                     else if (prop === 'obtenerConfiguracion') {
                                         try {
                                             const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                            let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, cicloDefault: '20', vistaDito: null, globalSort: [
+                                            let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, mesGestion: String(new Date().getMonth() + 1).padStart(2, '0'), cicloDefault: '20', vistaDito: null, globalSort: [
                                                 { col: 'NOMBRE_CLIENTE', dir: 'asc' },
                                                 { col: 'MESES', dir: 'desc' },
                                                 { col: 'CICLO', dir: 'asc' }
@@ -563,7 +576,7 @@
                                         const [newConf] = args;
                                         try {
                                             const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                            let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, cicloDefault: '20', vistaDito: null, globalSort: [] };
+                                            let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, mesGestion: String(new Date().getMonth() + 1).padStart(2, '0'), cicloDefault: '20', vistaDito: null, globalSort: [] };
                                             if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
                                             const merged = { ...curr, ...newConf };
                                             await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(merged)}).eq('ROL', 'GERENCIA');
@@ -574,7 +587,7 @@
                                         const [vista] = args;
                                         try {
                                             const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                            let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, cicloDefault: '20', vistaDito: null, globalSort: [] };
+                                            let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, mesGestion: String(new Date().getMonth() + 1).padStart(2, '0'), cicloDefault: '20', vistaDito: null, globalSort: [] };
                                             if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
                                             curr.vistaDito = vista;
                                             await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(curr)}).eq('ROL', 'GERENCIA');
@@ -846,18 +859,13 @@
                                         const [id, campo, valor] = args; let obj = {}; obj[campo] = valor; let { error } = await _supabase.from('BASE DITO').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DITO').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
-                                    // BÚSQUEDA POR DNI O CELULAR
+                                    // BÚSQUEDA POR DNI O CELULAR EN BASE DITO
                                     else if (prop === 'buscarClienteBase') {
                                         const [val] = args; 
-                                        const { data: dataDni, error: errDni } = await _supabase.from('BASE DITO').select('*').eq('DNI', val);
-                                        const { data: dataNum, error: errNum } = await _supabase.from('BASE DITO').select('*').eq('NUMERO', val);
+                                        const { data: dataDni, error: errDni } = await _supabase.from('BASE DITO').select('*').or(`DNI.eq.${val},NUMERO.eq.${val}`);
+                                        if (errDni) throw errDni;
                                         
-                                        let combined = [...(dataDni || []), ...(dataNum || [])];
-                                        // Eliminar duplicados por id
-                                        let unique = Array.from(new Set(combined.map(a => a.id || a.ID)))
-                                            .map(id => combined.find(a => (a.id || a.ID) === id));
-
-                                        let mapData = unique.map(d => ({dni: d.DNI, nombre: d.NOMBRE_CLIENTE, celular: d.NUMERO, fv: d.FV, ciclo: d.CICLO, carruselero: d.CARRUSELERO})); 
+                                        let mapData = (dataDni || []).map(d => ({dni: d.DNI, nombre: d.NOMBRE_CLIENTE, celular: d.NUMERO, fv: d.FV, ciclo: d.CICLO, carruselero: d.CARRUSELERO})); 
                                         result = { success: true, data: mapData };
                                     }
                                     
@@ -1034,7 +1042,13 @@
             const uRol = document.getElementById('userRol'); if(uRol && currentUser) uRol.textContent = currentUser.rol;
             const vAsesor = document.getElementById('ventaAsesor'); if(vAsesor && currentUser) vAsesor.value = currentUser.nombre;
             
-            // NO SOBREESCRIBIR EL FILTRO DE MES EN VENTAS PARA QUE CARGUE TODO
+            // Asignar el mes de gestión configurado al selector de filtro en Gestión de Ventas
+            let conf = getConfig();
+            const elMes = document.getElementById('filtroMes'); 
+            if(elMes && conf.mesGestion) { 
+                elMes.value = conf.mesGestion; 
+            }
+            
             document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.add('hidden'); });
 
             if (currentUser && currentUser.rol === 'CARRUSELERO') {
@@ -1064,6 +1078,7 @@
                     const m = document.getElementById('confMeta'); if(m) m.value = res.metaCuota;
                     const d = document.getElementById('confDias'); if(d) d.value = res.diasMes;
                     const b = document.getElementById('confBono'); if(b) b.value = res.bonoMeta;
+                    const mg = document.getElementById('confMesGestion'); if(mg && res.mesGestion) mg.value = res.mesGestion;
                 }
             }).obtenerConfiguracion();
         }
@@ -1147,7 +1162,6 @@
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
             
-            // Actualización automática cada 9 segundos
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
                 if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
@@ -1208,7 +1222,7 @@
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        // ORDEN: DNI, CLIENTE, NUMERO (ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, GESTIONADO (CHECK), CARRUSELERO, VENDEDOR
+                        // ORDEN: DNI, CLIENTE, NUMERO, FV, MESES, CICLO, ESTADO, HORA, OBS, GESTIONADO (CHECK), CARRUSELERO, VENDEDOR
                         htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '">' +
                             '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
                             '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
@@ -1354,6 +1368,19 @@
             let blob = new Blob([headers + ejemplo], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); let url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "plantilla_base_dito.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
+        function ejecutarBusquedaCliente() {
+            const inputEl = document.getElementById('inputBusquedaCliente'); let val = inputEl.value.trim(); if(!val) { showToast('Ingrese un DNI o Celular'); return; }
+            if (val.length > 0 && val.length < 8 && !isNaN(val)) { val = val.padStart(8, '0'); inputEl.value = val; }
+            for(let i=1; i<=3; i++) { document.getElementById('resBusqCel'+i).textContent = '-'; document.getElementById('resBusqFv'+i).textContent = '-'; document.getElementById('resBusqCiclo'+i).textContent = '-'; document.getElementById('resBusqCarr'+i).textContent = '-'; } document.getElementById('resBusqDni').textContent = '-'; document.getElementById('resBusqNombre').textContent = '-'; showToast('Buscando...');
+            google.script.run.withSuccessHandler(function(res) {
+                if(res.success && res.data.length > 0) {
+                    showToast('¡Cliente encontrado!'); const d = res.data; document.getElementById('resBusqDni').textContent = d[0].dni || '-'; document.getElementById('resBusqNombre').textContent = d[0].nombre || '-';
+                    let limit = Math.min(d.length, 3);
+                    for(let i=0; i<limit; i++) { let idx = i + 1; document.getElementById('resBusqCel'+idx).textContent = d[i].celular || '-'; document.getElementById('resBusqFv'+idx).textContent = d[i].fv || '-'; document.getElementById('resBusqCiclo'+idx).textContent = d[i].ciclo || '-'; document.getElementById('resBusqCarr'+idx).textContent = d[i].carruselero || '-'; }
+                } else { showToast('No se encontraron registros para este cliente'); }
+            }).withFailureHandler(function(err){ showToast('Error: ' + err.message); }).buscarClienteBase(val);
+        }
+
         function descargarPlantilla() {
             let headers = "ANI;N_PORTAR;ASESOR;CLIENTE;DOC;ESTADO;SUB_ESTADO;FECHA_ACTIVACION;OPERADOR;TIPO_VENTA;PAQUETE;CF;REGION;CARRUSELERO;CAMPANA;OBSERVACIONES;REVISION;SEC;FORMA_ENTREGA\n";
             let ejemplo = "987654321;999888777;SUNNY;Carlos Perez;12345678;P.ENTREGA;ASIGNADO CADENA;;MOVISTAR;Portabilidad;Chip;79.90;LIMA;HUMBERTO;REGULAR;Ejemplo obs;EN REPORTE;SEC-001;DELIVERY\n";
@@ -1389,6 +1416,13 @@
         }
 
         function cambiarPaginaBase(page) { currentPageBase = page; renderBaseTablePaginated(); }
+
+        // EXponer explícitamente al ámbito global para evitar errores
+        window.loadVentas = loadVentas;
+        window.loadBaseVentas = loadBaseVentas;
+        window.ejecutarBusquedaCliente = ejecutarBusquedaCliente;
+        window.aplicarFiltros = aplicarFiltros;
+        window.aplicarFiltrosBase = aplicarFiltrosBase;
     </script>
 </body>
 </html>
