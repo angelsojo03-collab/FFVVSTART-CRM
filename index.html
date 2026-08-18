@@ -254,21 +254,21 @@
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left border-collapse whitespace-nowrap text-xs md:text-sm min-w-max">
                                 <thead class="bg-slate-100 text-slate-500 border-b border-slate-200 uppercase tracking-widest font-black">
-    <tr>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px]" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i></th>
-        <th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th>
-    </tr>
-</thead>
+                                    <tr>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px]" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th>
+                                    </tr>
+                                </thead>
                                 <tbody id="tablaCuerpoBase" class="divide-y divide-slate-100 bg-white font-semibold w-full"></tbody>
                             </table>
                         </div>
@@ -397,8 +397,8 @@
                 bonoMeta: 7000, 
                 globalSort: [
                     { col: 'NOMBRE_CLIENTE', dir: 'asc' },  // 1. Cliente A-Z
-                    { col: 'MESES', dir: 'desc' },          // 2. Meses de mayor a menor (Z-A)
-                    { col: 'CICLO', dir: 'asc' }            // 3. Ciclo de menor a mayor (A-Z)
+                    { col: 'MESES', dir: 'desc' },          // 2. Meses de mayor a menor
+                    { col: 'CICLO', dir: 'asc' }            // 3. Ciclo de menor a mayor
                 ] 
             }; 
         }
@@ -540,36 +540,52 @@
                                     }
                                     
                                     else if (prop === 'obtenerConfiguracion') {
-                                        const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                        let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
-                                        if (data && data.length > 0 && data[0].CONFIG) { try { c = { ...c, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
-                                        result = c;
+                                        try {
+                                            const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [
+                                                { col: 'NOMBRE_CLIENTE', dir: 'asc' },
+                                                { col: 'MESES', dir: 'desc' },
+                                                { col: 'CICLO', dir: 'asc' }
+                                            ] };
+                                            if (data && data.length > 0 && data[0].CONFIG) { try { c = { ...c, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
+                                            result = c;
+                                        } catch(err) {
+                                            result = getConfig();
+                                        }
                                     }
                                     else if (prop === 'guardarConfiguracion') {
                                         const [newConf] = args;
-                                        const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                        let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
-                                        if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
-                                        const merged = { ...curr, ...newConf };
-                                        await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(merged)}).eq('ROL', 'GERENCIA');
+                                        try {
+                                            const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
+                                            if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
+                                            const merged = { ...curr, ...newConf };
+                                            await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(merged)}).eq('ROL', 'GERENCIA');
+                                        } catch(err) {
+                                            console.warn("Columna CONFIG no disponible en Supabase.");
+                                        }
                                         result = { success: true };
                                     }
                                     else if (prop === 'guardarVistaGlobal') {
                                         const [vista] = args;
-                                        const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                        let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
-                                        if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
-                                        curr.vistaDito = vista;
-                                        await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(curr)}).eq('ROL', 'GERENCIA');
+                                        try {
+                                            const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
+                                            if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
+                                            curr.vistaDito = vista;
+                                            await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(curr)}).eq('ROL', 'GERENCIA');
+                                        } catch(err){}
                                         result = { success: true };
                                     }
                                     
                                     else if (prop === 'getDashboardData') {
                                         const [rol, nombre] = args;
                                         
-                                        const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
-                                        if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                        try {
+                                            const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                        } catch(e){}
 
                                         const ventas = await fetchAllRecords('BASE DE VENTAS');
                                         const formattedVentas = ventas.map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
@@ -594,7 +610,7 @@
                                             let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
                                             let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
                                             
-                                            // EXCLUYE NO PROCEDE (Solo cuentan sin revisión / vacías o P. REPORTE)
+                                            // EXCLUYE NO PROCEDE
                                             let esValidoParaDashboard = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
 
                                             if (esValidoParaDashboard) { 
@@ -725,9 +741,15 @@
                                     
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
-                                        const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                        let cloudConf = { vistaDito: null, globalSort: [] };
-                                        if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                        let cloudConf = { vistaDito: null, globalSort: [
+                                            { col: 'NOMBRE_CLIENTE', dir: 'asc' },
+                                            { col: 'MESES', dir: 'desc' },
+                                            { col: 'CICLO', dir: 'asc' }
+                                        ] };
+                                        try {
+                                            const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                        } catch(e){}
                                         
                                         const baseV = await fetchAllRecords('BASE DITO'); 
                                         let filtered = baseV.map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
@@ -1162,12 +1184,6 @@
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
-                tb.innerHTML = htmlTemp;
-            } catch(e) { console.error("Error en renderBaseTable:", e); }
-        }
-                tb.innerHTML = htmlTemp;
-            } catch(e) { console.error("Error en renderBaseTable:", e); }
-        }
                 tb.innerHTML = htmlTemp;
             } catch(e) { console.error("Error en renderBaseTable:", e); }
         }
@@ -1712,7 +1728,7 @@
                     } catch(e) { console.error("Fila con error: ", e); }
                 });
                 tb.innerHTML = htmlTemp;
-            } catch(e) { console.error("Error en renderTable:", e); }
+            } catch(e) { console.error("Error en renderBaseTable:", e); }
         }
 
         function changeInlineEstado(id, nuevoEstado) { inlineUpdate(id, 'ESTADO', nuevoEstado); actualizarSubEstados('inlineEst_' + id, 'inlineSub_' + id); showToast('Estado actualizado'); }
