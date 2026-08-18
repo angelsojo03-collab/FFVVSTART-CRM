@@ -1206,20 +1206,14 @@ function aplicarFiltros() {
             const asesorEl = document.getElementById('filtroAsesor'); const asesorFiltro = asesorEl ? asesorEl.value : '';
             const revEl = document.getElementById('filtroRevision'); const revFiltro = revEl ? revEl.value : '';
 
-            // Obtenemos los estados seleccionados de los checkboxes
             const cBoxes = document.querySelectorAll('.chk-estado:checked'); 
             const estadosCheckbox = Array.from(cBoxes).map(cb => cb.value);
             
-            // CORRECCIÓN VISUAL: Actualizamos el texto del botón desplegable de estados dinámicamente
             const lblEstado = document.getElementById('lblEstadoFiltro');
             if (lblEstado) { 
-                if (estadosCheckbox.length === 0) {
-                    lblEstado.textContent = "Todos los Estados"; 
-                } else if (estadosCheckbox.length === 1) {
-                    lblEstado.textContent = estadosCheckbox[0]; 
-                } else {
-                    lblEstado.textContent = estadosCheckbox.length + " Seleccionados"; 
-                }
+                if (estadosCheckbox.length === 0) lblEstado.textContent = "Todos los Estados"; 
+                else if (estadosCheckbox.length === 1) lblEstado.textContent = estadosCheckbox[0]; 
+                else lblEstado.textContent = estadosCheckbox.length + " Seleccionados"; 
             }
 
             let fechaFiltroFormat = '';
@@ -1229,7 +1223,6 @@ function aplicarFiltros() {
             }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
-                // 1. Si hay texto en la barra de búsqueda, tiene prioridad absoluta
                 if (txt !== '') {
                     let cliente = String(v.CLIENTE || '').toLowerCase();
                     let doc = String(v.DOC || '').toLowerCase();
@@ -1240,7 +1233,6 @@ function aplicarFiltros() {
                     return cliente.includes(txt) || doc.includes(txt) || portar.includes(txt) || ani.includes(txt) || sec.includes(txt);
                 }
 
-                // 2. Si no hay texto, filtramos respetando los checkboxes de estados seleccionados
                 let matchEst = true; 
                 if (estadosCheckbox.length > 0) { 
                     matchEst = estadosCheckbox.includes(String(v.ESTADO || '').trim()); 
@@ -1287,8 +1279,7 @@ function aplicarFiltros() {
             
             currentPageVentas = 1;
             renderTablePaginated();
-        }
-            
+        }            
         function renderTablePaginated() {
             const total = ventasFiltradasGlobal.length;
             const totalPages = Math.ceil(total / itemsPerPageVentas) || 1;
