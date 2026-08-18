@@ -389,7 +389,7 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // CONFIGURACIONES GLOBALES POR LOCALSTORAGE
-        function () { return JSON.parse(localStorage.getItem('ffvv_config')) || { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, globalSort: [] }; }
+        function getConfig() { return JSON.parse(localStorage.getItem('ffvv_config')) || { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, globalSort: [] }; }
         function saveConfig(e) { 
             e.preventDefault(); 
             const c = { 
