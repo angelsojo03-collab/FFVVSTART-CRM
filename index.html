@@ -580,8 +580,13 @@
                                             let val = parseFloat(v.CF || 0); 
                                             let tipo = (v.TIPO_VENTA || '').toUpperCase();
                                             let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
+                                            let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
                                             
-                                            if (estadoVenta === 'ENTREGADO') { 
+                                            // REGLA NUEVA: Debe estar ENTREGADO y NO DEBE SER "NO PROCEDE" 
+                                            // (Solo cuentan: sin revisión / vacías, o "P. REPORTE")
+                                            let esValidoParaDashboard = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
+
+                                            if (esValidoParaDashboard) { 
                                                 cfVendido += val; 
                                                 ventasEntregadas++; 
                                                 if(tipo.includes('PORTA')) pPorta++; 
@@ -589,7 +594,7 @@
                                                 else if(tipo.includes('RENO')) pReno++; 
                                             }
                                         });
-
+                                        
                                         let calcReal = calculateComision(cfVendido, pPorta, pAlta, pReno);
                                         let cfProy = cfVendido * factorProy; 
                                         let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
@@ -603,7 +608,14 @@
 
                                         let gCf = 0; let gVent = 0; let aseMap = {}; let carrMap = {}; let regMap = {LIMA:0, NORTE:0, CENTRO:0, SUR:0}; let totalReg = 0; let diasMap = {};
                                         formattedVentas.forEach(v => {
-                                            let val = parseFloat(v.CF || 0); let isEnt = (v.ESTADO === 'ENTREGADO'); let tipo = (v.TIPO_VENTA || '').toUpperCase();
+                                            let val = parseFloat(v.CF || 0); 
+                                            let tipo = (v.TIPO_VENTA || '').toUpperCase();
+                                            let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
+                                            let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
+                                            
+                                            // REGLA NUEVA: Excluir las marcadas como NO PROCEDE en todo el dashboard gerencial
+                                            let isEnt = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
+
                                             if(v.ASESOR) {
                                                 let aK = v.ASESOR.toUpperCase(); if(!aseMap[aK]) aseMap[aK] = {nombre: v.ASESOR, ventas:0, cf:0, pP:0, pA:0, pR:0};
                                                 if(isEnt) { 
@@ -613,6 +625,17 @@
                                                     if(v.FECHA_ACTIVACION) { let fStr = String(v.FECHA_ACTIVACION); let diaStr = fStr.includes('/') ? fStr.split('/')[0] : fStr.split('-')[2]; if(diaStr) { if(!diasMap[diaStr]) diasMap[diaStr] = 0; diasMap[diaStr]++; } }
                                                 }
                                             }
+                                            if(v.CARRUSELERO) {
+                                                let cK = String(v.CARRUSELERO).toUpperCase().trim(); 
+                                                if(cK) {
+                                                    if(!carrMap[cK]) carrMap[cK] = { ventas: 0, cf: 0 };
+                                                    if(isEnt) { 
+                                                        carrMap[cK].ventas++; 
+                                                        carrMap[cK].cf += val; 
+                                                    }
+                                                }
+                                            }
+                                        });
                                             if(v.CARRUSELERO) {
                                                 let cK = String(v.CARRUSELERO).toUpperCase().trim(); 
                                                 if(cK) {
