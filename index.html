@@ -510,11 +510,13 @@
 
         async function fetchAllRecords(table) {
             let all = [];
-            for (let i = 0; i < 100000; i += 1000) {
-                let {data, error} = await _supabase.from(table).select('*').range(i, i+999);
+            try {
+                // Descarga un lote optimizado inicial para agilizar el coworking
+                let {data, error} = await _supabase.from(table).select('*').range(0, 1999);
                 if (error) throw error;
                 if (data && data.length > 0) all.push(...data);
-                if (!data || data.length < 1000) break;
+            } catch(e) {
+                console.error("Error cargando lote optimizado:", e);
             }
             return all;
         }
@@ -1055,7 +1057,7 @@
 
             const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc };
             const tbody = document.getElementById('tablaCuerpoBase');
-            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Base Dito y calculando duplicados...</td></tr>';
+            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Coworking Dito...</td></tr>';
 
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { 
@@ -1066,9 +1068,9 @@
                     }
                     if (!silencioso || txt !== '') { currentPageBase = 1; }
                     renderBaseTablePaginated(); 
-                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Error del servidor al cargar base.</td></tr>'; }
+                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Error al sincronizar base.</td></tr>'; }
             }).withFailureHandler(function(err) {
-                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="14" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
+                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
             }).obtenerBaseFiltrada(filtros);
         }
 
@@ -1100,10 +1102,14 @@
         function loadBaseVentas() {
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
+            
+            // Sincronización automática rápida de coworking cada 10 segundos
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
-                if (vistaBase && !vistaBase.classList.contains('view-hidden')) aplicarFiltrosBase(true);
-            }, 300000); 
+                if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
+                    aplicarFiltrosBase(true); // Actualización silenciosa en tiempo real
+                }
+            }, 10000); 
         }
 
         function sortBase(columna) { 
