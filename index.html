@@ -1363,7 +1363,7 @@
         function actualizarDashboardCard(d) {
             if (!d) return;
             const isAdmin = (currentUser.rol === 'GERENCIA' || currentUser.rol === 'SUPERVISOR');
-            let conf = ();
+            let conf = getConfig();
 
             if(isAdmin) {
                 const elMeta = document.getElementById('dashMetaCf'); if(elMeta) elMeta.textContent = 'S/ ' + Number(d.metaGlobal || 20000).toLocaleString('es-PE');
