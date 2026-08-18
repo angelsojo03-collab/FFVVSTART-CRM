@@ -1196,7 +1196,7 @@
         function addLinea() { const container = document.getElementById('lineasContainer'); if(!container) return; const div = document.createElement('div'); div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 linea-row'; div.innerHTML = '<div><label class="block text-[10px] text-slate-600 font-bold">N° a Portar</label><input type="text" name="n_portar" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: 999888777" required></div><div><label class="block text-[10px] text-slate-600 font-bold">N° SEC</label><input type="text" name="sec" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: SEC-123"></div><div><label class="block text-[10px] text-slate-600 font-bold">Tipo de Venta</label><select name="tipoVenta" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" onchange="actualizarOpRow(this)"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovación</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Operador</label><select name="operador" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Plan (CF S/)</label><select name="cf" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-green-700 text-sm font-bold focus:outline-none focus:border-red-600"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Campaña</label><select name="campana" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div><div class="col-span-1 md:col-span-6 flex justify-end"><button type="button" onclick="this.closest(\'.linea-row\').remove()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded text-xs transition">Eliminar Línea</button></div>'; container.appendChild(div); }
 
         function aplicarFiltros() {
-            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.trim() : '';
+            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.trim().toLowerCase() : '';
             const tipoEl = document.getElementById('filtroTipo'); const tipo = tipoEl ? tipoEl.value : '';
             const mesEl = document.getElementById('filtroMes'); const mes = mesEl ? mesEl.value : '';
             const fechaEl = document.getElementById('filtroFechaAct'); const fechaFiltro = fechaEl ? fechaEl.value : '';
@@ -1212,20 +1212,22 @@
             if (fechaFiltro) { let partes = fechaFiltro.split('-'); fechaFiltroFormat = partes[2] + '/' + partes[1] + '/' + partes[0]; }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
-                const t = txt.toLowerCase();
-                const matchTxt = !t || (
-                    String(v.CLIENTE || '').toLowerCase().includes(t) || 
-                    String(v.DOC || '').toLowerCase().includes(t) || 
-                    String(v.N_PORTAR || '').toLowerCase().includes(t) || 
-                    String(v.ANI || '').toLowerCase().includes(t) || 
-                    String(v.SEC || '').toLowerCase().includes(t)
-                );
-
-                // REGLA INTELIGENTE: Si el usuario escribe algo en el buscador, priorizamos encontrarlo ignorando los filtros estrictos de estado
-                if (t.length > 0) {
-                    return matchTxt;
+                // 1. EVALUACIÓN DE TEXTO (DNI, Nombre, ANI, SEC, etc.)
+                let matchTxt = true;
+                if (txt !== '') {
+                    matchTxt = (
+                        String(v.CLIENTE || '').toLowerCase().includes(txt) || 
+                        String(v.DOC || '').toLowerCase().includes(txt) || 
+                        String(v.N_PORTAR || '').toLowerCase().includes(txt) || 
+                        String(v.ANI || '').toLowerCase().includes(txt) || 
+                        String(v.SEC || '').toLowerCase().includes(txt)
+                    );
+                    // Si hay texto de búsqueda y coincide, filtramos estrictamente por este criterio de inmediato
+                    if (matchTxt) return true;
+                    else return false; 
                 }
-                
+
+                // 2. FILTROS ESTÁNDAR (Cuando el buscador de texto está vacío)
                 let matchEst = true; 
                 if (estadosCheckbox.length > 0) { 
                     matchEst = estadosCheckbox.includes(v.ESTADO); 
@@ -1247,9 +1249,7 @@
                 let fAct = String(v.FECHA_ACTIVACION || '').trim();
                 let matchMes = true; 
                 if (mes) { 
-                    if (fAct === '') { 
-                        matchMes = true; 
-                    } else { 
+                    if (fAct !== '') { 
                         let parts = fAct.split('/'); 
                         let mesVenta = parts.length >= 2 ? parts[1] : ''; 
                         matchMes = (mesVenta === mes); 
@@ -1261,10 +1261,10 @@
                     matchFecha = (fAct === fechaFiltroFormat); 
                 }
                 
-                return matchTxt && matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
+                return matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
             });
             
-            // ORDENAMIENTO ESTRICTO: Las ventas más nuevas siempre arriba
+            // ORDENAMIENTO ESTRICTO: Las ventas más nuevas (ID mayor) siempre arriba
             ventasFiltradasGlobal.sort(function(a, b) {
                 let idA = String(a.ID || a.id || '');
                 let idB = String(b.ID || b.id || '');
