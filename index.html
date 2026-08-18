@@ -168,7 +168,7 @@
                 </div>
 
                 <!-- ================= VISTA: GESTIÓN DE VENTAS CRM =============== -->
-                <div id="ventasList" class="content-view space-y-6 w-full">
+                <div id="ventasList" class="content-view space-y-6 view-hidden w-full">
                     <div id="panelReales" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-2">
                         <div class="bg-white border-t-4 border-blue-500 p-4 md:p-5 rounded-xl shadow-md"><p class="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">Meta Cuota</p><p class="text-xl md:text-2xl lg:text-3xl font-black text-blue-600 truncate" id="dashMetaCf">S/ 0</p></div>
                         <div class="bg-white border-t-4 border-green-500 p-4 md:p-5 rounded-xl shadow-md"><p class="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">CF Vendido</p><p class="text-xl md:text-2xl lg:text-3xl font-black text-green-600 truncate" id="dashCfVendido">S/ 0.00</p></div>
@@ -259,7 +259,7 @@
                     </div>
                     <div class="border border-slate-200 rounded-2xl bg-white shadow-md overflow-hidden flex flex-col w-full">
                         <div class="overflow-x-auto w-full">
-                            <table class="w-full text-left border-collapse whitespace-nowrap text-xs md:text-sm min-w-max">
+                            <table class="w-full text-left border-collapse min-w-max">
                                 <thead class="bg-slate-100 text-slate-500 border-b border-slate-200 uppercase tracking-widest font-black">
                                     <tr>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th>
@@ -271,9 +271,9 @@
                                         <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-32 text-center" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody id="tablaCuerpoBase" class="divide-y divide-slate-100 bg-white font-semibold w-full"></tbody>
@@ -397,11 +397,6 @@
         const SUPABASE_KEY = 'sb_publishable_1co4uYVkYwVPClzHxSSYCw_JVLBTU5k';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let userIsInteracting = false;
-        document.addEventListener('mousedown', () => { userIsInteracting = true; });
-        document.addEventListener('mouseup', () => { setTimeout(() => { userIsInteracting = false; }, 3000); });
-        document.addEventListener('keydown', () => { userIsInteracting = true; setTimeout(() => { userIsInteracting = false; }, 3000); });
-
         function getConfig() { 
             return JSON.parse(localStorage.getItem('ffvv_config')) || { 
                 metaCuota: 4000, 
@@ -523,11 +518,12 @@
 
         async function fetchAllRecords(table) {
             let all = [];
-            try {
-                let {data, error} = await _supabase.from(table).select('*').range(0, 1999);
+            for (let i = 0; i < 50000; i += 1000) {
+                let {data, error} = await _supabase.from(table).select('*').range(i, i+999);
                 if (error) throw error;
                 if (data && data.length > 0) all.push(...data);
-            } catch(e) {}
+                if (!data || data.length < 1000) break;
+            }
             return all;
         }
 
@@ -741,7 +737,7 @@
                                         const [id] = args; let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
-                                    // COWORK BASE DITO - DESCARGA TOTAL PAGINADA POR BLOQUES HASTA 35,000 REGISTROS FILTRADOS POR CICLO
+                                    // COWORK BASE DITO - DESCARGA TOTAL PAGINADA POR BLOQUES HASTA 50,000 REGISTROS FILTRADOS POR CICLO
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
                                         let cloudConf = { cicloDefault: '20', vistaDito: null, globalSort: [
@@ -766,7 +762,7 @@
 
                                         let allBaseV = [];
                                         let step = 1000;
-                                        for (let i = 0; i < 35000; i += step) {
+                                        for (let i = 0; i < 50000; i += step) {
                                             let query = _supabase.from('BASE DITO').select('*');
                                             
                                             if (ciclos.length === 1) {
@@ -850,9 +846,19 @@
                                         const [id, campo, valor] = args; let obj = {}; obj[campo] = valor; let { error } = await _supabase.from('BASE DITO').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DITO').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
+                                    // BÚSQUEDA POR DNI O CELULAR
                                     else if (prop === 'buscarClienteBase') {
-                                        const [val] = args; const { data, error } = await _supabase.from('BASE DITO').select('*').eq('DNI', val); if (error) throw error;
-                                        let mapData = data.map(d => ({dni: d.DNI, nombre: d.NOMBRE_CLIENTE, celular: d.NUMERO, fv: d.FV, ciclo: d.CICLO, carruselero: d.CARRUSELERO})); result = { success: true, data: mapData };
+                                        const [val] = args; 
+                                        const { data: dataDni, error: errDni } = await _supabase.from('BASE DITO').select('*').eq('DNI', val);
+                                        const { data: dataNum, error: errNum } = await _supabase.from('BASE DITO').select('*').eq('NUMERO', val);
+                                        
+                                        let combined = [...(dataDni || []), ...(dataNum || [])];
+                                        // Eliminar duplicados por id
+                                        let unique = Array.from(new Set(combined.map(a => a.id || a.ID)))
+                                            .map(id => combined.find(a => (a.id || a.ID) === id));
+
+                                        let mapData = unique.map(d => ({dni: d.DNI, nombre: d.NOMBRE_CLIENTE, celular: d.NUMERO, fv: d.FV, ciclo: d.CICLO, carruselero: d.CARRUSELERO})); 
+                                        result = { success: true, data: mapData };
                                     }
                                     
                                     else if (prop === 'procesarCargaMasiva') {
@@ -896,7 +902,7 @@
             const loginForm = document.getElementById('loginForm'); if(loginForm) { loginForm.onsubmit = function(e) { e.preventDefault(); google.script.run.withSuccessHandler(function(res) { if(res && res.success) { localStorage.setItem('ffvv_user', JSON.stringify(res.user)); currentUser = res.user; initApp(); } else { const errEl = document.getElementById('loginError'); if(errEl) { errEl.textContent = res ? res.message : 'Error desconocido'; errEl.classList.remove('hidden'); } } }).loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); }; }
             const logoutBtn = document.getElementById('logoutBtn'); if(logoutBtn) { logoutBtn.onclick = function() { localStorage.removeItem('ffvv_user'); location.reload(); }; }
             
-            // BOTÓN TOGGLE LATERAL FIJO Y SEGURO
+            // SIDEBAR TOGGLE FIJO
             const sidebarToggle = document.getElementById('sidebarToggle'); 
             if(sidebarToggle) { 
                 sidebarToggle.onclick = function() { 
@@ -1027,9 +1033,8 @@
             const uName = document.getElementById('userName'); if(uName && currentUser) uName.textContent = currentUser.nombre;
             const uRol = document.getElementById('userRol'); if(uRol && currentUser) uRol.textContent = currentUser.rol;
             const vAsesor = document.getElementById('ventaAsesor'); if(vAsesor && currentUser) vAsesor.value = currentUser.nombre;
-            const d = new Date(); const currentMonth = String(d.getMonth() + 1).padStart(2, '0');
-            const elMes = document.getElementById('filtroMes'); if(elMes) elMes.value = currentMonth;
             
+            // NO SOBREESCRIBIR EL FILTRO DE MES EN VENTAS PARA QUE CARGUE TODO
             document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.add('hidden'); });
 
             if (currentUser && currentUser.rol === 'CARRUSELERO') {
@@ -1142,7 +1147,7 @@
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
             
-            // Actualización segura cada 9 segundos
+            // Actualización automática cada 9 segundos
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
                 if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
@@ -1203,7 +1208,7 @@
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        // Columnas ajustadas: Meses, Ciclo y Estado más compactos
+                        // ORDEN: DNI, CLIENTE, NUMERO (ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, GESTIONADO (CHECK), CARRUSELERO, VENDEDOR
                         htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '">' +
                             '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
                             '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
@@ -1214,9 +1219,9 @@
                             '<td class="px-2 py-2 w-32"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit font-black rounded text-xs \' + (this.value ? \'opt-\'+this.value.replace(/\\s+/g, \'\') : \'bg-transparent text-slate-800\');" class="inline-edit font-black rounded text-xs ' + selectEstadoClass + '" ' + blockGestion + '>' + htmlEstado + '</select></td>' +
                             '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-20 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-transparent" ' + blockGestion + '></td>' +
+                            '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit bg-transparent text-xs \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'\')));" class="inline-edit bg-transparent text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
                             '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-transparent text-xs" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
-                            '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
@@ -1347,19 +1352,6 @@
             let headers = "VENDEDOR;DNI;NOMBRE_CLIENTE;FV;MESES;OPERACION;SISACT;ESTADO;HORA;OBS;GESTIONADO;CARRUSELERO;CICLO;NUMERO;MES;OPERADOR;FECHA_OPSITEL\n";
             let ejemplo = "SUNNY;12345678;JUAN PEREZ;15/04/2026;3;PORTA;APROBADO;VENTA;10:00;obs prueba;FALSE;HUMBERTO;17;999888777;abril;CLARO;15/04/2026\n";
             let blob = new Blob([headers + ejemplo], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); let url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "plantilla_base_dito.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        }
-
-        function ejecutarBusquedaCliente() {
-            const inputEl = document.getElementById('inputBusquedaCliente'); let val = inputEl.value.trim(); if(!val) { showToast('Ingrese un DNI o Celular'); return; }
-            if (val.length > 0 && val.length < 8 && !isNaN(val)) { val = val.padStart(8, '0'); inputEl.value = val; }
-            for(let i=1; i<=3; i++) { document.getElementById('resBusqCel'+i).textContent = '-'; document.getElementById('resBusqFv'+i).textContent = '-'; document.getElementById('resBusqCiclo'+i).textContent = '-'; document.getElementById('resBusqCarr'+i).textContent = '-'; } document.getElementById('resBusqDni').textContent = '-'; document.getElementById('resBusqNombre').textContent = '-'; showToast('Buscando...');
-            google.script.run.withSuccessHandler(function(res) {
-                if(res.success && res.data.length > 0) {
-                    showToast('¡Cliente encontrado!'); const d = res.data; document.getElementById('resBusqDni').textContent = d[0].dni || '-'; document.getElementById('resBusqNombre').textContent = d[0].nombre || '-';
-                    let limit = Math.min(d.length, 3);
-                    for(let i=0; i<limit; i++) { let idx = i + 1; document.getElementById('resBusqCel'+idx).textContent = d[i].celular || '-'; document.getElementById('resBusqFv'+idx).textContent = d[i].fv || '-'; document.getElementById('resBusqCiclo'+idx).textContent = d[i].ciclo || '-'; document.getElementById('resBusqCarr'+idx).textContent = d[i].carruselero || '-'; }
-                } else { showToast('No se encontraron registros para este cliente'); }
-            }).withFailureHandler(function(err){ showToast('Error: ' + err.message); }).buscarClienteBase(val);
         }
 
         function descargarPlantilla() {
