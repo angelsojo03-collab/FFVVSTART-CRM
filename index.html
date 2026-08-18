@@ -920,10 +920,19 @@
                                     
                                     // BÚSQUEDA ROBUSTA EN BASE DITO POR DNI O CELULAR
                                     else if (prop === 'buscarClienteBase') {
-                                        const [val] = args; 
+                                        const [valRaw] = args; 
+                                        const val = String(valRaw || '').trim();
+                                        if (!val) { result = { success: true, data: [] }; if (target.successCb) target.successCb(result); return; }
+
                                         const queryStr = `DNI.eq.${val},NUMERO.eq.${val}`;
-                                        const { data, error } = await _supabase.from('BASE DITO').select('*').or(queryStr);
+                                        let { data, error } = await _supabase.from('BASE DITO').select('*').or(queryStr);
                                         if (error) throw error;
+
+                                        // Si no hay coincidencia exacta, se intenta una búsqueda por texto parcial (columnas tipo texto)
+                                        if (!data || data.length === 0) {
+                                            const { data: dataFallback, error: errorFallback } = await _supabase.from('BASE DITO').select('*').or(`DNI.ilike.%${val}%,NUMERO.ilike.%${val}%`);
+                                            if (!errorFallback && dataFallback) data = dataFallback;
+                                        }
                                         
                                         let mapData = (data || []).map(d => ({
                                             dni: d.DNI, 
@@ -1067,6 +1076,63 @@
             }).withFailureHandler(function(err){ showToast('Error: ' + err.message); }).buscarClienteBase(val);
         }
 
+        // ================= AUTOCOMPLETADO DNI (REGISTRAR VENTA) =================
+        function autoFillDni() {
+            const dniInput = document.getElementById('formDoc');
+            const val = dniInput ? dniInput.value.trim() : '';
+            if (!val) { showToast('Ingrese un DNI o Celular para buscar'); return; }
+
+            showToast('Buscando cliente...');
+            google.script.run.withSuccessHandler(function(res) {
+                if (res && res.success && res.data && res.data.length > 0) {
+                    const d = res.data[0];
+                    const clienteInput = document.getElementById('formCliente');
+                    if (clienteInput && d.nombre) clienteInput.value = d.nombre;
+
+                    const carruseleroSelect = document.getElementById('formCarruselero');
+                    if (carruseleroSelect && d.carruselero) {
+                        const opt = Array.from(carruseleroSelect.options).find(function(o) { return o.value.toUpperCase() === String(d.carruselero).toUpperCase(); });
+                        if (opt) carruseleroSelect.value = opt.value;
+                    }
+                    showToast('¡Cliente encontrado y autocompletado!');
+                } else {
+                    showToast('No se encontraron registros para este DNI/Celular');
+                }
+            }).withFailureHandler(function(err) {
+                showToast('Error al buscar cliente: ' + err.message);
+            }).buscarClienteBase(val);
+        }
+
+        // ================= LÍNEAS DINÁMICAS (REGISTRAR VENTA) =================
+        let lineaCounter = 0;
+        function addLinea() {
+            const container = document.getElementById('lineasContainer');
+            if (!container) return null;
+
+            lineaCounter++;
+            const row = document.createElement('div');
+            row.className = 'linea-row grid grid-cols-1 md:grid-cols-6 gap-4 bg-slate-50 border border-slate-200 rounded-lg p-4';
+            row.dataset.lineaId = lineaCounter;
+            row.innerHTML =
+                '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">N&deg; Portar</label><input type="text" name="n_portar" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"></div>' +
+                '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">SEC</label><input type="text" name="sec" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"></div>' +
+                '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Tipo Venta</label><select name="tipoVenta" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovaci&oacute;n</option></select></div>' +
+                '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Operador</label><select name="operador" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div>' +
+                '<div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Plan (CF)</label><select name="cf" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-green-700 font-black focus:outline-none focus:border-red-600 shadow-inner"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90">79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div>' +
+                '<div class="flex items-end gap-2">' +
+                    '<div class="flex-1"><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-1">Campa&ntilde;a</label><select name="campana" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-red-600 shadow-inner"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL">DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div>' +
+                    '<button type="button" onclick="eliminarLinea(this)" class="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg shadow-sm" title="Eliminar l\u00ednea"><i class="fas fa-trash"></i></button>' +
+                '</div>';
+
+            container.appendChild(row);
+            return row;
+        }
+
+        function eliminarLinea(btn) {
+            const row = btn.closest('.linea-row');
+            if (row) row.remove();
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             if(typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
             loadConfigUI();
@@ -1178,6 +1244,7 @@
             if(viewId === 'ventasList' || viewId === 'dashGrupalView') loadVentas();
             if(viewId === 'baseVentasView') loadBaseVentas(); 
             if(viewId === 'configView') loadConfigUI();
+            if(viewId === 'newVenta') { const lc = document.getElementById('lineasContainer'); if(lc && lc.children.length === 0) addLinea(); }
             
             if(window.innerWidth < 768) { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.add('sidebar-hidden'); if(mc) mc.classList.remove('md:pl-64'); }
         }
@@ -1846,6 +1913,42 @@
         window.aplicarFiltrosBase = aplicarFiltrosBase;
         window.organizarBaseEstado = organizarBaseEstado;
         window.initResize = initResize;
+
+        // ================= EXPOSICIÓN GLOBAL DE FUNCIONES CRÍTICAS (RENDER / FORM) =================
+        // Se declaran explícitamente en window para evitar ReferenceError al invocarse
+        // desde atributos onclick/onchange del HTML o desde otros bloques del script.
+        window.autoFillDni = autoFillDni;
+        window.addLinea = addLinea;
+        window.eliminarLinea = eliminarLinea;
+        window.renderTable = renderTable;
+        window.renderTablePaginated = renderTablePaginated;
+        window.renderBaseTable = renderBaseTable;
+        window.renderBaseTablePaginated = renderBaseTablePaginated;
+        window.cambiarPagina = cambiarPagina;
+        window.cambiarPaginaBase = cambiarPaginaBase;
+        window.sortBase = sortBase;
+        window.aplicarMultiSort = aplicarMultiSort;
+        window.inlineUpdate = inlineUpdate;
+        window.inlineUpdateBase = inlineUpdateBase;
+        window.inlineUpdateDate = inlineUpdateDate;
+        window.changeInlineEstado = changeInlineEstado;
+        window.openModalEdit = openModalEdit;
+        window.closeModalEdit = closeModalEdit;
+        window.eliminarVenta = eliminarVenta;
+        window.cambiarVista = cambiarVista;
+        window.initApp = initApp;
+        window.calculateClaroCycle = calculateClaroCycle;
+        window.renderMovistarCycles = renderMovistarCycles;
+        window.fijarVistaGlobal = fijarVistaGlobal;
+        window.forzarSincronizacionGeneral = forzarSincronizacionGeneral;
+        window.silentlyRefreshDashboards = silentlyRefreshDashboards;
+        window.actualizarDashboardCard = actualizarDashboardCard;
+        window.renderGerenciaDashboard = renderGerenciaDashboard;
+        window.renderDashGrupal = renderDashGrupal;
+        window.abrirModalWhatsApp = abrirModalWhatsApp;
+        window.closeModalWap = closeModalWap;
+        window.copiarTextoWap = copiarTextoWap;
+        window.formatRangoText = formatRangoText;
     </script>
 </body>
 </html>
