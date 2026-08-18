@@ -254,21 +254,21 @@
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left border-collapse whitespace-nowrap text-xs md:text-sm min-w-max">
                                 <thead class="bg-slate-100 text-slate-500 border-b border-slate-200 uppercase tracking-widest font-black">
-                                    <tr>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px]" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i></th>
-                                    </tr>
-                                </thead>
+    <tr>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px]" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i></th>
+        <th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th>
+    </tr>
+</thead>
                                 <tbody id="tablaCuerpoBase" class="divide-y divide-slate-100 bg-white font-semibold w-full"></tbody>
                             </table>
                         </div>
@@ -1145,22 +1145,26 @@
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
+                        // ORDEN DE COLUMNAS SOLICITADO: DNI, CLIENTE, NUMERO (EN ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, CARRUSELERO, VENDEDOR, GESTIONADO
                         htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '">' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-transparent" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
                             '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
-                            '<td class="px-4 py-2 font-black text-slate-900 max-w-[200px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
+                            '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
+                            '<td class="px-4 py-2 font-mono text-red-600 font-black">' + (v.NUMERO || '') + '</td>' +
                             '<td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td>' +
                             '<td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td>' +
+                            '<td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td>' +
                             '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit font-black rounded \' + (this.value ? \'opt-\'+this.value.replace(/\\s+/g, \'\') : \'bg-transparent text-slate-800\');" class="inline-edit font-black rounded ' + selectEstadoClass + '" ' + blockGestion + '>' + htmlEstado + '</select></td>' +
                             '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-transparent" ' + blockGestion + '></td>' +
-                            '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit bg-transparent \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'\')));" class="inline-edit bg-transparent ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
-                            '<td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td>' +
-                            '<td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-transparent" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
+                            '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
+                tb.innerHTML = htmlTemp;
+            } catch(e) { console.error("Error en renderBaseTable:", e); }
+        }
                 tb.innerHTML = htmlTemp;
             } catch(e) { console.error("Error en renderBaseTable:", e); }
         }
