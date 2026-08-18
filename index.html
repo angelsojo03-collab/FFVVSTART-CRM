@@ -732,105 +732,97 @@
                                     }
                                     
                                     else if (prop === 'obtenerBaseFiltrada') {
-                                        const [f] = args; 
-                                        let cloudConf = { vistaDito: null, globalSort: [
-                                            { col: 'NOMBRE_CLIENTE', dir: 'asc' },
-                                            { col: 'MESES', dir: 'desc' },
-                                            { col: 'CICLO', dir: 'asc' }
-                                        ] };
-                                        try {
-                                            const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
-                                            if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
-                                        } catch(e){}
-                                        
-                                        const baseV = await fetchAllRecords('BASE DITO'); 
-                                        let filtered = baseV.map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
-                                        
-                                        let vGlobal = cloudConf.vistaDito || {};
-                                        let ocultar = vGlobal.ocultarCheck !== undefined ? vGlobal.ocultarCheck : f.ocultarCheck;
-                                        let ciclos = vGlobal.ciclos || f.ciclos || [];
-                                        let meses = vGlobal.meses || f.meses || [];
-                                        
-                                        if (f.texto) { 
-                                            let t = String(f.texto).toLowerCase().trim(); 
-                                            filtered = filtered.filter(v => 
-                                                (String(v.DNI||'')).toLowerCase().includes(t) || 
-                                                (String(v.NOMBRE_CLIENTE||'')).toLowerCase().includes(t) || 
-                                                (String(v.NUMERO||'')).toLowerCase().includes(t)
-                                            ); 
+                                const [f] = args; 
+                                let cloudConf = { vistaDito: null, globalSort: [
+                                    { col: 'NOMBRE_CLIENTE', dir: 'asc' },
+                                    { col: 'MESES', dir: 'desc' },
+                                    { col: 'CICLO', dir: 'asc' }
+                                ] };
+                                try {
+                                    const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                    if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                } catch(e){}
+                                
+                                let vGlobal = cloudConf.vistaDito || {};
+                                let ocultar = vGlobal.ocultarCheck !== undefined ? vGlobal.ocultarCheck : f.ocultarCheck;
+                                let ciclos = vGlobal.ciclos || f.ciclos || [];
+                                let meses = vGlobal.meses || f.meses || [];
+
+                                // CONSULTA DIRECTA OPTIMIZADA A SUPABASE FILTRANDO POR CICLO SI ESTÁ SELECCIONADO
+                                let query = _supabase.from('BASE DITO').select('*');
+                                
+                                if (ciclos.length === 1) {
+                                    // Si hay un ciclo exacto seleccionado, traemos directo de la BD ese ciclo filtrado (Súper rápido y sin límite ciego)
+                                    query = query.eq('CICLO', parseInt(ciclos[0]));
+                                } else if (ciclos.length > 1) {
+                                    query = query.in('CICLO', ciclos.map(c => parseInt(c)));
+                                }
+
+                                let { data: baseV, error } = await query.range(0, 1999);
+                                if (error) throw error;
+
+                                let filtered = (baseV || []).map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
+                                
+                                if (f.texto) { 
+                                    let t = String(f.texto).toLowerCase().trim(); 
+                                    filtered = filtered.filter(v => 
+                                        (String(v.DNI||'')).toLowerCase().includes(t) || 
+                                        (String(v.NOMBRE_CLIENTE||'')).toLowerCase().includes(t) || 
+                                        (String(v.NUMERO||'')).toLowerCase().includes(t)
+                                    ); 
+                                }
+                                
+                                if (ocultar) { filtered = filtered.filter(v => String(v.GESTIONADO).toUpperCase() !== 'TRUE'); }
+                                if (meses.length > 0) { filtered = filtered.filter(v => meses.includes(String(v.MES).toLowerCase())); }
+                                
+                                let dniMap = {};
+                                filtered.forEach(v => { 
+                                    if(!v.DNI || String(v.DNI).trim() === '') return; 
+                                    let dniS = String(v.DNI).trim(); 
+                                    if(!dniMap[dniS]) dniMap[dniS] = new Set(); 
+                                    if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO).trim()); 
+                                });
+                                filtered.forEach(v => { 
+                                    if(v.DNI && String(v.DNI).trim() !== '' && dniMap[String(v.DNI).trim()] && dniMap[String(v.DNI).trim()].size > 1) { 
+                                        v.isDuplicate = true; 
+                                    } else { v.isDuplicate = false; } 
+                                });
+
+                                let globalSort = cloudConf.globalSort || [];
+                                let finalSortConfigs = [];
+
+                                if (globalSort.length > 0) {
+                                    finalSortConfigs = globalSort;
+                                } else if (f.sortCol) {
+                                    finalSortConfigs = [{col: f.sortCol, dir: f.sortAsc ? 'asc' : 'desc'}];
+                                }
+
+                                if (finalSortConfigs.length > 0) {
+                                    filtered.sort((a,b) => {
+                                        for(let i=0; i<finalSortConfigs.length; i++) {
+                                            let col = finalSortConfigs[i].col; let dir = finalSortConfigs[i].dir === 'asc' ? 1 : -1;
+                                            let v1 = a[col]; let v2 = b[col];
+                                            
+                                            if (v1 === null || v1 === undefined) v1 = ''; 
+                                            if (v2 === null || v2 === undefined) v2 = '';
+                                            v1 = String(v1).trim(); v2 = String(v2).trim();
+
+                                            if (v1 === '' && v2 !== '') return 1;
+                                            if (v1 !== '' && v2 === '') return -1;
+                                            if (v1 === '' && v2 === '') continue;
+
+                                            if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); } 
+                                            else { v1 = v1.toLowerCase(); v2 = v2.toLowerCase(); }
+                                            
+                                            if (v1 < v2) return -1 * dir; 
+                                            if (v1 > v2) return 1 * dir;
                                         }
-                                        
-                                        if (ocultar) { filtered = filtered.filter(v => String(v.GESTIONADO).toUpperCase() !== 'TRUE'); }
-                                        if (ciclos.length > 0) { filtered = filtered.filter(v => ciclos.includes(String(v.CICLO))); }
-                                        if (meses.length > 0) { filtered = filtered.filter(v => meses.includes(String(v.MES).toLowerCase())); }
-                                        
-                                        let dniMap = {};
-                                        filtered.forEach(v => { 
-                                            if(!v.DNI || String(v.DNI).trim() === '') return; 
-                                            let dniS = String(v.DNI).trim(); 
-                                            if(!dniMap[dniS]) dniMap[dniS] = new Set(); 
-                                            if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO).trim()); 
-                                        });
-                                        filtered.forEach(v => { 
-                                            if(v.DNI && String(v.DNI).trim() !== '' && dniMap[String(v.DNI).trim()] && dniMap[String(v.DNI).trim()].size > 1) { 
-                                                v.isDuplicate = true; 
-                                            } else { v.isDuplicate = false; } 
-                                        });
-
-                                        let globalSort = cloudConf.globalSort || [];
-                                        let finalSortConfigs = [];
-
-                                        if (globalSort.length > 0) {
-                                            finalSortConfigs = globalSort;
-                                        } else if (f.sortCol) {
-                                            finalSortConfigs = [{col: f.sortCol, dir: f.sortAsc ? 'asc' : 'desc'}];
-                                        }
-
-                                        if (finalSortConfigs.length > 0) {
-                                            filtered.sort((a,b) => {
-                                                for(let i=0; i<finalSortConfigs.length; i++) {
-                                                    let col = finalSortConfigs[i].col; let dir = finalSortConfigs[i].dir === 'asc' ? 1 : -1;
-                                                    let v1 = a[col]; let v2 = b[col];
-                                                    
-                                                    if (v1 === null || v1 === undefined) v1 = ''; 
-                                                    if (v2 === null || v2 === undefined) v2 = '';
-                                                    v1 = String(v1).trim(); v2 = String(v2).trim();
-
-                                                    if (v1 === '' && v2 !== '') return 1;
-                                                    if (v1 !== '' && v2 === '') return -1;
-                                                    if (v1 === '' && v2 === '') continue;
-
-                                                    if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); } 
-                                                    else { v1 = v1.toLowerCase(); v2 = v2.toLowerCase(); }
-                                                    
-                                                    if (v1 < v2) return -1 * dir; 
-                                                    if (v1 > v2) return 1 * dir;
-                                                }
-                                                return 0;
-                                            });
-                                        } else { 
-                                            filtered.sort((a,b) => {
-                                                let n1 = String(a.NOMBRE_CLIENTE||'').trim().toLowerCase(); 
-                                                let n2 = String(b.NOMBRE_CLIENTE||'').trim().toLowerCase();
-                                                if (n1 === '' && n2 !== '') return 1;
-                                                if (n1 !== '' && n2 === '') return -1;
-                                                if (n1 !== n2) return n1 < n2 ? -1 : 1;
-                                                
-                                                let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
-                                                if(m1 !== m2) return m1 > m2 ? -1 : 1; 
-                                                
-                                                let e1 = String(a.ESTADO||'').trim().toLowerCase();
-                                                let e2 = String(b.ESTADO||'').trim().toLowerCase();
-                                                if (e1 === '' && e2 !== '') return 1;
-                                                if (e1 !== '' && e2 === '') return -1;
-                                                if (e1 !== e2) return e1 < e2 ? -1 : 1;
-
-                                                return 0;
-                                            });
-                                        }
-                                        
-                                        result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal }; 
-                                    }
+                                        return 0;
+                                    });
+                                }
+                                
+                                result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal }; 
+                            }
                                     
                                     else if (prop === 'updateBaseVentasInline') {
                                         const [id, campo, valor] = args; let obj = {}; obj[campo] = valor; let { error } = await _supabase.from('BASE DITO').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DITO').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
