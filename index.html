@@ -1145,7 +1145,7 @@
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        // ORDEN DE COLUMNAS SOLICITADO: DNI, CLIENTE, NUMERO (EN ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, CARRUSELERO, VENDEDOR, GESTIONADO
+                        // ORDEN SOLICITADO: DNI, CLIENTE, NUMERO (ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, CARRUSELERO, VENDEDOR, GESTIONADO
                         htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '">' +
                             '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
                             '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
@@ -1162,6 +1162,9 @@
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
+                tb.innerHTML = htmlTemp;
+            } catch(e) { console.error("Error en renderBaseTable:", e); }
+        }
                 tb.innerHTML = htmlTemp;
             } catch(e) { console.error("Error en renderBaseTable:", e); }
         }
