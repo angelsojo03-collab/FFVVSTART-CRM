@@ -15,29 +15,21 @@
         .opt-INFORMADO { background-color: #0891b2 !important; color: white !important; } .opt-DNC { background-color: #dc2626 !important; color: white !important; } .opt-NOCONTESTA { background-color: #ea580c !important; color: white !important; } .opt-NOINTERESADO { background-color: #9333ea !important; color: white !important; } .opt-VENTA { background-color: #16a34a !important; color: white !important; } .opt-WSP { background-color: #eab308 !important; color: black !important; }
         .table-header { padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; text-align: center; } .table-cell { padding: 4px 8px; border: 1px solid #f1f5f9; text-align: center; }
         
-        .carr-SARA { color: #db2777 !important; font-weight: 900 !important; }
-        .carr-ANA { color: #ea580c !important; font-weight: 900 !important; }
-        .carr-HUMBERTO { color: #2563eb !important; font-weight: 900 !important; }
+        /* COLORES PERSONALIZADOS PARA CARRUSELEROS Y VENDEDORES */
+        .carr-SARA { background-color: #d8b4fe !important; color: #581c87 !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .carr-ANA { background-color: #fed7aa !important; color: #9a3412 !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .carr-HUMBERTO { background-color: #bbf7d0 !important; color: #166534 !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+
+        .vend-ANGELICA { background-color: #fbcfe8 !important; color: #831843 !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .vend-GEAN { background-color: #bfdbfe !important; color: #1e3a8a !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .vend-SUNNY { background-color: #99f6e4 !important; color: #134e4a !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
         
         select.opt-INFORMADO, select.opt-DNC, select.opt-NOCONTESTA, select.opt-NOINTERESADO, select.opt-VENTA, select.opt-WSP { font-weight: 900 !important; border: none !important; }
 
-        /* Redimensionador de columnas para Base Dito */
-        .resizable-th {
-            position: relative;
-        }
-        .resizer {
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 6px;
-            cursor: col-resize;
-            user-select: none;
-            touch-action: none;
-        }
-        .resizer:hover, .resizer.resizing {
-            background-color: #ef4444;
-        }
+        /* Redimensionador de columnas */
+        .resizable-th { position: relative; }
+        .resizer { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: col-resize; user-select: none; touch-action: none; }
+        .resizer:hover, .resizer.resizing { background-color: #ef4444; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -266,9 +258,14 @@
                             <h1 class="text-xl md:text-2xl font-black text-slate-800"><i class="fas fa-database text-red-600 mr-2"></i>Base Dito Asignada</h1>
                             <p class="text-xs md:text-sm font-bold text-slate-500 mt-1">Los clientes con más de una línea se resaltan en <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded">color lila</span> automáticamente.</p>
                         </div>
-                        <div class="flex flex-wrap gap-3">
+                        <div class="flex flex-wrap gap-3 items-center">
+                            <!-- TARJETA CONTADOR DE INFORMADOS -->
+                            <div id="cardContadorInformados" class="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-black text-blue-800 shadow-sm flex items-center gap-2">
+                                <i class="fas fa-info-circle text-blue-600"></i> Informados: <span id="numInformadosCount" class="text-base text-blue-900">0</span> / 15
+                            </div>
                             <button id="btnFijarVista" onclick="fijarVistaGlobal()" class="hidden px-4 md:px-5 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-black transition shadow-sm items-center gap-2"><i class="fas fa-thumbtack"></i> Fijar Vista Global</button>
                             <button onclick="forzarSincronizacionGeneral()" class="px-4 md:px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-sync"></i> Forzar Ciclo Global</button>
+                            <button onclick="organizarBaseEstado()" class="px-4 md:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2" title="Organizar por Estado (Informado > Venta > WSP)"><i class="fas fa-sort-alpha-down"></i> Organizar Base</button>
                             <button onclick="document.getElementById('modalMultiSort').classList.remove('hidden')" class="px-4 md:px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-sort-amount-down"></i> Orden Múltiple</button>
                             <button onclick="aplicarFiltrosBase(false)" class="px-4 md:px-5 py-2.5 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-sync-alt"></i> Actualizar Base</button>
                         </div>
@@ -867,13 +864,28 @@
                                         let globalSort = cloudConf.globalSort || [];
                                         let finalSortConfigs = [];
 
-                                        if (globalSort.length > 0) {
+                                        if (f.organizarEstadoCustom) {
+                                            // Orden personalizado por estado: INFORMADO > VENTA > WSP > OTROS
+                                            const ordenEstadoVal = (est) => {
+                                                let e = String(est || '').trim().toUpperCase();
+                                                if (e === 'INFORMADO') return 1;
+                                                if (e === 'VENTA') return 2;
+                                                if (e === 'WSP') return 3;
+                                                return 4;
+                                            };
+                                            filtered.sort((a, b) => {
+                                                let diff = ordenEstadoVal(a.ESTADO) - ordenEstadoVal(b.ESTADO);
+                                                if (diff !== 0) return diff;
+                                                // Si tienen el mismo estado, aplica el orden global estándar
+                                                return 0;
+                                            });
+                                        } else if (globalSort.length > 0) {
                                             finalSortConfigs = globalSort;
                                         } else if (f.sortCol) {
                                             finalSortConfigs = [{col: f.sortCol, dir: f.sortAsc ? 'asc' : 'desc'}];
                                         }
 
-                                        if (finalSortConfigs.length > 0) {
+                                        if (!f.organizarEstadoCustom && finalSortConfigs.length > 0) {
                                             filtered.sort((a,b) => {
                                                 for(let i=0; i<finalSortConfigs.length; i++) {
                                                     let col = finalSortConfigs[i].col; let dir = finalSortConfigs[i].dir === 'asc' ? 1 : -1;
@@ -1001,6 +1013,22 @@
                     aplicarFiltrosBase(true);
                 }
             }, 9000); 
+        }
+
+        let organizarEstadoActivado = false;
+        function organizarBaseEstado() {
+            organizarEstadoActivado = !organizarEstadoActivado;
+            const btn = event.currentTarget;
+            if (organizarEstadoActivado) {
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                btn.classList.add('bg-amber-600', 'hover:bg-amber-700');
+                showToast("Base organizada: INFORMADO > VENTA > WSP");
+            } else {
+                btn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                showToast("Orden estándar restablecido");
+            }
+            aplicarFiltrosBase(false);
         }
 
         function ejecutarBusquedaCliente() {
@@ -1261,13 +1289,27 @@
             const lblCiclos = document.getElementById('lblCiclosBase'); if(lblCiclos) lblCiclos.textContent = ciclosCheckbox.length === 0 ? "Todos los Ciclos" : (ciclosCheckbox.length === 1 ? "Ciclo " + ciclosCheckbox[0] : ciclosCheckbox.length + " Seleccionados");
             const lblMeses = document.getElementById('lblMesesBase'); if(lblMeses) lblMeses.textContent = mesesCheckbox.length === 0 ? "Todos los Meses" : (mesesCheckbox.length === 1 ? mesesCheckbox[0] : mesesCheckbox.length + " Seleccionados");
 
-            const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc };
+            const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc, organizarEstadoCustom: organizarEstadoActivado };
             const tbody = document.getElementById('tablaCuerpoBase');
             if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Coworking Dito...</td></tr>';
 
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { 
                     baseVentasGlobal = res.baseVentas || []; 
+                    
+                    // CONTADOR DE INFORMADOS
+                    let informadosCount = baseVentasGlobal.filter(v => String(v.ESTADO || '').trim().toUpperCase() === 'INFORMADO').length;
+                    const numInfEl = document.getElementById('numInformadosCount');
+                    const cardInfEl = document.getElementById('cardContadorInformados');
+                    if (numInfEl) numInfEl.textContent = informadosCount;
+                    if (cardInfEl) {
+                        if (informadosCount > 15) {
+                            cardInfEl.className = "px-4 py-2 bg-red-100 border border-red-300 rounded-lg text-sm font-black text-red-800 shadow-sm flex items-center gap-2 animate-pulse";
+                        } else {
+                            cardInfEl.className = "px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-black text-blue-800 shadow-sm flex items-center gap-2";
+                        }
+                    }
+
                     if (res.vistaGlobal && !silencioso) {
                         let vg = res.vistaGlobal;
                         if(chkOcultar && vg.ocultarCheck !== undefined) chkOcultar.checked = vg.ocultarCheck;
@@ -1335,7 +1377,15 @@
                 let htmlTemp = ''; 
                 lista.forEach(function(v) {
                     try {
-                        let htmlVend = '<option value=""></option>'; for(let i=0; i<optVendedores.length; i++) { let sel = v.VENDEDOR === optVendedores[i] ? 'selected' : ''; htmlVend += '<option value="' + optVendedores[i] + '" class="bg-white text-slate-800" ' + sel + '>' + optVendedores[i] + '</option>'; }
+                        let vKey = String(v.VENDEDOR || '').toUpperCase().trim();
+                        let vendClass = vKey === 'ANGELICA' ? 'vend-ANGELICA' : (vKey === 'GEAN' ? 'vend-GEAN' : (vKey === 'SUNNY' ? 'vend-SUNNY' : 'bg-transparent text-blue-600 font-black'));
+
+                        let htmlVend = '<option value=""></option>'; 
+                        for(let i=0; i<optVendedores.length; i++) { 
+                            let sel = v.VENDEDOR === optVendedores[i] ? 'selected' : ''; 
+                            let vSubClass = optVendedores[i] === 'ANGELICA' ? 'vend-ANGELICA' : (optVendedores[i] === 'GEAN' ? 'vend-GEAN' : 'vend-SUNNY');
+                            htmlVend += '<option value="' + optVendedores[i] + '" class="' + vSubClass + '" ' + sel + '>' + optVendedores[i] + '</option>'; 
+                        }
                         
                         let estadoClave = (v.ESTADO || '').replace(/\s+/g, ''); 
                         let selectEstadoClass = v.ESTADO ? 'opt-' + estadoClave : 'bg-white text-slate-800';
@@ -1349,14 +1399,22 @@
                         }
                         
                         let carrColorClass = '';
-                        if(v.CARRUSELERO === 'SARA' || v.CARRUSELERO === 'ANA') carrColorClass = 'carr-SARA';
-                        else if(v.CARRUSELERO === 'HUMBERTO') carrColorClass = 'carr-HUMBERTO';
+                        let cKey = String(v.CARRUSELERO || '').toUpperCase().trim();
+                        if(cKey === 'SARA') carrColorClass = 'carr-SARA';
+                        else if(cKey === 'ANA') carrColorClass = 'carr-ANA';
+                        else if(cKey === 'HUMBERTO') carrColorClass = 'carr-HUMBERTO';
 
-                        let htmlCarr = '<option value="" class="bg-white text-slate-800"></option>'; for(let k=0; k<optCarruseleros.length; k++) { let sel = v.CARRUSELERO === optCarruseleros[k] ? 'selected' : ''; htmlCarr += '<option value="' + optCarruseleros[k] + '" class="bg-white text-slate-800" ' + sel + '>' + optCarruseleros[k] + '</option>'; }
+                        let htmlCarr = '<option value="" class="bg-white text-slate-800"></option>'; 
+                        for(let k=0; k<optCarruseleros.length; k++) { 
+                            let sel = v.CARRUSELERO === optCarruseleros[k] ? 'selected' : ''; 
+                            let cSubClass = optCarruseleros[k] === 'SARA' ? 'carr-SARA' : (optCarruseleros[k] === 'ANA' ? 'carr-ANA' : 'carr-HUMBERTO');
+                            htmlCarr += '<option value="' + optCarruseleros[k] + '" class="' + cSubClass + '" ' + sel + '>' + optCarruseleros[k] + '</option>'; 
+                        }
                         
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
+                        // ORDEN: DNI, CLIENTE, NUMERO, FV, MESES, CICLO, ESTADO, HORA, OBS, GESTIONADO (CHECK), CARRUSELERO, VENDEDOR
                         htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '">' +
                             '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
                             '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
@@ -1368,8 +1426,8 @@
                             '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-20 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit bg-transparent text-xs \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'\')));" class="inline-edit bg-transparent text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-transparent text-xs" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit text-xs ' + carrColorClass + '\';" class="inline-edit text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value); this.className=\'inline-edit font-black text-xs ' + vendClass + '\';" class="inline-edit font-black text-xs ' + vendClass + '" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
@@ -1450,6 +1508,9 @@
                         else if (v.ESTADO === 'REINGRESAR') estadoColorText = 'text-orange-700';
                         else if (v.ESTADO === 'NO DESEA') estadoColorText = 'text-red-700';
 
+                        let carrKey = String(v.CARRUSELERO || '').toUpperCase().trim();
+                        let carrClass = carrKey === 'SARA' ? 'carr-SARA' : (carrKey === 'ANA' ? 'carr-ANA' : (carrKey === 'HUMBERTO' ? 'carr-HUMBERTO' : 'text-purple-800'));
+
                         htmlTemp += '<tr class="transition text-xs border-b border-slate-200 ' + rowColor + '">' +
                             '<td class="px-5 py-4 align-top border-r border-slate-200/50">' +
                                 '<div class="flex flex-col gap-2">' +
@@ -1480,7 +1541,7 @@
                                     '<div><span class="text-[11px] uppercase font-bold text-slate-500 block leading-none mb-1">Fecha Act.</span><input type="date" value="' + (v.FECHA_ACTIVACION ? String(v.FECHA_ACTIVACION).split('/').reverse().join('-') : '') + '" onchange="inlineUpdateDate(\'' + v.ID + '\', this.value)" class="inline-edit bg-white/60 border border-slate-300 text-slate-900 text-xs w-full font-bold shadow-inner" ' + blockEdit + '></div>' +
                                     '<div><span class="text-[11px] uppercase font-bold text-slate-500 block leading-none mb-1">Revisión</span><select onchange="inlineUpdate(\'' + v.ID + '\', \'REVISION\', this.value)" class="inline-edit bg-white/60 border border-slate-300 font-black text-xs w-full shadow-inner ' + revColor + '" ' + (isGerencia ? '' : 'disabled') + '><option value="" ' + (!v.REVISION||v.REVISION===''?'selected':'') + '>- Sin Revisión -</option><option value="P. REPORTE" ' + (v.REVISION==='P. REPORTE'?'selected':'') + '>P. REPORTE</option><option value="EN REPORTE" ' + (v.REVISION==='EN REPORTE'?'selected':'') + '>EN REPORTE</option><option value="NO PROCEDE" ' + (v.REVISION==='NO PROCEDE'?'selected':'') + '>NO PROCEDE</option><option value="P. REVISION" ' + (v.REVISION==='P. REVISION'?'selected':'') + '>P. REVISION</option><option value="RECLAMAR" ' + (v.REVISION==='RECLAMAR'?'selected':'') + '>RECLAMAR</option></select></div>' +
                                     '<div><span class="text-[11px] uppercase font-bold text-slate-500 block leading-none mb-1">Región</span><select onchange="inlineUpdate(\'' + v.ID + '\', \'REGION\', this.value)" class="inline-edit bg-white/60 border border-slate-300 text-slate-900 text-xs w-full font-bold shadow-inner" ' + blockEdit + '>' + optRegiones + '</select></div>' +
-                                    '<div><span class="text-[11px] uppercase font-bold text-slate-500 block leading-none mb-1">Carruselero</span><select onchange="inlineUpdate(\'' + v.ID + '\', \'CARRUSELERO\', this.value)" class="inline-edit bg-white/60 border border-slate-300 text-purple-800 font-black text-xs w-full shadow-inner" ' + blockEdit + '>' + optCarruseleros + '</select></div>' +
+                                    '<div><span class="text-[11px] uppercase font-bold text-slate-500 block leading-none mb-1">Carruselero</span><select onchange="inlineUpdate(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit bg-white/60 border border-slate-300 font-black text-xs w-full shadow-inner \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : \'carr-HUMBERTO\'));" class="inline-edit bg-white/60 border border-slate-300 font-black text-xs w-full shadow-inner ' + carrClass + '" ' + blockEdit + '>' + optCarruseleros + '</select></div>' +
                                 '</div>' +
                             '</td>' +
                             '<td class="px-5 py-4 align-top border-r border-slate-200/50">' +
@@ -1780,6 +1841,8 @@
         window.ejecutarBusquedaCliente = ejecutarBusquedaCliente;
         window.aplicarFiltros = aplicarFiltros;
         window.aplicarFiltrosBase = aplicarFiltrosBase;
+        window.organizarBaseEstado = organizarBaseEstado;
+        window.initResize = initResize;
     </script>
 </body>
 </html>
