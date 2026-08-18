@@ -1223,6 +1223,7 @@
             }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
+                // 1. PRIORIDAD MANUAL 1: Buscador de texto (DNI, Nombre, ANI, Portar, SEC)
                 const matchTxt = !txt || (
                     String(v.CLIENTE || '').toLowerCase().includes(txt) || 
                     String(v.DOC || '').toLowerCase().includes(txt) || 
@@ -1231,17 +1232,18 @@
                     String(v.SEC || '').toLowerCase().includes(txt)
                 );
 
-                // PRIORIDAD ABSOLUTA AL TEXTO: Si escribiste algo, filtramos solo por el texto sin importar estados o meses
+                // Si el usuario escribió algo en el texto, obligamos a que coincida con el texto sin bloquearse por otros filtros cruzados por defecto
                 if (txt !== '') {
                     return matchTxt;
                 }
 
-                // Si la barra de búsqueda está vacía, aplicamos los filtros normales
+                // 2. PRIORIDAD MANUAL 2: Estados seleccionados en el desplegable/checkboxes
                 let matchEst = true; 
                 if (estadosCheckbox.length > 0) { 
                     matchEst = estadosCheckbox.includes(v.ESTADO); 
                 }
                 
+                // 3. Demás filtros manuales opcionales
                 const matchTipo = !tipo || v.TIPO_VENTA === tipo; 
                 const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; 
                 const matchAsesor = !asesorFiltro || String(v.ASESOR || '').toUpperCase() === asesorFiltro.toUpperCase();
@@ -1268,10 +1270,10 @@
                     matchFecha = (fAct === fechaFiltroFormat); 
                 }
                 
-                return matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
+                return matchTxt && matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
             });
             
-            // ORDENAMIENTO ESTRICTO: Las ventas más nuevas siempre arriba
+            // ORDENAMIENTO ESTRICTO: Las ventas más nuevas (ID mayor / timestamp) siempre arriba
             ventasFiltradasGlobal.sort(function(a, b) {
                 let idA = String(a.ID || a.id || '');
                 let idB = String(b.ID || b.id || '');
