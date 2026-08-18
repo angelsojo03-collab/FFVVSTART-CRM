@@ -328,7 +328,7 @@
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Paquete</label><select name="paquete" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="Chip">Chip</option><option value="Pack">Pack</option></select></div>
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Región</label><select name="region" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="" selected></option><option value="LIMA">LIMA</option><option value="NORTE">NORTE</option><option value="CENTRO">CENTRO</option><option value="SUR">SUR</option></select></div>
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Carruselero</label><select name="carruselero" id="formCarruselero" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="" selected></option><option value="HUMBERTO">HUMBERTO</option><option value="ANA">ANA</option><option value="SARA">SARA</option></select></div>
-                            <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Fecha Activación</label><input type="date" name="fechaActivacion" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"></div>                        </div>
+                            <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Fecha Activación</label><input type="date" name="fechaActivacion" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"></div>    </div>
                         <div class="border-t border-slate-200 pt-6">
                             <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-black text-slate-800">Líneas a Registrar</h3><button type="button" onclick="addLinea()" class="text-sm bg-slate-800 hover:bg-slate-900 font-black px-4 py-2 rounded-lg text-white shadow-md flex items-center gap-2"><i class="fas fa-plus"></i> Añadir Línea</button></div>
                             <div id="lineasContainer" class="space-y-4"></div>
@@ -409,7 +409,8 @@
             const d = document.getElementById('confDias'); if(d) d.value = c.diasMes; 
             const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; 
         }
-        // FUNCIÓN GLOBAL DE FILTRADO (Debe estar fuera de DOMContentLoaded)
+        
+        // FUNCIÓN GLOBAL DE FILTRADO
         function aplicarFiltros() {
             const txtEl = document.getElementById('filtroTexto'); 
             const txt = txtEl ? txtEl.value.trim().toLowerCase() : '';
@@ -526,7 +527,6 @@
                                         if (data && data.length > 0) { result = { success: true, user: { nombre: data[0].NOMBRE, correo: data[0].EMAIL, rol: data[0].ROL } }; } else { result = { success: false, message: 'Credenciales inválidas' }; }
                                     }
                                     
-                                    // === CONFIGURACIÓN GLOBAL NUBE ===
                                     else if (prop === 'obtenerConfiguracion') {
                                         const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, vistaDito: null, globalSort: [] };
@@ -552,11 +552,9 @@
                                         result = { success: true };
                                     }
                                     
-                                    // === OBTENER VENTAS Y DASHBOARD ===
                                     else if (prop === 'getDashboardData') {
                                         const [rol, nombre] = args;
                                         
-                                        // Obtener Config de Nube
                                         const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
                                         let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
                                         if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
@@ -583,7 +581,6 @@
                                             let tipo = (v.TIPO_VENTA || '').toUpperCase();
                                             let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
                                             
-                                            // REGLA ESTRICTA: Solo sumar y contabilizar si el estado es exactamente ENTREGADO
                                             if (estadoVenta === 'ENTREGADO') { 
                                                 cfVendido += val; 
                                                 ventasEntregadas++; 
@@ -628,7 +625,6 @@
                                             }
                                         });
 
-                                        // Definimos ambas estructuras de propiedades para satisfacer a las dos tablas del sistema
                                         let carruselerosFinalMap = {};
                                         Object.keys(carrMap).forEach(k => {
                                             let cData = carrMap[k];
@@ -642,7 +638,6 @@
                                             };
                                         });
                                         
-                                        // Asignamos de forma idéntica para que tanto gerencia como el dash grupal lo lean sin errores
                                         dash.gerencia.carruselerosDetalle = carruselerosFinalMap;
                                         dash.carruselerosDetalle = carruselerosFinalMap;
                                         dash.metaGlobal = Object.keys(aseMap).length * cloudConf.metaCuota;
@@ -660,7 +655,6 @@
                                         result = { success: true, ventas: myVentas.sort((a, b) => Number(b.ID || 0) - Number(a.ID || 0)), dashboard: dash };
                                     }
                                     
-                                    // === EL RESTO DE METODOS CRUD Y BASE DITO ===
                                     else if (prop === 'saveVentasMultiples') {
                                         const [d] = args; 
                                         let fechaFinalIns = d.fechaActivacionOpcional ? d.fechaActivacionOpcional : ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
@@ -765,7 +759,6 @@
                                                     if (v2 === null || v2 === undefined) v2 = '';
                                                     v1 = String(v1).trim(); v2 = String(v2).trim();
 
-                                                    // REGLA ESTRICTA: Vacíos siempre van al fondo absoluto
                                                     if (v1 === '' && v2 !== '') return 1;
                                                     if (v1 !== '' && v2 === '') return -1;
                                                     if (v1 === '' && v2 === '') continue;
@@ -779,20 +772,16 @@
                                                 return 0;
                                             });
                                         } else { 
-                                            // ORDENAMIENTO NATIVO POR DEFECTO
                                             filtered.sort((a,b) => {
-                                                // 1. Cliente (A-Z)
                                                 let n1 = String(a.NOMBRE_CLIENTE||'').trim().toLowerCase(); 
                                                 let n2 = String(b.NOMBRE_CLIENTE||'').trim().toLowerCase();
                                                 if (n1 === '' && n2 !== '') return 1;
                                                 if (n1 !== '' && n2 === '') return -1;
                                                 if (n1 !== n2) return n1 < n2 ? -1 : 1;
                                                 
-                                                // 2. Meses (Mayor a Menor - DESC)
                                                 let m1 = Number(a.MESES||0); let m2 = Number(b.MESES||0);
                                                 if(m1 !== m2) return m1 > m2 ? -1 : 1; 
                                                 
-                                                // 3. Estado (A-Z)
                                                 let e1 = String(a.ESTADO||'').trim().toLowerCase();
                                                 let e2 = String(b.ESTADO||'').trim().toLowerCase();
                                                 if (e1 === '' && e2 !== '') return 1;
@@ -908,6 +897,7 @@
                     }).saveVentasMultiples(data); 
                 }; 
             }
+        });
 
         function calculateClaroCycle() {
             const dateVal = document.getElementById('claroActDate').value; if(!dateVal) return;
@@ -1076,13 +1066,11 @@
             if(baseSyncInterval) clearInterval(baseSyncInterval);
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
-                // Sincronización y auto-ordenamiento forzado cada 5 minutos exactos (300,000 ms)
                 if (vistaBase && !vistaBase.classList.contains('view-hidden')) aplicarFiltrosBase(true);
             }, 300000); 
         }
 
         function sortBase(columna) { 
-            // Regla de Negocio: Asesores solo ordenan por OBS
             if (currentUser && currentUser.rol === 'ASESOR' && columna !== 'OBS') {
                 showToast('Acceso Denegado: Solo puedes ordenar por Observaciones (OBS)');
                 return;
@@ -1114,19 +1102,17 @@
                     try {
                         let htmlVend = '<option value=""></option>'; for(let i=0; i<optVendedores.length; i++) { let sel = v.VENDEDOR === optVendedores[i] ? 'selected' : ''; htmlVend += '<option value="' + optVendedores[i] + '" class="bg-white text-slate-800" ' + sel + '>' + optVendedores[i] + '</option>'; }
                         
-                        // Procesar color del SELECT ESTADO principal
-                        let estadoClave = (v.ESTADO || '').replace(/\s+/g, ''); // Remueve espacios para coincidir con CSS
+                        let estadoClave = (v.ESTADO || '').replace(/\s+/g, ''); 
                         let selectEstadoClass = v.ESTADO ? 'opt-' + estadoClave : 'bg-white text-slate-800';
                         let htmlEstado = '<option value="" class="bg-white text-slate-800"></option>'; 
                         
-                        // Inyección de colores nativos a cada <option> del menú desplegable
                         for(let j=0; j<optEstados.length; j++) { 
                             let o = optEstados[j]; 
                             let sel = v.ESTADO === o ? 'selected' : ''; 
-                            let optColorClass = 'opt-' + o.replace(/\s+/g, ''); // Genera: opt-INFORMADO, opt-DNC, opt-NOCONTESTA, etc.
+                            let optColorClass = 'opt-' + o.replace(/\s+/g, ''); 
                             htmlEstado += '<option value="' + o + '" class="' + optColorClass + ' font-bold" ' + sel + '>&nbsp;&nbsp;' + o + '</option>'; 
                         }
-                        // Procesar color de CARRUSELERO por género
+                        
                         let carrColorClass = '';
                         if(v.CARRUSELERO === 'SARA' || v.CARRUSELERO === 'ANA') carrColorClass = 'carr-SARA';
                         else if(v.CARRUSELERO === 'HUMBERTO') carrColorClass = 'carr-HUMBERTO';
@@ -1146,7 +1132,8 @@
                             '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
-'<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit bg-transparent \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'\')));" class="inline-edit bg-transparent ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +                            '<td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit bg-transparent \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'\')));" class="inline-edit bg-transparent ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
+                            '<td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td>' +
                             '<td class="px-4 py-2 font-mono text-green-700 font-black">' + (v.NUMERO || '') + '</td>' +
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
@@ -1313,13 +1300,11 @@
             
             google.script.run.withSuccessHandler(function(res) {
                 if(res && res.success) { 
-                    // Aseguramos que el ID se mantenga normalizado y ordenado desde el inicio
                     ventasGlobal = (res.ventas || []).map(v => ({
                         ...v, 
                         ID: String(v.ID !== undefined ? v.ID : (v.id !== undefined ? v.id : Date.now()))
                     }));
                     
-                    // Ordenamos de inmediato: lo más nuevo arriba
                     ventasGlobal.sort(function(a, b) {
                         let idA = String(a.ID || '');
                         let idB = String(b.ID || '');
@@ -1405,7 +1390,7 @@
 
         function renderGerenciaDashboard(g) {
             if(!g) return;
-            let conf = ();
+            let conf = getConfig();
             const regLima = document.getElementById('dashRegLima'); if(regLima) regLima.textContent = g.regionesPorcentaje.LIMA || '0%';
             const regNorte = document.getElementById('dashRegNorte'); if(regNorte) regNorte.textContent = g.regionesPorcentaje.NORTE || '0%';
             const regCentro = document.getElementById('dashRegCentro'); if(regCentro) regCentro.textContent = g.regionesPorcentaje.CENTRO || '0%';
@@ -1427,7 +1412,7 @@
                 }); 
             }
 
-            const tbCarr = document.getElementById('tablaGerenciaCarruseleros'); // (O tablaGrupalCarruseleros según la función)
+            const tbCarr = document.getElementById('tablaGerenciaCarruseleros'); 
             if(tbCarr) { 
                 tbCarr.innerHTML = ''; 
                 const carrData = g.carruselerosDetalle || {};
@@ -1437,9 +1422,8 @@
                     let ventasC = c.ventas || c[0] || 0;
                     let cfC = c.cf || c.CF || c[1] || 0;
                     
-                    // Cálculo directo del 2% real y su proyección
                     let comReal = Number(cfC) * 0.02;
-                    let comProy = comReal * (().diasMes / (new Date().getDate() || 1));
+                    let comProy = comReal * (getConfig().diasMes / (new Date().getDate() || 1));
 
                     tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${ventasC}</td><td class="font-bold text-slate-500">S/ ${Number(cfC).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(comReal).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(comProy).toFixed(2)}</td></tr>`; 
                 }); 
@@ -1497,7 +1481,7 @@
         function renderDashGrupal(dashboard) {
             if(!dashboard || !dashboard.gerencia) return;
             let g = dashboard.gerencia;
-            let conf = ();
+            let conf = getConfig();
             
             const regLima = document.getElementById('dashRegLimaGrupal'); if(regLima) regLima.textContent = g.regionesPorcentaje.LIMA || '0%';
             const regNorte = document.getElementById('dashRegNorteGrupal'); if(regNorte) regNorte.textContent = g.regionesPorcentaje.NORTE || '0%';
@@ -1524,7 +1508,8 @@
                     tbAsesores.innerHTML += `<tr><td class="py-2 font-bold">${a.nombre}</td><td class="font-bold text-slate-500">S/ ${Number(a.cfProyectado).toFixed(2)}</td><td class="text-emerald-600 font-bold">S/ ${Number(a.comisionProyectada).toFixed(2)}</td><td>${formatRangoText(a.rangoProyectado)}</td></tr>`; 
                 }); 
             }
-const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
+            
+            const tbCarr = document.getElementById('tablaGrupalCarruseleros'); 
             if(tbCarr) { 
                 tbCarr.innerHTML = ''; 
                 const carrData = (dashboard && dashboard.gerencia && dashboard.gerencia.carruselerosDetalle) ? dashboard.gerencia.carruselerosDetalle : (g.carruselerosDetalle || {});
@@ -1534,9 +1519,8 @@ const tbCarr = document.getElementById('tablaGrupalCarruseleros');
                     let ventasC = c.ventas || c[0] || 0;
                     let cfC = parseFloat(c.cf || c.CF || c[1] || 0);
                     
-                    // Cálculo directo seguro del 2% real y su proyección
                     let comReal = cfC * 0.02;
-                    let comProy = comReal * (().diasMes / (new Date().getDate() || 1));
+                    let comProy = comReal * (getConfig().diasMes / (new Date().getDate() || 1));
 
                     tbCarr.innerHTML += `<tr><td class="py-2 font-bold">${cName}</td><td class="font-bold">${ventasC}</td><td class="font-bold text-slate-500">S/ ${Number(cfC).toFixed(2)}</td><td class="text-purple-600 font-bold">S/ ${Number(comReal).toFixed(2)}</td><td class="text-pink-600 font-bold">S/ ${Number(comProy).toFixed(2)}</td></tr>`; 
                 }); 
@@ -1712,7 +1696,7 @@ const tbCarr = document.getElementById('tablaGrupalCarruseleros');
             const secEl = document.getElementById('editSec'); if(secEl) secEl.value = v.SEC || ''; const formEl = document.getElementById('editFormaEntrega'); if(formEl) formEl.value = v.FORMA_ENTREGA || 'DELIVERY';
             actualizarSubEstadosModal(); document.getElementById('editSubEstado').value = v.SUB_ESTADO || ''; document.getElementById('editObservaciones').value = v.OBSERVACIONES || ''; document.getElementById('modalEdit').classList.remove('hidden');
         }
-         function closeModalEdit() { 
+        function closeModalEdit() { 
             document.getElementById('modalEdit').classList.add('hidden'); 
         }
         
@@ -1734,7 +1718,6 @@ const tbCarr = document.getElementById('tablaGrupalCarruseleros');
                 t.classList.add('hidden'); 
             }, 2500); 
         }
-    }); // <-- Asegúrate de que este cierre de DOMContentLoaded esté presente
     </script>
 </body>
 </html>
