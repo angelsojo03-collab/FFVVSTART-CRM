@@ -1265,7 +1265,14 @@
                     headers.forEach((h, idx) => { rawObj[h] = lines[i][idx] || null; });
                     
                     // Mapeo estricto por nombre de columna para evitar desplazamientos por orden de Excel
+                    let inserts = [];
+                for(let i=1; i<lines.length; i++) {
+                    if(lines[i].length < 2) continue;
+                    let rawObj = {}; 
+                    headers.forEach((h, idx) => { rawObj[h] = lines[i][idx] || null; });
+                    
                     let obj = {
+                        ID: Date.now().toString() + 'D' + i, // <-- AQUÍ SE AÑADE EL ID OBLIGATORIO
                         VENDEDOR: rawObj['VENDEDOR'] || null,
                         DNI: rawObj['DNI'] ? parseInt(rawObj['DNI'].replace(/[^0-9]/g, '')) || null : null,
                         NOMBRE_CLIENTE: rawObj['NOMBRE_CLIENTE'] || rawObj['NOMBRE_CL'] || null,
