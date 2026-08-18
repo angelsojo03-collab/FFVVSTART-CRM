@@ -1251,7 +1251,7 @@
             reader.onload = async function(e) {
                 let text = e.target.result;
                 let lines = text.split('\n').map(line => line.split(';').map(item => item.trim()));
-                let headers = lines[0].map(h => h.trim());
+                let headers = lines[0].map(h => h.trim().toUpperCase());
                 
                 const progressDiv = document.getElementById('progressContainerBase');
                 const bar = document.getElementById('progressBarBase');
@@ -1261,8 +1261,30 @@
                 let inserts = [];
                 for(let i=1; i<lines.length; i++) {
                     if(lines[i].length < 2) continue;
-                    let obj = {}; headers.forEach((h, idx) => { obj[h] = lines[i][idx] || null; });
-                    if (!obj['ID'] && !obj['id']) obj['ID'] = Date.now().toString() + 'D' + i;
+                    let rawObj = {}; 
+                    headers.forEach((h, idx) => { rawObj[h] = lines[i][idx] || null; });
+                    
+                    // Mapeo estricto por nombre de columna para evitar desplazamientos por orden de Excel
+                    let obj = {
+                        VENDEDOR: rawObj['VENDEDOR'] || null,
+                        DNI: rawObj['DNI'] ? parseInt(rawObj['DNI'].replace(/[^0-9]/g, '')) || null : null,
+                        NOMBRE_CLIENTE: rawObj['NOMBRE_CLIENTE'] || rawObj['NOMBRE_CL'] || null,
+                        FV: rawObj['FV'] || null,
+                        MESES: rawObj['MESES'] ? parseInt(rawObj['MESES']) || 0 : 0,
+                        OPERACION: rawObj['OPERACION'] || null,
+                        SISACT: rawObj['SISACT'] || null,
+                        ESTADO: rawObj['ESTADO'] || null,
+                        HORA: rawObj['HORA'] || null,
+                        OBS: rawObj['OBS'] || null,
+                        GESTIONADO: rawObj['GESTIONADO'] || 'FALSE',
+                        CARRUSELERO: rawObj['CARRUSELERO'] || null,
+                        CICLO: rawObj['CICLO'] ? parseInt(rawObj['CICLO']) || null : null,
+                        NUMERO: rawObj['NUMERO'] || null,
+                        MES: rawObj['MES'] || null,
+                        OPERADOR: rawObj['OPERADOR'] || null,
+                        FECHA_OPSITEL: rawObj['FECHA_OPSITEL'] || null
+                    };
+
                     inserts.push(obj);
                 }
                 
@@ -1284,7 +1306,6 @@
             };
             reader.readAsText(fileInput.files[0]);
         }
-
         function descargarPlantillaBase() {
             let headers = "VENDEDOR;DNI;NOMBRE_CLIENTE;FV;MESES;OPERACION;SISACT;ESTADO;HORA;OBS;GESTIONADO;CARRUSELERO;CICLO;NUMERO;MES;OPERADOR;FECHA_OPSITEL\n";
             let ejemplo = "SUNNY;12345678;JUAN PEREZ;15/04/2026;3;PORTA;APROBADO;VENTA;10:00;obs prueba;FALSE;HUMBERTO;17;999888777;abril;CLARO;15/04/2026\n";
