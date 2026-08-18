@@ -571,7 +571,7 @@
                                         dash.gerencia.carruselerosDetalle = carrMap; 
                                         Object.keys(diasMap).sort().forEach(d => { dash.gerencia.diasOrdenados.push({dia: d, cantidad: diasMap[d]}); });
 
-                                        result = { success: true, ventas: myVentas.sort((a,b)=>b.ID - a.ID), dashboard: dash };
+                                        result = { success: true, ventas: myVentas.sort((a, b) => Number(b.ID || 0) - Number(a.ID || 0)), dashboard: dash };
                                     }
                                     
                                     // === EL RESTO DE METODOS CRUD Y BASE DITO ===
