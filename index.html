@@ -38,7 +38,12 @@
     <div id="mainView" class="flex view-hidden min-h-screen overflow-hidden max-w-[100vw]">
         <!-- SIDEBAR -->
         <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 fixed left-0 top-0 h-screen transition-slide z-40 overflow-y-auto shadow-lg">
-            <div class="p-6 border-b border-slate-200 bg-slate-50"><h2 class="text-3xl font-black text-red-600 tracking-wider">FFVV START</h2><p class="text-xs text-slate-500 uppercase font-black mt-1" id="rolDisplaySidebar">Rol</p></div>
+            <div class="p-6 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                    <h2 class="text-3xl font-black text-red-600 tracking-wider">FFVV START</h2>
+                    <p class="text-xs text-slate-500 uppercase font-black mt-1" id="rolDisplaySidebar">Rol</p>
+                </div>
+            </div>
             <nav class="mt-4 space-y-1 px-3">
                 <a href="#" class="nav-link nav-asesor nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="ventasList"><i class="fas fa-list w-5 text-lg"></i><span class="font-bold">GESTIÓN DE VENTAS</span></a>
                 <a href="#" class="nav-link nav-asesor nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="newVenta"><i class="fas fa-plus-circle w-5 text-lg"></i><span class="font-bold">REGISTRAR VENTA</span></a>
@@ -55,7 +60,7 @@
         <div id="mainContent" class="flex-1 flex flex-col transition-all duration-300 md:pl-64 h-screen overflow-hidden min-w-0 bg-slate-100 max-w-full">
             <header class="bg-white border-b border-slate-200 sticky top-0 z-30 flex-shrink-0 shadow-sm w-full">
                 <div class="px-6 py-4 flex items-center justify-between">
-                    <button id="sidebarToggle" class="text-slate-500 hover:text-red-600 text-2xl transition-colors"><i class="fas fa-bars"></i></button>
+                    <button id="sidebarToggle" class="text-slate-600 hover:text-red-600 text-2xl transition-colors focus:outline-none"><i class="fas fa-bars"></i></button>
                     <div class="flex items-center gap-4"><span class="text-sm font-bold"><span id="userRol" class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded border border-red-200 mr-2 uppercase"></span><span id="userName" class="text-slate-700 uppercase hidden sm:inline-block">Usuario</span></span><button id="logoutBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-200 text-sm shadow-md flex items-center gap-2"><i class="fas fa-power-off"></i> <span class="hidden sm:inline-block">Salir</span></button></div>
                 </div>
             </header>
@@ -163,7 +168,7 @@
                 </div>
 
                 <!-- ================= VISTA: GESTIÓN DE VENTAS CRM =============== -->
-                <div id="ventasList" class="content-view space-y-6 view-hidden w-full">
+                <div id="ventasList" class="content-view space-y-6 w-full">
                     <div id="panelReales" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-2">
                         <div class="bg-white border-t-4 border-blue-500 p-4 md:p-5 rounded-xl shadow-md"><p class="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">Meta Cuota</p><p class="text-xl md:text-2xl lg:text-3xl font-black text-blue-600 truncate" id="dashMetaCf">S/ 0</p></div>
                         <div class="bg-white border-t-4 border-green-500 p-4 md:p-5 rounded-xl shadow-md"><p class="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">CF Vendido</p><p class="text-xl md:text-2xl lg:text-3xl font-black text-green-600 truncate" id="dashCfVendido">S/ 0.00</p></div>
@@ -254,16 +259,16 @@
                     </div>
                     <div class="border border-slate-200 rounded-2xl bg-white shadow-md overflow-hidden flex flex-col w-full">
                         <div class="overflow-x-auto w-full">
-                            <table class="w-full text-left border-collapse min-w-max">
+                            <table class="w-full text-left border-collapse whitespace-nowrap text-xs md:text-sm min-w-max">
                                 <thead class="bg-slate-100 text-slate-500 border-b border-slate-200 uppercase tracking-widest font-black">
                                     <tr>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px]" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-20 text-center" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-20 text-center" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-32 text-center" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th>
@@ -394,8 +399,8 @@
 
         let userIsInteracting = false;
         document.addEventListener('mousedown', () => { userIsInteracting = true; });
-        document.addEventListener('mouseup', () => { setTimeout(() => { userIsInteracting = false; }, 4000); });
-        document.addEventListener('keydown', () => { userIsInteracting = true; setTimeout(() => { userIsInteracting = false; }, 4000); });
+        document.addEventListener('mouseup', () => { setTimeout(() => { userIsInteracting = false; }, 3000); });
+        document.addEventListener('keydown', () => { userIsInteracting = true; setTimeout(() => { userIsInteracting = false; }, 3000); });
 
         function getConfig() { 
             return JSON.parse(localStorage.getItem('ffvv_config')) || { 
@@ -736,7 +741,7 @@
                                         const [id] = args; let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
-                                    // COWORK BASE DITO - DESCARGA TOTAL PAGINADA POR BLOQUES HASTA 40,000 REGISTROS FILTRADOS POR CICLO
+                                    // COWORK BASE DITO - DESCARGA TOTAL PAGINADA POR BLOQUES HASTA 35,000 REGISTROS FILTRADOS POR CICLO
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
                                         let cloudConf = { cicloDefault: '20', vistaDito: null, globalSort: [
@@ -761,7 +766,7 @@
 
                                         let allBaseV = [];
                                         let step = 1000;
-                                        for (let i = 0; i < 40000; i += step) {
+                                        for (let i = 0; i < 35000; i += step) {
                                             let query = _supabase.from('BASE DITO').select('*');
                                             
                                             if (ciclos.length === 1) {
@@ -890,7 +895,18 @@
             const saved = localStorage.getItem('ffvv_user'); if (saved) { try { currentUser = JSON.parse(saved); initApp(); } catch(e) { localStorage.removeItem('ffvv_user'); } }
             const loginForm = document.getElementById('loginForm'); if(loginForm) { loginForm.onsubmit = function(e) { e.preventDefault(); google.script.run.withSuccessHandler(function(res) { if(res && res.success) { localStorage.setItem('ffvv_user', JSON.stringify(res.user)); currentUser = res.user; initApp(); } else { const errEl = document.getElementById('loginError'); if(errEl) { errEl.textContent = res ? res.message : 'Error desconocido'; errEl.classList.remove('hidden'); } } }).loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); }; }
             const logoutBtn = document.getElementById('logoutBtn'); if(logoutBtn) { logoutBtn.onclick = function() { localStorage.removeItem('ffvv_user'); location.reload(); }; }
-            const sidebarToggle = document.getElementById('sidebarToggle'); if(sidebarToggle) { sidebarToggle.onclick = function() { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.toggle('sidebar-hidden'); if(mc) { mc.classList.remove('md:pl-64'); } }; }
+            
+            // BOTÓN TOGGLE LATERAL FIJO Y SEGURO
+            const sidebarToggle = document.getElementById('sidebarToggle'); 
+            if(sidebarToggle) { 
+                sidebarToggle.onclick = function() { 
+                    const sb = document.getElementById('sidebar'); 
+                    const mc = document.getElementById('mainContent'); 
+                    if(sb) sb.classList.toggle('sidebar-hidden'); 
+                    if(mc) mc.classList.toggle('md:pl-64'); 
+                }; 
+            }
+
             document.querySelectorAll('.nav-link').forEach(function(link) { link.onclick = function(e) { e.preventDefault(); if(link.dataset.view) cambiarVista(link.dataset.view); }; });
 
             const ventaForm = document.getElementById('ventaForm');
@@ -996,7 +1012,7 @@
             if(viewId === 'baseVentasView') loadBaseVentas(); 
             if(viewId === 'configView') loadConfigUI();
             
-            if(window.innerWidth < 768) { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.add('sidebar-hidden'); if(mc) { mc.classList.remove('md:pl-64'); } }
+            if(window.innerWidth < 768) { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.add('sidebar-hidden'); if(mc) mc.classList.remove('md:pl-64'); }
         }
 
         document.addEventListener('click', function(e) {
@@ -1070,8 +1086,6 @@
         }
 
         function aplicarFiltrosBase(silencioso = false) {
-            if (silencioso && userIsInteracting) return; // Protege tus selecciones y menús
-
             const txtEl = document.getElementById('filtroTextoBase'); const txt = txtEl ? txtEl.value.trim() : '';
             const chkOcultar = document.getElementById('chkOcultarGestionados'); const ocultar = chkOcultar ? chkOcultar.checked : true;
             const cBoxes = document.querySelectorAll('.chk-ciclo:checked'); const ciclosCheckbox = Array.from(cBoxes).map(cb => cb.value);
@@ -1128,7 +1142,7 @@
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
             
-            // Actualización automática cada 9 segundos (segura y sin interrumpir tu trabajo)
+            // Actualización segura cada 9 segundos
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
                 if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
@@ -1189,20 +1203,20 @@
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        // ORDEN: DNI, CLIENTE, NUMERO (ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, CARRUSELERO, VENDEDOR, GESTIONADO
+                        // Columnas ajustadas: Meses, Ciclo y Estado más compactos
                         htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '">' +
                             '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
                             '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
                             '<td class="px-4 py-2 font-mono text-red-600 font-black">' + (v.NUMERO || '') + '</td>' +
                             '<td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td>' +
-                            '<td class="px-4 py-2 text-center text-slate-700 font-bold">' + (v.MESES || '') + '</td>' +
-                            '<td class="px-4 py-2 text-blue-700 font-black text-center">' + (v.CICLO || '') + '</td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit font-black rounded \' + (this.value ? \'opt-\'+this.value.replace(/\\s+/g, \'\') : \'bg-transparent text-slate-800\');" class="inline-edit font-black rounded ' + selectEstadoClass + '" ' + blockGestion + '>' + htmlEstado + '</select></td>' +
-                            '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-24 bg-transparent" ' + blockGestion + '></td>' +
+                            '<td class="px-3 py-2 text-center text-slate-700 font-bold w-16">' + (v.MESES || '') + '</td>' +
+                            '<td class="px-3 py-2 text-blue-700 font-black text-center w-16">' + (v.CICLO || '') + '</td>' +
+                            '<td class="px-2 py-2 w-32"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit font-black rounded text-xs \' + (this.value ? \'opt-\'+this.value.replace(/\\s+/g, \'\') : \'bg-transparent text-slate-800\');" class="inline-edit font-black rounded text-xs ' + selectEstadoClass + '" ' + blockGestion + '>' + htmlEstado + '</select></td>' +
+                            '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-20 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-transparent" ' + blockGestion + '></td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit bg-transparent \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'\')));" class="inline-edit bg-transparent ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-transparent" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
-                            '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\', \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit bg-transparent text-xs \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'\')));" class="inline-edit bg-transparent text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value)" class="inline-edit font-black text-blue-600 bg-transparent text-xs" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
+                            '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
@@ -1359,7 +1373,7 @@
         function actualizarSubEstadosModal() { const estado = document.getElementById('editEstado').value; const sub = document.getElementById('editSubEstado'); if(!sub) return; sub.innerHTML = ''; let arr = DEP_ESTADOS[estado] || []; for(let i=0; i<arr.length; i++) { sub.innerHTML += '<option value="' + arr[i] + '">' + arr[i] + '</option>'; } }
         function addLinea() { const container = document.getElementById('lineasContainer'); if(!container) return; const div = document.createElement('div'); div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 linea-row'; div.innerHTML = '<div><label class="block text-[10px] text-slate-600 font-bold">N° a Portar</label><input type="text" name="n_portar" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: 999888777" required></div><div><label class="block text-[10px] text-slate-600 font-bold">N° SEC</label><input type="text" name="sec" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: SEC-123"></div><div><label class="block text-[10px] text-slate-600 font-bold">Tipo de Venta</label><select name="tipoVenta" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" onchange="actualizarOpRow(this)"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovación</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Operador</label><select name="operador" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Plan (CF S/)</label><select name="cf" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-green-700 text-sm font-bold focus:outline-none focus:border-red-600"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Campaña</label><select name="campana" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div><div class="col-span-1 md:col-span-6 flex justify-end"><button type="button" onclick="this.closest(\'.linea-row\').remove()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded text-xs transition">Eliminar Línea</button></div>'; container.appendChild(div); }
 
-        function renderTablePaginated() {
+        function renderBaseTablePaginated() {
             const total = baseVentasGlobal.length;
             const totalPages = Math.ceil(total / itemsPerPageBase) || 1;
             if(currentPageBase > totalPages) currentPageBase = totalPages;
