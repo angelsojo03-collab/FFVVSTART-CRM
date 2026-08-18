@@ -1213,22 +1213,66 @@
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
                 const t = txt.toLowerCase();
-                const matchTxt = !t || (String(v.CLIENTE || '').toLowerCase().includes(t) || String(v.DOC || '').toLowerCase().includes(t) || String(v.N_PORTAR || '').toLowerCase().includes(t) || String(v.ANI || '').toLowerCase().includes(t) || String(v.SEC || '').toLowerCase().includes(t));
-                let matchEst = true; if (estadosCheckbox.length > 0) { matchEst = estadosCheckbox.includes(v.ESTADO); }
-                const matchTipo = !tipo || v.TIPO_VENTA === tipo; const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; const matchAsesor = !asesorFiltro || v.ASESOR.toUpperCase() === asesorFiltro.toUpperCase();
-                let matchRevision = true; if (revFiltro) { if (revFiltro === "- Sin Revisión -") { matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; } else { matchRevision = v.REVISION === revFiltro; } }
+                const matchTxt = !t || (
+                    String(v.CLIENTE || '').toLowerCase().includes(t) || 
+                    String(v.DOC || '').toLowerCase().includes(t) || 
+                    String(v.N_PORTAR || '').toLowerCase().includes(t) || 
+                    String(v.ANI || '').toLowerCase().includes(t) || 
+                    String(v.SEC || '').toLowerCase().includes(t)
+                );
+                
+                let matchEst = true; 
+                if (estadosCheckbox.length > 0) { 
+                    matchEst = estadosCheckbox.includes(v.ESTADO); 
+                }
+                
+                const matchTipo = !tipo || v.TIPO_VENTA === tipo; 
+                const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; 
+                const matchAsesor = !asesorFiltro || String(v.ASESOR || '').toUpperCase() === asesorFiltro.toUpperCase();
+                
+                let matchRevision = true; 
+                if (revFiltro) { 
+                    if (revFiltro === "- Sin Revisión -") { 
+                        matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; 
+                    } else { 
+                        matchRevision = v.REVISION === revFiltro; 
+                    } 
+                }
                 
                 let fAct = String(v.FECHA_ACTIVACION || '').trim();
-                let matchMes = true; if (mes) { if (fAct === '') { matchMes = true; } else { let parts = fAct.split('/'); let mesVenta = parts.length >= 2 ? parts[1] : ''; matchMes = (mesVenta === mes); } }
-                let matchFecha = true; if (fechaFiltroFormat) { matchFecha = (fAct === fechaFiltroFormat); }
+                let matchMes = true; 
+                if (mes) { 
+                    if (fAct === '') { 
+                        matchMes = true; 
+                    } else { 
+                        let parts = fAct.split('/'); 
+                        let mesVenta = parts.length >= 2 ? parts[1] : ''; 
+                        matchMes = (mesVenta === mes); 
+                    } 
+                }
+                
+                let matchFecha = true; 
+                if (fechaFiltroFormat) { 
+                    matchFecha = (fAct === fechaFiltroFormat); 
+                }
                 
                 return matchTxt && matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
+            });
+            
+            // ORDENAMIENTO ESTRICTO: Las ventas más nuevas (ID mayor / marcas de tiempo) siempre arriba
+            ventasFiltradasGlobal.sort(function(a, b) {
+                let idA = String(a.ID || a.id || '');
+                let idB = String(b.ID || b.id || '');
+                // Si son marcas de tiempo numéricas con sufijos 'V', limpiamos para comparar bien
+                let numA = parseFloat(idA.replace(/[^0-9.]/g, '')) || 0;
+                let numB = parseFloat(idB.replace(/[^0-9.]/g, '')) || 0;
+                if(numA !== numB) return numB - numA;
+                return idB.localeCompare(idA);
             });
             
             currentPageVentas = 1;
             renderTablePaginated();
         }
-
         function renderTablePaginated() {
             const total = ventasFiltradasGlobal.length;
             const totalPages = Math.ceil(total / itemsPerPageVentas) || 1;
