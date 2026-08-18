@@ -1095,13 +1095,13 @@
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
             
-            // Sincronización automática rápida de coworking cada 10 segundos
+            // Sincronización en tiempo real ultrarrápida (cada 500ms para reflejar marcas inmediatas)
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
                 if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
-                    aplicarFiltrosBase(true); // Actualización silenciosa en tiempo real
+                    aplicarFiltrosBase(true); // Actualización silenciosa instantánea
                 }
-            }, 10000); 
+            }, 500); 
         }
 
         function sortBase(columna) { 
