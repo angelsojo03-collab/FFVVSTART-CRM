@@ -328,7 +328,8 @@
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Paquete</label><select name="paquete" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="Chip">Chip</option><option value="Pack">Pack</option></select></div>
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Región</label><select name="region" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="" selected></option><option value="LIMA">LIMA</option><option value="NORTE">NORTE</option><option value="CENTRO">CENTRO</option><option value="SUR">SUR</option></select></div>
                             <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Carruselero</label><select name="carruselero" id="formCarruselero" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="" selected></option><option value="HUMBERTO">HUMBERTO</option><option value="ANA">ANA</option><option value="SARA">SARA</option></select></div>
-                            <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Fecha Activación</label><input type="date" name="fechaActivacion" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"></div>    </div>
+                            <div><label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Fecha Activación</label><input type="date" name="fechaActivacion" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"></div>
+                        </div>
                         <div class="border-t border-slate-200 pt-6">
                             <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-black text-slate-800">Líneas a Registrar</h3><button type="button" onclick="addLinea()" class="text-sm bg-slate-800 hover:bg-slate-900 font-black px-4 py-2 rounded-lg text-white shadow-md flex items-center gap-2"><i class="fas fa-plus"></i> Añadir Línea</button></div>
                             <div id="lineasContainer" class="space-y-4"></div>
@@ -582,8 +583,7 @@
                                             let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
                                             let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
                                             
-                                            // REGLA NUEVA: Debe estar ENTREGADO y NO DEBE SER "NO PROCEDE" 
-                                            // (Solo cuentan: sin revisión / vacías, o "P. REPORTE")
+                                            // EXCLUYE NO PROCEDE (Solo cuentan sin revisión / vacías o P. REPORTE)
                                             let esValidoParaDashboard = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
 
                                             if (esValidoParaDashboard) { 
@@ -594,7 +594,7 @@
                                                 else if(tipo.includes('RENO')) pReno++; 
                                             }
                                         });
-                                        
+
                                         let calcReal = calculateComision(cfVendido, pPorta, pAlta, pReno);
                                         let cfProy = cfVendido * factorProy; 
                                         let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
@@ -613,7 +613,7 @@
                                             let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
                                             let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
                                             
-                                            // REGLA NUEVA: Excluir las marcadas como NO PROCEDE en todo el dashboard gerencial
+                                            // EXCLUYE NO PROCEDE EN TODO EL DASHBOARD GERENCIAL
                                             let isEnt = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
 
                                             if(v.ASESOR) {
@@ -625,17 +625,6 @@
                                                     if(v.FECHA_ACTIVACION) { let fStr = String(v.FECHA_ACTIVACION); let diaStr = fStr.includes('/') ? fStr.split('/')[0] : fStr.split('-')[2]; if(diaStr) { if(!diasMap[diaStr]) diasMap[diaStr] = 0; diasMap[diaStr]++; } }
                                                 }
                                             }
-                                            if(v.CARRUSELERO) {
-                                                let cK = String(v.CARRUSELERO).toUpperCase().trim(); 
-                                                if(cK) {
-                                                    if(!carrMap[cK]) carrMap[cK] = { ventas: 0, cf: 0 };
-                                                    if(isEnt) { 
-                                                        carrMap[cK].ventas++; 
-                                                        carrMap[cK].cf += val; 
-                                                    }
-                                                }
-                                            }
-                                        });
                                             if(v.CARRUSELERO) {
                                                 let cK = String(v.CARRUSELERO).toUpperCase().trim(); 
                                                 if(cK) {
