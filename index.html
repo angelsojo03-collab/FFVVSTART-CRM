@@ -103,7 +103,7 @@
                                             <th rowspan="2" class="table-header align-middle text-sm w-20">CICLO</th><th colspan="4" id="movHeader1" class="table-header bg-slate-50 text-slate-600">PERIODO 1</th><th colspan="4" id="movHeader2" class="table-header bg-red-50 text-red-700">PERIODO 2</th><th colspan="4" id="movHeader3" class="table-header bg-green-50 text-green-700">PERIODO 3</th>
                                         </tr>
                                         <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
-                                            <th class="table-header font-bold">Inicia</th><th class="table-header font-bold">Culmina</th><th class="table-header text-yellow-700 font-bold">Emisión</th><th class="table-header text-green-700 font-bold">Paga</th><th class="table-header font-bold">Inicia</th><th class="table-header font-bold">Culmina</th><th class="table-header text-yellow-700 font-bold">Emisión</th><th class="table-header text-green-700 font-bold">Paga</th><th class="table-header font-bold">Inicia</th><th class="table-header font-bold">Culmina</th><th class="table-header text-yellow-700 font-bold">Emisión</th><th class="table-header font-bold">Paga</th>
+                                            <th class="table-header font-bold">Inicia</th><th class="table-header font-bold">Culmina</th><th class="table-header text-yellow-700 font-bold">Emisión</th><th class="table-header text-green-700 font-bold">Paga</th><th class="table-header font-bold">Inicia</th><th class="table-header font-bold">Culmina</th><th class="table-header text-yellow-700 font-bold">Emisión</th><th class="table-header text-green-700 font-bold">Paga</th><th class="table-header font-bold">Inicia</th><th class="table-header font-bold">Culmina</th><th class="table-header text-yellow-700 font-bold">Emisión</th><th class="table-header text-green-700 font-bold">Paga</th>
                                         </tr>
                                     </thead>
                                     <tbody id="movistarTbody" class="divide-y divide-slate-100 font-semibold"></tbody>
@@ -157,7 +157,7 @@
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full"><h3 class="text-xs uppercase text-slate-800 font-black tracking-wider mb-3">Ventas Entregadas</h3><table class="w-full text-[11px] md:text-xs text-left min-w-max"><thead class="text-slate-400 border-b border-slate-200 font-black tracking-wider"><tr><th class="py-2 pr-2">Asesor</th><th class="pr-2">Vent.</th><th class="pr-2">CF Total</th><th class="pr-2">Com. Real</th><th>Rango</th></tr></thead><tbody id="tablaGrupalVentasAsesor" class="divide-y divide-slate-50 text-slate-800"></tbody></table></div>
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full"><h3 class="text-xs uppercase text-slate-800 font-black tracking-wider mb-3">Proyecciones Mensuales</h3><table class="w-full text-[11px] md:text-xs text-left min-w-max"><thead class="text-slate-400 border-b border-slate-200 font-black tracking-wider"><tr><th class="py-2 pr-2">Asesor</th><th class="pr-2">Proy. CF</th><th class="pr-2">Com. Proy.</th><th>Rango Proy.</th></tr></thead><tbody id="tablaGrupalAsesores" class="divide-y divide-slate-50 text-slate-800"></tbody></table></div>
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full"><h3 class="text-xs uppercase text-slate-800 font-black tracking-wider mb-3">Avance Carruseleros (2%)</h3><table class="w-full text-[11px] md:text-xs text-left min-w-max"><thead class="text-slate-400 border-b border-slate-200 font-black tracking-wider"><tr><th class="py-2 pr-2">Carr.</th><th class="pr-2">Vent.</th><th class="pr-2">CF Total</th><th class="pr-2">Com(2%)</th><th>Proy.</th></tr></thead><tbody id="tablaGrupalCarruseleros" class="divide-y divide-slate-50 text-slate-800"></tbody></table></div>
-                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full"><h3 class="text-xs uppercase text-slate-800 font-black tracking-wider mb-3">Bono KT Meta</h3><table class="w-full text-[11px] md:text-xs text-left min-w-max"><thead class="text-slate-400 border-b border-slate-200 font-black tracking-wider"><tr><th class="py-2 pr-2">Asesor</th><th class="pr-2">Meta</th><th class="pr-2">Progreso</th><th class="pr-2">Restante</th><th>Bono</th></tr></thead><tbody id="tablaGrupalBono" class="divide-y divide-slate-50 text-slate-800"></tbody></table></div>
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full"><h3 class="text-xs uppercase text-slate-800 font-black tracking-wider mb-3">Bono KT Meta</h3><table class="w-full text-[11px] md:text-xs text-left min-w-max"><thead class="text-slate-400 border-b border-slate-200 font-black tracking-wider"><tr><th class="py-2 pr-2">Asesor</th><th class="py-2 pr-2">Meta</th><th class="py-2 pr-2">Progreso</th><th class="py-2 pr-2">Restante</th><th>Bono</th></tr></thead><tbody id="tablaGrupalBono" class="divide-y divide-slate-50 text-slate-800"></tbody></table></div>
                         </div>
                     </div>
                 </div>
@@ -394,8 +394,8 @@
 
         let userIsInteracting = false;
         document.addEventListener('mousedown', () => { userIsInteracting = true; });
-        document.addEventListener('mouseup', () => { setTimeout(() => { userIsInteracting = false; }, 2000); });
-        document.addEventListener('keydown', () => { userIsInteracting = true; setTimeout(() => { userIsInteracting = false; }, 2000); });
+        document.addEventListener('mouseup', () => { setTimeout(() => { userIsInteracting = false; }, 4000); });
+        document.addEventListener('keydown', () => { userIsInteracting = true; setTimeout(() => { userIsInteracting = false; }, 4000); });
 
         function getConfig() { 
             return JSON.parse(localStorage.getItem('ffvv_config')) || { 
@@ -736,7 +736,7 @@
                                         const [id] = args; let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
                                     }
                                     
-                                    // COWORK BASE DITO - DESCARGA TOTAL PAGINADA POR BLOQUES HASTA 35,000 REGISTROS FILTRADOS POR CICLO
+                                    // COWORK BASE DITO - DESCARGA TOTAL PAGINADA POR BLOQUES HASTA 40,000 REGISTROS FILTRADOS POR CICLO
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
                                         let cloudConf = { cicloDefault: '20', vistaDito: null, globalSort: [
@@ -761,7 +761,7 @@
 
                                         let allBaseV = [];
                                         let step = 1000;
-                                        for (let i = 0; i < 35000; i += step) {
+                                        for (let i = 0; i < 40000; i += step) {
                                             let query = _supabase.from('BASE DITO').select('*');
                                             
                                             if (ciclos.length === 1) {
@@ -1070,7 +1070,7 @@
         }
 
         function aplicarFiltrosBase(silencioso = false) {
-            if (silencioso && userIsInteracting) return; // Pausa sincronización si estás escribiendo o desplegando menús
+            if (silencioso && userIsInteracting) return; // Protege tus selecciones y menús
 
             const txtEl = document.getElementById('filtroTextoBase'); const txt = txtEl ? txtEl.value.trim() : '';
             const chkOcultar = document.getElementById('chkOcultarGestionados'); const ocultar = chkOcultar ? chkOcultar.checked : true;
@@ -1128,13 +1128,13 @@
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
             
-            // Sincronización en segundo plano segura (cada 2 segundos, pausada si el usuario interactúa)
+            // Actualización automática cada 9 segundos (segura y sin interrumpir tu trabajo)
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
                 if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
                     aplicarFiltrosBase(true);
                 }
-            }, 2000); 
+            }, 9000); 
         }
 
         function sortBase(columna) { 
@@ -1189,6 +1189,7 @@
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
+                        // ORDEN: DNI, CLIENTE, NUMERO (ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, CARRUSELERO, VENDEDOR, GESTIONADO
                         htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '">' +
                             '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
                             '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
@@ -1221,6 +1222,167 @@
 
             google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
+
+        async function ejecutarCargaMasiva() {
+            let fileInput = document.getElementById('csvFileInput');
+            if (!fileInput.files || fileInput.files.length === 0) { alert('Por favor selecciona un archivo CSV primero.'); return; }
+            
+            let reader = new FileReader();
+            reader.onload = async function(e) {
+                let text = e.target.result;
+                let lines = text.split('\n').map(line => line.split(';').map(item => item.trim()));
+                let headers = lines[0].map(h => h.trim());
+                
+                const progressDiv = document.getElementById('progressContainerVentas');
+                const bar = document.getElementById('progressBarVentas');
+                const pText = document.getElementById('progressTextVentas');
+                progressDiv.classList.remove('hidden'); bar.style.width = '0%'; bar.classList.remove('bg-red-500'); bar.classList.add('bg-blue-600'); pText.textContent = 'Procesando archivo...';
+                
+                let inserts = [];
+                for(let i=1; i<lines.length; i++) {
+                    if(lines[i].length < 2) continue;
+                    let obj = {}; headers.forEach((h, idx) => { obj[h] = lines[i][idx] || null; });
+                    if (!obj['ID'] && !obj['id']) obj['ID'] = Date.now().toString() + 'V' + i;
+                    inserts.push(obj);
+                }
+                
+                let total = inserts.length; let chunkSize = 300; let processed = 0; let hasError = false;
+                
+                for(let i=0; i<total; i+=chunkSize) {
+                    let chunk = inserts.slice(i, i+chunkSize);
+                    const { error } = await _supabase.from('BASE DE VENTAS').insert(chunk);
+                    if (error) { hasError = true; showToast('Error: ' + error.message); break; }
+                    processed += chunk.length;
+                    let percent = Math.min(100, Math.round((processed / total) * 100));
+                    bar.style.width = percent + '%'; pText.textContent = `Cargando CRM... ${percent}% (${processed}/${total})`;
+                }
+                
+                if(!hasError) {
+                    showToast('Carga Masiva CRM completada'); fileInput.value = ''; loadVentas();
+                    setTimeout(() => progressDiv.classList.add('hidden'), 3000);
+                } else { pText.textContent = 'Error en la carga.'; bar.classList.remove('bg-blue-600'); bar.classList.add('bg-red-500'); }
+            };
+            reader.readAsText(fileInput.files[0]);
+        }
+
+        async function ejecutarCargaBase() {
+            let fileInput = document.getElementById('csvBaseInput');
+            if (!fileInput.files || fileInput.files.length === 0) { alert('Selecciona el CSV de la Base.'); return; }
+            
+            let reader = new FileReader();
+            reader.onload = async function(e) {
+                let text = e.target.result;
+                let lines = text.split('\n').map(line => line.split(';').map(item => item.trim()));
+                let headers = lines[0].map(h => h.trim().toUpperCase());
+                
+                const progressDiv = document.getElementById('progressContainerBase');
+                const bar = document.getElementById('progressBarBase');
+                const pText = document.getElementById('progressTextBase');
+                progressDiv.classList.remove('hidden'); bar.style.width = '0%'; bar.classList.remove('bg-red-500'); bar.classList.add('bg-slate-800'); pText.textContent = 'Procesando archivo...';
+                
+                let inserts = [];
+                for(let i=1; i<lines.length; i++) {
+                    if(lines[i].length < 2) continue;
+                    let rawObj = {}; 
+                    headers.forEach((h, idx) => { rawObj[h] = lines[i][idx] || null; });
+                    
+                    let obj = {
+                        ID: Date.now().toString() + 'D' + i,
+                        VENDEDOR: rawObj['VENDEDOR'] || null,
+                        DNI: rawObj['DNI'] ? parseInt(rawObj['DNI'].replace(/[^0-9]/g, '')) || null : null,
+                        NOMBRE_CLIENTE: rawObj['NOMBRE_CLIENTE'] || rawObj['NOMBRE_CL'] || null,
+                        FV: rawObj['FV'] || null,
+                        MESES: rawObj['MESES'] ? parseInt(rawObj['MESES']) || 0 : 0,
+                        OPERACION: rawObj['OPERACION'] || null,
+                        SISACT: rawObj['SISACT'] || null,
+                        ESTADO: rawObj['ESTADO'] || null,
+                        HORA: rawObj['HORA'] || null,
+                        OBS: rawObj['OBS'] || null,
+                        GESTIONADO: rawObj['GESTIONADO'] || 'FALSE',
+                        CARRUSELERO: rawObj['CARRUSELERO'] || null,
+                        CICLO: rawObj['CICLO'] ? parseInt(rawObj['CICLO']) || null : null,
+                        NUMERO: rawObj['NUMERO'] || null,
+                        MES: rawObj['MES'] || null,
+                        OPERADOR: rawObj['OPERADOR'] || null,
+                        FECHA_OPSITEL: rawObj['FECHA_OPSITEL'] || null
+                    };
+
+                    inserts.push(obj);
+                }
+                
+                let total = inserts.length; let chunkSize = 300; let processed = 0; let hasError = false;
+                
+                for(let i=0; i<total; i+=chunkSize) {
+                    let chunk = inserts.slice(i, i+chunkSize);
+                    const { error } = await _supabase.from('BASE DITO').insert(chunk);
+                    if (error) { hasError = true; showToast('Error: ' + error.message); break; }
+                    processed += chunk.length;
+                    let percent = Math.min(100, Math.round((processed / total) * 100));
+                    bar.style.width = percent + '%'; pText.textContent = `Cargando Base Dito... ${percent}% (${processed}/${total})`;
+                }
+                
+                if(!hasError) {
+                    showToast('Base Dito cargada exitosamente'); fileInput.value = ''; loadBaseVentas();
+                    setTimeout(() => progressDiv.classList.add('hidden'), 3000);
+                } else { pText.textContent = 'Error en la carga.'; bar.classList.remove('bg-slate-800'); bar.classList.add('bg-red-500'); }
+            };
+            reader.readAsText(fileInput.files[0]);
+        }
+
+        function descargarPlantillaBase() {
+            let headers = "VENDEDOR;DNI;NOMBRE_CLIENTE;FV;MESES;OPERACION;SISACT;ESTADO;HORA;OBS;GESTIONADO;CARRUSELERO;CICLO;NUMERO;MES;OPERADOR;FECHA_OPSITEL\n";
+            let ejemplo = "SUNNY;12345678;JUAN PEREZ;15/04/2026;3;PORTA;APROBADO;VENTA;10:00;obs prueba;FALSE;HUMBERTO;17;999888777;abril;CLARO;15/04/2026\n";
+            let blob = new Blob([headers + ejemplo], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); let url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "plantilla_base_dito.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        function ejecutarBusquedaCliente() {
+            const inputEl = document.getElementById('inputBusquedaCliente'); let val = inputEl.value.trim(); if(!val) { showToast('Ingrese un DNI o Celular'); return; }
+            if (val.length > 0 && val.length < 8 && !isNaN(val)) { val = val.padStart(8, '0'); inputEl.value = val; }
+            for(let i=1; i<=3; i++) { document.getElementById('resBusqCel'+i).textContent = '-'; document.getElementById('resBusqFv'+i).textContent = '-'; document.getElementById('resBusqCiclo'+i).textContent = '-'; document.getElementById('resBusqCarr'+i).textContent = '-'; } document.getElementById('resBusqDni').textContent = '-'; document.getElementById('resBusqNombre').textContent = '-'; showToast('Buscando...');
+            google.script.run.withSuccessHandler(function(res) {
+                if(res.success && res.data.length > 0) {
+                    showToast('¡Cliente encontrado!'); const d = res.data; document.getElementById('resBusqDni').textContent = d[0].dni || '-'; document.getElementById('resBusqNombre').textContent = d[0].nombre || '-';
+                    let limit = Math.min(d.length, 3);
+                    for(let i=0; i<limit; i++) { let idx = i + 1; document.getElementById('resBusqCel'+idx).textContent = d[i].celular || '-'; document.getElementById('resBusqFv'+idx).textContent = d[i].fv || '-'; document.getElementById('resBusqCiclo'+idx).textContent = d[i].ciclo || '-'; document.getElementById('resBusqCarr'+idx).textContent = d[i].carruselero || '-'; }
+                } else { showToast('No se encontraron registros para este cliente'); }
+            }).withFailureHandler(function(err){ showToast('Error: ' + err.message); }).buscarClienteBase(val);
+        }
+
+        function descargarPlantilla() {
+            let headers = "ANI;N_PORTAR;ASESOR;CLIENTE;DOC;ESTADO;SUB_ESTADO;FECHA_ACTIVACION;OPERADOR;TIPO_VENTA;PAQUETE;CF;REGION;CARRUSELERO;CAMPANA;OBSERVACIONES;REVISION;SEC;FORMA_ENTREGA\n";
+            let ejemplo = "987654321;999888777;SUNNY;Carlos Perez;12345678;P.ENTREGA;ASIGNADO CADENA;;MOVISTAR;Portabilidad;Chip;79.90;LIMA;HUMBERTO;REGULAR;Ejemplo obs;EN REPORTE;SEC-001;DELIVERY\n";
+            let blob = new Blob([headers + ejemplo], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); let url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "plantilla_carga_ventas_ffvv.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        function actualizarOpRow(selectTipo) { const row = selectTipo.closest('.linea-row'); const opSelect = row.querySelector('select[name="operador"]'); const tipo = selectTipo.value; opSelect.innerHTML = ''; let opciones = (tipo === 'Alta' || tipo === 'Renovacion') ? ['CLARO'] : ['MOVISTAR', 'BITEL', 'ENTEL', 'OTROS']; for(let i=0; i<opciones.length; i++) { opSelect.innerHTML += '<option value="' + opciones[i] + '">' + opciones[i] + '</option>'; } }
+        function actualizarSubEstados(idPadre, idHijo, valorPredefinido = null) { const padreEl = document.getElementById(idPadre); if(!padreEl) return; const estado = padreEl.value; const sub = document.getElementById(idHijo); if(!sub) return; sub.innerHTML = ''; let arr = DEP_ESTADOS[estado] || []; for(let i=0; i<arr.length; i++) { let sel = valorPredefinido === arr[i] ? 'selected' : ''; sub.innerHTML += '<option value="' + arr[i] + '" ' + sel + '>' + arr[i] + '</option>'; } if(idPadre.indexOf('inline') !== -1 && !valorPredefinido && arr.length > 0) { inlineUpdate(idPadre.split('_')[1], 'SUB_ESTADO', arr[0]); } }
+        function actualizarSubEstadosModal() { const estado = document.getElementById('editEstado').value; const sub = document.getElementById('editSubEstado'); if(!sub) return; sub.innerHTML = ''; let arr = DEP_ESTADOS[estado] || []; for(let i=0; i<arr.length; i++) { sub.innerHTML += '<option value="' + arr[i] + '">' + arr[i] + '</option>'; } }
+        function addLinea() { const container = document.getElementById('lineasContainer'); if(!container) return; const div = document.createElement('div'); div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 linea-row'; div.innerHTML = '<div><label class="block text-[10px] text-slate-600 font-bold">N° a Portar</label><input type="text" name="n_portar" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: 999888777" required></div><div><label class="block text-[10px] text-slate-600 font-bold">N° SEC</label><input type="text" name="sec" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: SEC-123"></div><div><label class="block text-[10px] text-slate-600 font-bold">Tipo de Venta</label><select name="tipoVenta" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" onchange="actualizarOpRow(this)"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovación</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Operador</label><select name="operador" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Plan (CF S/)</label><select name="cf" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-green-700 text-sm font-bold focus:outline-none focus:border-red-600"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Campaña</label><select name="campana" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div><div class="col-span-1 md:col-span-6 flex justify-end"><button type="button" onclick="this.closest(\'.linea-row\').remove()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded text-xs transition">Eliminar Línea</button></div>'; container.appendChild(div); }
+
+        function renderTablePaginated() {
+            const total = baseVentasGlobal.length;
+            const totalPages = Math.ceil(total / itemsPerPageBase) || 1;
+            if(currentPageBase > totalPages) currentPageBase = totalPages;
+            
+            const start = (currentPageBase - 1) * itemsPerPageBase;
+            const end = start + itemsPerPageBase;
+            const paginatedItems = baseVentasGlobal.slice(start, end);
+            
+            renderBaseTable(paginatedItems); 
+            
+            const pagDiv = document.getElementById('paginacionBaseVentas');
+            if(pagDiv) {
+                let html = '<div class="text-sm md:text-base font-extrabold text-slate-800">Mostrando ' + (total === 0 ? 0 : start + 1) + ' a ' + Math.min(end, total) + ' de <span class="text-blue-600">' + total + '</span> registros</div>';
+                html += '<div class="flex gap-2 items-center">';
+                html += '<button onclick="cambiarPaginaBase(' + (currentPageBase - 1) + ')" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 font-bold shadow-sm disabled:opacity-50 transition" ' + (currentPageBase === 1 ? 'disabled' : '') + '><i class="fas fa-chevron-left mr-2"></i> Anterior</button>';
+                html += '<span class="px-4 text-sm md:text-base font-black text-slate-800 bg-slate-200 py-2 rounded-lg">Pág ' + currentPageBase + ' / ' + totalPages + '</span>';
+                html += '<button onclick="cambiarPaginaBase(' + (currentPageBase + 1) + ')" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 font-bold shadow-sm disabled:opacity-50 transition" ' + (currentPageBase === totalPages ? 'disabled' : '') + '>Siguiente <i class="fas fa-chevron-right ml-2"></i></button>';
+                html += '</div>';
+                pagDiv.innerHTML = html;
+            }
+        }
+
+        function cambiarPaginaBase(page) { currentPageBase = page; renderBaseTablePaginated(); }
     </script>
 </body>
 </html>
