@@ -20,6 +20,24 @@
         .carr-HUMBERTO { color: #2563eb !important; font-weight: 900 !important; }
         
         select.opt-INFORMADO, select.opt-DNC, select.opt-NOCONTESTA, select.opt-NOINTERESADO, select.opt-VENTA, select.opt-WSP { font-weight: 900 !important; border: none !important; }
+
+        /* Redimensionador de columnas para Base Dito */
+        .resizable-th {
+            position: relative;
+        }
+        .resizer {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            cursor: col-resize;
+            user-select: none;
+            touch-action: none;
+        }
+        .resizer:hover, .resizer.resizing {
+            background-color: #ef4444;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -272,18 +290,18 @@
                             <table class="w-full text-left border-collapse min-w-max">
                                 <thead class="bg-slate-100 text-slate-500 border-b border-slate-200 uppercase tracking-widest font-black">
                                     <tr>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px]" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-20 text-center" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-20 text-center" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-32 text-center" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px]" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 text-center" title="Gestionado"><i class="fas fa-check-square text-lg"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i></th>
-                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 resizable-th" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[220px] resizable-th" onclick="sortBase('NOMBRE_CLIENTE')">Cliente <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 resizable-th" onclick="sortBase('NUMERO')">Número <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 resizable-th" onclick="sortBase('FV')">FV <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-20 text-center resizable-th" onclick="sortBase('MESES')">Meses <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-20 text-center resizable-th" onclick="sortBase('CICLO')">Ciclo <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-3 py-3 cursor-pointer hover:text-red-600 w-32 text-center resizable-th" onclick="sortBase('ESTADO')">Estado <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 resizable-th" onclick="sortBase('HORA')">Hora <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 min-w-[180px] resizable-th" onclick="sortBase('OBS')">Obs <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-4 py-3 text-center resizable-th" title="Gestionado"><i class="fas fa-check-square text-lg"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 resizable-th" onclick="sortBase('CARRUSELERO')">Carruselero <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
+                                        <th class="px-4 py-3 cursor-pointer hover:text-red-600 resizable-th" onclick="sortBase('VENDEDOR')">Vendedor <i class="fas fa-sort ml-1"></i><div class="resizer" onmousedown="initResize(event)"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="tablaCuerpoBase" class="divide-y divide-slate-100 bg-white font-semibold w-full"></tbody>
@@ -1186,6 +1204,32 @@
             }).obtenerConfiguracion();
         }
 
+        function initResize(e) {
+            e.stopPropagation();
+            const th = e.target.parentElement;
+            const startX = e.clientX;
+            const startWidth = th.offsetWidth;
+            const resizer = e.target;
+
+            resizer.classList.add('resizing');
+
+            function onMouseMove(event) {
+                const currentWidth = startWidth + (event.clientX - startX);
+                if (currentWidth > 40) {
+                    th.style.width = currentWidth + 'px';
+                }
+            }
+
+            function onMouseUp() {
+                resizer.classList.remove('resizing');
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
         function fijarVistaGlobal() {
             const chkOcultar = document.getElementById('chkOcultarGestionados');
             const cBoxes = document.querySelectorAll('.chk-ciclo:checked');
@@ -1343,7 +1387,7 @@
                 if(tr) tr.remove(); 
             } else { renderBaseTablePaginated(); }
 
-            google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado in BD'); } }).updateBaseVentasInline(id, campo, valor);
+            google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
 
         // RENDER DE VENTAS ACTIVAS
@@ -1729,6 +1773,13 @@
 
         function closeModalWap() { const m = document.getElementById('modalWap'); if(m) m.classList.add('hidden'); }
         function copiarTextoWap() { let area = document.getElementById('wapTextContent'); if(area) { area.select(); document.execCommand('copy'); showToast('¡Texto copiado al portapapeles!'); } }
+
+        // Exponer funciones globales de utilidad
+        window.loadVentas = loadVentas;
+        window.loadBaseVentas = loadBaseVentas;
+        window.ejecutarBusquedaCliente = ejecutarBusquedaCliente;
+        window.aplicarFiltros = aplicarFiltros;
+        window.aplicarFiltrosBase = aplicarFiltrosBase;
     </script>
 </body>
 </html>
