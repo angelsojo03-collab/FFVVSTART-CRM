@@ -1209,6 +1209,13 @@
             const cBoxes = document.querySelectorAll('.chk-estado:checked'); 
             const estadosCheckbox = Array.from(cBoxes).map(cb => cb.value);
             
+            const lblEstado = document.getElementById('lblEstadoFiltro');
+            if (lblEstado) { 
+                if (estadosCheckbox.length === 0) lblEstado.textContent = "Todos los Estados"; 
+                else if (estadosCheckbox.length === 1) lblEstado.textContent = estadosCheckbox[0]; 
+                else lblEstado.textContent = estadosCheckbox.length + " Seleccionados"; 
+            }
+
             let fechaFiltroFormat = '';
             if (fechaFiltro) { 
                 let partes = fechaFiltro.split('-'); 
@@ -1216,19 +1223,24 @@
             }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
-                // Si hay texto escrito, la búsqueda actúa de inmediato sin restricciones de estado
+                const matchTxt = !txt || (
+                    String(v.CLIENTE || '').toLowerCase().includes(txt) || 
+                    String(v.DOC || '').toLowerCase().includes(txt) || 
+                    String(v.N_PORTAR || '').toLowerCase().includes(txt) || 
+                    String(v.ANI || '').toLowerCase().includes(txt) || 
+                    String(v.SEC || '').toLowerCase().includes(txt)
+                );
+
+                // PRIORIDAD ABSOLUTA AL TEXTO: Si escribiste algo, filtramos solo por el texto sin importar estados o meses
                 if (txt !== '') {
-                    return (
-                        String(v.CLIENTE || '').toLowerCase().includes(txt) || 
-                        String(v.DOC || '').toLowerCase().includes(txt) || 
-                        String(v.N_PORTAR || '').toLowerCase().includes(txt) || 
-                        String(v.ANI || '').toLowerCase().includes(txt) || 
-                        String(v.SEC || '').toLowerCase().includes(txt)
-                    );
+                    return matchTxt;
                 }
 
+                // Si la barra de búsqueda está vacía, aplicamos los filtros normales
                 let matchEst = true; 
-                if (estadosCheckbox.length > 0) { matchEst = estadosCheckbox.includes(v.ESTADO); }
+                if (estadosCheckbox.length > 0) { 
+                    matchEst = estadosCheckbox.includes(v.ESTADO); 
+                }
                 
                 const matchTipo = !tipo || v.TIPO_VENTA === tipo; 
                 const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; 
@@ -1236,8 +1248,11 @@
                 
                 let matchRevision = true; 
                 if (revFiltro) { 
-                    if (revFiltro === "- Sin Revisión -") { matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; } 
-                    else { matchRevision = v.REVISION === revFiltro; } 
+                    if (revFiltro === "- Sin Revisión -") { 
+                        matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; 
+                    } else { 
+                        matchRevision = v.REVISION === revFiltro; 
+                    } 
                 }
                 
                 let fAct = String(v.FECHA_ACTIVACION || '').trim();
@@ -1249,12 +1264,14 @@
                 }
                 
                 let matchFecha = true; 
-                if (fechaFiltroFormat) { matchFecha = (fAct === fechaFiltroFormat); }
+                if (fechaFiltroFormat) { 
+                    matchFecha = (fAct === fechaFiltroFormat); 
+                }
                 
                 return matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
             });
             
-            // Ordenamiento estricto: Las ventas más nuevas siempre arriba
+            // ORDENAMIENTO ESTRICTO: Las ventas más nuevas siempre arriba
             ventasFiltradasGlobal.sort(function(a, b) {
                 let idA = String(a.ID || a.id || '');
                 let idB = String(b.ID || b.id || '');
