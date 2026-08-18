@@ -198,7 +198,7 @@
                     </div>
                     
                     <div class="bg-white p-4 md:p-5 rounded-2xl shadow-md border border-slate-200 flex flex-wrap items-center gap-3 md:gap-4 w-full">
-                        <div class="flex-grow min-w-[200px] relative"><i class="fas fa-search absolute left-3 top-3 text-slate-400"></i><input type="text" id="filtroTexto" onkeyup="aplicarFiltros()" placeholder="Buscar Cliente, DNI o SEC..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"></div>
+                        <div class="flex-grow min-w-[200px] relative"><i class="fas fa-search absolute left-3 top-3 text-slate-400"></i><input type="text" id="filtroTexto" oninput="aplicarFiltros()" placeholder="Buscar Cliente, DNI o SEC..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"></div>
                         <div class="w-full sm:w-32"><select id="filtroMes" onchange="aplicarFiltros()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner"><option value="">Todos los Meses</option><option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option><option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option><option value="07">Julio</option><option value="08">Agosto</option><option value="09">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div>
                         <div class="w-full sm:w-36"><input type="date" id="filtroFechaAct" onchange="aplicarFiltros()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner" title="Filtrar por Día Exacto"></div>
                         <div class="w-full sm:w-44 relative"><button id="btnEstadoFiltro" type="button" class="w-full text-left px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none flex justify-between items-center font-bold shadow-inner" onclick="document.getElementById('listaEstados').classList.toggle('hidden')"><span id="lblEstadoFiltro" class="truncate">P.ENTREGA</span><i class="fas fa-chevron-down ml-2 text-slate-400"></i></button><div id="listaEstados" class="hidden absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl p-2 flex flex-col gap-2 max-h-56 overflow-y-auto"><label class="flex items-center gap-3 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded"><input type="checkbox" value="P.ENTREGA" class="chk-estado accent-red-600 w-4 h-4" checked onchange="aplicarFiltros()"> P.ENTREGA</label><label class="flex items-center gap-3 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded"><input type="checkbox" value="AGENDADO" class="chk-estado accent-red-600 w-4 h-4" onchange="aplicarFiltros()"> AGENDADO</label><label class="flex items-center gap-3 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded"><input type="checkbox" value="ENTREGADO" class="chk-estado accent-red-600 w-4 h-4" onchange="aplicarFiltros()"> ENTREGADO</label><label class="flex items-center gap-3 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded"><input type="checkbox" value="REINGRESAR" class="chk-estado accent-red-600 w-4 h-4" onchange="aplicarFiltros()"> REINGRESAR</label><label class="flex items-center gap-3 text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded"><input type="checkbox" value="NO DESEA" class="chk-estado accent-red-600 w-4 h-4" onchange="aplicarFiltros()"> NO DESEA</label></div></div>
@@ -1196,7 +1196,9 @@
         function addLinea() { const container = document.getElementById('lineasContainer'); if(!container) return; const div = document.createElement('div'); div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 linea-row'; div.innerHTML = '<div><label class="block text-[10px] text-slate-600 font-bold">N° a Portar</label><input type="text" name="n_portar" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: 999888777" required></div><div><label class="block text-[10px] text-slate-600 font-bold">N° SEC</label><input type="text" name="sec" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" placeholder="Ej: SEC-123"></div><div><label class="block text-[10px] text-slate-600 font-bold">Tipo de Venta</label><select name="tipoVenta" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600" onchange="actualizarOpRow(this)"><option value="Portabilidad">Portabilidad</option><option value="Alta">Alta</option><option value="Renovacion">Renovación</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Operador</label><select name="operador" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="MOVISTAR">MOVISTAR</option><option value="BITEL">BITEL</option><option value="ENTEL">ENTEL</option><option value="OTROS">OTROS</option><option value="CLARO">CLARO</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Plan (CF S/)</label><select name="cf" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-green-700 text-sm font-bold focus:outline-none focus:border-red-600"><option value="29.90">29.90</option><option value="39.90">39.90</option><option value="49.90">49.90</option><option value="56.90">56.90</option><option value="60.90">60.90</option><option value="69.90">69.90</option><option value="79.90" selected>79.90</option><option value="95.90">95.90</option><option value="109.9">109.9</option></select></div><div><label class="block text-[10px] text-slate-600 font-bold">Campaña</label><select name="campana" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded text-slate-800 text-sm focus:outline-none focus:border-red-600"><option value="REGULAR">REGULAR</option><option value="DAC VIRTUAL" selected>DAC VIRTUAL</option><option value="FC ESPECIAL">FC ESPECIAL</option><option value="LINEA ADICIONAL">LINEA ADICIONAL</option></select></div><div class="col-span-1 md:col-span-6 flex justify-end"><button type="button" onclick="this.closest(\'.linea-row\').remove()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded text-xs transition">Eliminar Línea</button></div>'; container.appendChild(div); }
 
         function aplicarFiltros() {
-            const txtEl = document.getElementById('filtroTexto'); const txt = txtEl ? txtEl.value.trim().toLowerCase() : '';
+            const txtEl = document.getElementById('filtroTexto'); 
+            const txt = txtEl ? txtEl.value.trim().toLowerCase() : '';
+            
             const tipoEl = document.getElementById('filtroTipo'); const tipo = tipoEl ? tipoEl.value : '';
             const mesEl = document.getElementById('filtroMes'); const mes = mesEl ? mesEl.value : '';
             const fechaEl = document.getElementById('filtroFechaAct'); const fechaFiltro = fechaEl ? fechaEl.value : '';
@@ -1205,33 +1207,25 @@
             const revEl = document.getElementById('filtroRevision'); const revFiltro = revEl ? revEl.value : '';
 
             const cBoxes = document.querySelectorAll('.chk-estado:checked'); const estadosCheckbox = Array.from(cBoxes).map(cb => cb.value);
-            const lblEstado = document.getElementById('lblEstadoFiltro');
-            if (lblEstado) { if (estadosCheckbox.length === 0) lblEstado.textContent = "Todos los Estados"; else if (estadosCheckbox.length === 1) lblEstado.textContent = estadosCheckbox[0]; else lblEstado.textContent = estadosCheckbox.length + " Seleccionados"; }
-
+            
             let fechaFiltroFormat = '';
             if (fechaFiltro) { let partes = fechaFiltro.split('-'); fechaFiltroFormat = partes[2] + '/' + partes[1] + '/' + partes[0]; }
 
             ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
-                // 1. EVALUACIÓN DE TEXTO (DNI, Nombre, ANI, SEC, etc.)
-                let matchTxt = true;
+                // Si hay texto escrito, filtramos exclusivamente por el texto (DNI, Cliente, ANI, SEC, etc.)
                 if (txt !== '') {
-                    matchTxt = (
+                    return (
                         String(v.CLIENTE || '').toLowerCase().includes(txt) || 
                         String(v.DOC || '').toLowerCase().includes(txt) || 
                         String(v.N_PORTAR || '').toLowerCase().includes(txt) || 
                         String(v.ANI || '').toLowerCase().includes(txt) || 
                         String(v.SEC || '').toLowerCase().includes(txt)
                     );
-                    // Si hay texto de búsqueda y coincide, filtramos estrictamente por este criterio de inmediato
-                    if (matchTxt) return true;
-                    else return false; 
                 }
 
-                // 2. FILTROS ESTÁNDAR (Cuando el buscador de texto está vacío)
+                // Si la barra de búsqueda está vacía, aplicamos los filtros gerenciales normales
                 let matchEst = true; 
-                if (estadosCheckbox.length > 0) { 
-                    matchEst = estadosCheckbox.includes(v.ESTADO); 
-                }
+                if (estadosCheckbox.length > 0) { matchEst = estadosCheckbox.includes(v.ESTADO); }
                 
                 const matchTipo = !tipo || v.TIPO_VENTA === tipo; 
                 const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; 
@@ -1239,32 +1233,25 @@
                 
                 let matchRevision = true; 
                 if (revFiltro) { 
-                    if (revFiltro === "- Sin Revisión -") { 
-                        matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; 
-                    } else { 
-                        matchRevision = v.REVISION === revFiltro; 
-                    } 
+                    if (revFiltro === "- Sin Revisión -") { matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; } 
+                    else { matchRevision = v.REVISION === revFiltro; } 
                 }
                 
                 let fAct = String(v.FECHA_ACTIVACION || '').trim();
                 let matchMes = true; 
-                if (mes) { 
-                    if (fAct !== '') { 
-                        let parts = fAct.split('/'); 
-                        let mesVenta = parts.length >= 2 ? parts[1] : ''; 
-                        matchMes = (mesVenta === mes); 
-                    } 
+                if (mes && fAct !== '') { 
+                    let parts = fAct.split('/'); 
+                    let mesVenta = parts.length >= 2 ? parts[1] : ''; 
+                    matchMes = (mesVenta === mes); 
                 }
                 
                 let matchFecha = true; 
-                if (fechaFiltroFormat) { 
-                    matchFecha = (fAct === fechaFiltroFormat); 
-                }
+                if (fechaFiltroFormat) { matchFecha = (fAct === fechaFiltroFormat); }
                 
                 return matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
             });
             
-            // ORDENAMIENTO ESTRICTO: Las ventas más nuevas (ID mayor) siempre arriba
+            // Ordenamiento estricto: Las ventas más nuevas siempre arriba
             ventasFiltradasGlobal.sort(function(a, b) {
                 let idA = String(a.ID || a.id || '');
                 let idB = String(b.ID || b.id || '');
