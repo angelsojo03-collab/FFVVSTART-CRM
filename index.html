@@ -488,8 +488,995 @@
             const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; 
             const mg = document.getElementById('confMesGestion'); if(mg) mg.value = c.mesGestion || '';
         }
+        
+        function aplicarFiltros() {
+            const txtEl = document.getElementById('filtroTexto'); 
+            const txt = txtEl ? txtEl.value.trim().toLowerCase() : '';
+            const tipoEl = document.getElementById('filtroTipo'); const tipo = tipoEl ? tipoEl.value : '';
+            const mesEl = document.getElementById('filtroMes'); const mes = mesEl ? mesEl.value : '';
+            const fechaEl = document.getElementById('filtroFechaAct'); const fechaFiltro = fechaEl ? fechaEl.value : '';
+            const entregaEl = document.getElementById('filtroEntrega'); const entrega = entregaEl ? entregaEl.value : '';
+            const asesorEl = document.getElementById('filtroAsesor'); const asesorFiltro = asesorEl ? asesorEl.value : '';
+            const revEl = document.getElementById('filtroRevision'); const revFiltro = revEl ? revEl.value : '';
 
-        // FUNCIONES DE RENDERIZADO DECLARADAS DE MANERA SECUENCIAL SEGURA
+            const cBoxes = document.querySelectorAll('.chk-estado:checked'); 
+            const estadosCheckbox = Array.from(cBoxes).map(cb => cb.value);
+            
+            const lblEstado = document.getElementById('lblEstadoFiltro');
+            if (lblEstado) { 
+                if (estadosCheckbox.length === 0) lblEstado.textContent = "Todos los Estados"; 
+                else if (estadosCheckbox.length === 1) lblEstado.textContent = estadosCheckbox[0]; 
+                else lblEstado.textContent = estadosCheckbox.length + " Seleccionados"; 
+            }
+
+            let fechaFiltroFormat = '';
+            if (fechaFiltro) { 
+                let partes = fechaFiltro.split('-'); 
+                fechaFiltroFormat = partes[2] + '/' + partes[1] + '/' + partes[0]; 
+            }
+
+            ventasFiltradasGlobal = ventasGlobal.filter(function(v) {
+                if (txt !== '') {
+                    let cliente = String(v.CLIENTE || '').toLowerCase();
+                    let doc = String(v.DOC || '').toLowerCase();
+                    let portar = String(v.N_PORTAR || '').toLowerCase();
+                    let ani = String(v.ANI || '').toLowerCase();
+                    let sec = String(v.SEC || '').toLowerCase();
+                    return cliente.includes(txt) || doc.includes(txt) || portar.includes(txt) || ani.includes(txt) || sec.includes(txt);
+                }
+
+                let matchEst = true; 
+                if (estadosCheckbox.length > 0) { 
+                    matchEst = estadosCheckbox.includes(String(v.ESTADO || '').trim()); 
+                }
+                
+                const matchTipo = !tipo || v.TIPO_VENTA === tipo; 
+                const matchEntrega = !entrega || v.FORMA_ENTREGA === entrega; 
+                const matchAsesor = !asesorFiltro || String(v.ASESOR || '').toUpperCase() === asesorFiltro.toUpperCase();
+                
+                let matchRevision = true; 
+                if (revFiltro) { 
+                    if (revFiltro === "- Sin Revisión -") { 
+                        matchRevision = !v.REVISION || String(v.REVISION).trim() === ''; 
+                    } else { 
+                        matchRevision = v.REVISION === revFiltro; 
+                    } 
+                }
+                
+                let fAct = String(v.FECHA_ACTIVACION || '').trim();
+                let matchMes = true; 
+                if (mes && fAct !== '') { 
+                    let parts = fAct.split('/'); 
+                    let mesVenta = parts.length >= 2 ? parts[1] : ''; 
+                    matchMes = (mesVenta === mes); 
+                }
+                
+                let matchFecha = true; 
+                if (fechaFiltroFormat) { 
+                    matchFecha = (fAct === fechaFiltroFormat); 
+                }
+                
+                return matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
+            });
+            
+            ventasFiltradasGlobal.sort(function(a, b) {
+                let idA = String(a.ID || a.id || '');
+                let idB = String(b.ID || b.id || '');
+                let numA = parseFloat(idA.replace(/[^0-9.]/g, '')) || 0;
+                let numB = parseFloat(idB.replace(/[^0-9.]/g, '')) || 0;
+                if(numA !== numB) return numB - numA;
+                return idB.localeCompare(idA);
+            });
+            
+            currentPageVentas = 1;
+            renderTablePaginated();
+        }
+
+        async function fetchAllRecords(table) {
+            let all = [];
+            for (let i = 0; i < 50000; i += 1000) {
+                let {data, error} = await _supabase.from(table).select('*').range(i, i+999);
+                if (error) throw error;
+                if (data && data.length > 0) all.push(...data);
+                if (!data || data.length < 1000) break;
+            }
+            return all;
+        }
+
+        window.google = {
+            script: {
+                get run() {
+                    const ctx = { successCb: null, failureCb: null, withSuccessHandler: function(cb) { this.successCb = cb; return this; }, withFailureHandler: function(cb) { this.failureCb = cb; return this; } };
+                    return new Proxy(ctx, {
+                        get: function(target, prop) {
+                            if (prop in target) return target[prop];
+                            return async function(...args) {
+                                try {
+                                    let result = null; let conf = getConfig();
+                                    
+                                    if (prop === 'loginUser') {
+                                        const [email, pass] = args;
+                                        const { data, error } = await _supabase.from('CREDENCIALES').select('*').eq('EMAIL', email).eq('PASSWORD', pass).eq('ESTADO', 'Activo');
+                                        if (error) throw error;
+                                        if (data && data.length > 0) { result = { success: true, user: { nombre: data[0].NOMBRE, correo: data[0].EMAIL, rol: data[0].ROL } }; } else { result = { success: false, message: 'Credenciales inválidas' }; }
+                                    }
+                                    
+                                    else if (prop === 'obtenerConfiguracion') {
+                                        try {
+                                            const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            let c = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, mesGestion: String(new Date().getMonth() + 1).padStart(2, '0'), cicloDefault: '20', vistaDito: null, globalSort: [
+                                                { col: 'NOMBRE_CLIENTE', dir: 'asc' },
+                                                { col: 'MESES', dir: 'desc' },
+                                                { col: 'CICLO', dir: 'asc' }
+                                            ] };
+                                            if (data && data.length > 0 && data[0].CONFIG) { try { c = { ...c, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
+                                            result = c;
+                                        } catch(err) {
+                                            result = getConfig();
+                                        }
+                                    }
+                                    else if (prop === 'guardarConfiguracion') {
+                                        const [newConf] = args;
+                                        try {
+                                            const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, mesGestion: String(new Date().getMonth() + 1).padStart(2, '0'), cicloDefault: '20', vistaDito: null, globalSort: [] };
+                                            if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
+                                            const merged = { ...curr, ...newConf };
+                                            await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(merged)}).eq('ROL', 'GERENCIA');
+                                        } catch(err) {}
+                                        result = { success: true };
+                                    }
+                                    else if (prop === 'guardarVistaGlobal') {
+                                        const [vista] = args;
+                                        try {
+                                            const {data} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            let curr = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000, mesGestion: String(new Date().getMonth() + 1).padStart(2, '0'), cicloDefault: '20', vistaDito: null, globalSort: [] };
+                                            if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
+                                            curr.vistaDito = vista;
+                                            await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(curr)}).eq('ROL', 'GERENCIA');
+                                        } catch(err){}
+                                        result = { success: true };
+                                    }
+                                    
+                                    else if (prop === 'getDashboardData') {
+                                        const [rol, nombre] = args;
+                                        let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
+                                        try {
+                                            const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                        } catch(e){}
+
+                                        const ventas = await fetchAllRecords('BASE DE VENTAS');
+                                        const formattedVentas = ventas.map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
+                                        let myVentas = formattedVentas;
+                                        if (rol === 'ASESOR') { myVentas = formattedVentas.filter(v => (v.ASESOR || '').toUpperCase() === (nombre || '').toUpperCase()); }
+
+                                        function calculateComision(cf, countPorta, countAlta, countReno) {
+                                            if (cf < cloudConf.metaCuota) return { rango: '< ' + cloudConf.metaCuota, comision: cf * 0.277 };
+                                            if (cf >= 4000 && cf <= 4300) return { rango: 'COBRE', comision: (countAlta * 1.5) + (countReno * 1.5) + (countPorta * 3.0) };
+                                            if (cf >= 4301 && cf <= 4600) return { rango: 'PLATA', comision: (countAlta * 2.0) + (countReno * 2.0) + (countPorta * 5.0) };
+                                            if (cf >= 4601 && cf <= 5000) return { rango: 'ORO', comision: (countAlta * 3.5) + (countReno * 2.5) + (countPorta * 6.0) };
+                                            if (cf >= 5001) return { rango: 'DIAMANTE', comision: (countAlta * 4.0) + (countReno * 3.0) + (countPorta * 7.0) };
+                                            return { rango: 'SIN RANGO', comision: 0 };
+                                        }
+
+                                        let currentDay = new Date().getDate() || 1; if (currentDay > cloudConf.diasMes) currentDay = cloudConf.diasMes; const factorProy = cloudConf.diasMes / currentDay;
+                                        let cfVendido = 0; let ventasEntregadas = 0; let pPorta = 0; let pAlta = 0; let pReno = 0;
+
+                                        myVentas.forEach(v => {
+                                            let val = parseFloat(v.CF || 0); 
+                                            let tipo = (v.TIPO_VENTA || '').toUpperCase();
+                                            let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
+                                            let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
+                                            let esValidoParaDashboard = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
+
+                                            if (esValidoParaDashboard) { 
+                                                cfVendido += val; 
+                                                ventasEntregadas++; 
+                                                if(tipo.includes('PORTA')) pPorta++; 
+                                                else if(tipo.includes('ALTA')) pAlta++; 
+                                                else if(tipo.includes('RENO')) pReno++; 
+                                            }
+                                        });
+
+                                        let calcReal = calculateComision(cfVendido, pPorta, pAlta, pReno);
+                                        let cfProy = cfVendido * factorProy; 
+                                        let calcProy = calculateComision(cfProy, pPorta * factorProy, pAlta * factorProy, pReno * factorProy);
+
+                                        let dash = {
+                                            metaCf: cloudConf.metaCuota, cfVendidoTotal: cfVendido, totalVentasAsesor: ventasEntregadas, porcentajeAvance: ((cfVendido / cloudConf.metaCuota) * 100).toFixed(1),
+                                            rangoReal: calcReal.rango, comisionReal: calcReal.comision, cfProyectado: cfProy, ventasProyectadas: ventasEntregadas * factorProy, avanceProyectado: ((cfProy / cloudConf.metaCuota) * 100).toFixed(1),
+                                            rangoProyectado: calcProy.rango, comisionProyectada: calcProy.comision, bonoRestante: Math.max(0, cloudConf.bonoMeta - cfVendido), bonoGanado: cfVendido >= cloudConf.bonoMeta,
+                                            gerencia: { regionesPorcentaje: {LIMA:'0%', NORTE:'0%', CENTRO:'0%', SUR:'0%'}, asesoresDetalle: [], carruselerosDetalle: [], diasOrdenados: [] }
+                                        };
+
+                                        let gCf = 0; let gVent = 0; let aseMap = {}; let carrMap = {}; let regMap = {LIMA:0, NORTE:0, CENTRO:0, SUR:0}; let totalReg = 0; let diasMap = {};
+                                        formattedVentas.forEach(v => {
+                                            let val = parseFloat(v.CF || 0); 
+                                            let tipo = (v.TIPO_VENTA || '').toUpperCase();
+                                            let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
+                                            let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
+                                            let isEnt = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
+
+                                            if(v.ASESOR) {
+                                                let aK = v.ASESOR.toUpperCase(); if(!aseMap[aK]) aseMap[aK] = {nombre: v.ASESOR, ventas:0, cf:0, pP:0, pA:0, pR:0};
+                                                if(isEnt) { 
+                                                    aseMap[aK].ventas++; aseMap[aK].cf += val; gCf += val; gVent++; 
+                                                    if(tipo.includes('PORTA')) aseMap[aK].pP++; else if(tipo.includes('ALTA')) aseMap[aK].pA++; else if(tipo.includes('RENO')) aseMap[aK].pR++;
+                                                    if(v.REGION && regMap[v.REGION]!==undefined) {regMap[v.REGION]++; totalReg++;}
+                                                    if(v.FECHA_ACTIVACION) { let fStr = String(v.FECHA_ACTIVACION); let diaStr = fStr.includes('/') ? fStr.split('/')[0] : fStr.split('-')[2]; if(diaStr) { if(!diasMap[diaStr]) diasMap[diaStr] = 0; diasMap[diaStr]++; } }
+                                                }
+                                            }
+                                            if(v.CARRUSELERO) {
+                                                let cK = String(v.CARRUSELERO).toUpperCase().trim(); 
+                                                if(cK) {
+                                                    if(!carrMap[cK]) carrMap[cK] = { ventas: 0, cf: 0 };
+                                                    if(isEnt) { 
+                                                        carrMap[cK].ventas++; 
+                                                        carrMap[cK].cf += val; 
+                                                    }
+                                                }
+                                            }
+                                        });
+
+                                        let carruselerosFinalMap = {};
+                                        Object.keys(carrMap).forEach(k => {
+                                            let cData = carrMap[k];
+                                            let comReal = cData.cf * 0.02;
+                                            let comProy = (cData.cf * factorProy) * 0.02;
+                                            carruselerosFinalMap[k] = { 
+                                                ventas: cData.ventas, 
+                                                cf: cData.cf, 
+                                                comision: isNaN(comReal) ? 0 : comReal, 
+                                                comisionProy: isNaN(comProy) ? 0 : comProy 
+                                            };
+                                        });
+                                        
+                                        dash.gerencia.carruselerosDetalle = carruselerosFinalMap;
+                                        dash.carruselerosDetalle = carruselerosFinalMap;
+                                        dash.metaGlobal = Object.keys(aseMap).length * cloudConf.metaCuota;
+                                        dash.totalCfGeneral = gCf; dash.totalVentasGeneral = gVent; dash.avanceGlobal = ((gCf / (dash.metaGlobal || 1)) * 100).toFixed(1);
+                                        
+                                        if(totalReg>0) { dash.gerencia.regionesPorcentaje = { LIMA: ((regMap.LIMA/totalReg)*100).toFixed(0)+'%', NORTE: ((regMap.NORTE/totalReg)*100).toFixed(0)+'%', CENTRO: ((regMap.CENTRO/totalReg)*100).toFixed(0)+'%', SUR: ((regMap.SUR/totalReg)*100).toFixed(0)+'%' }; }
+                                        Object.values(aseMap).forEach(a => {
+                                            let cR = calculateComision(a.cf, a.pP, a.pA, a.pR); let cfP = a.cf * factorProy; let cP = calculateComision(cfP, a.pP * factorProy, a.pA * factorProy, a.pR * factorProy);
+                                            dash.gerencia.asesoresDetalle.push({ nombre: a.nombre, totalVentas: a.ventas, cf: a.cf, comision: cR.comision, rango: cR.rango, cfProyectado: cfP, comisionProyectada: cP.comision, rangoProyectado: cP.rango, bonoRestante: Math.max(0, cloudConf.bonoMeta - a.cf), avance: ((a.cf/cloudConf.metaCuota)*100).toFixed(1) });
+                                        });
+                                        dash.gerencia.asesoresDetalle.sort((a,b) => b.cf - a.cf);
+                                        dash.gerencia.carruselerosDetalle = carrMap; 
+                                        Object.keys(diasMap).sort().forEach(d => { dash.gerencia.diasOrdenados.push({dia: d, cantidad: diasMap[d]}); });
+
+                                        result = { success: true, ventas: myVentas.sort((a, b) => Number(b.ID || 0) - Number(a.ID || 0)), dashboard: dash };
+                                    }
+                                    
+                                    else if (prop === 'saveVentasMultiples') {
+                                        const [d] = args; 
+                                        let fechaFinalIns = d.fechaActivacionOpcional ? d.fechaActivacionOpcional : ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
+                                        let inserts = d.lineasDetalle.map((l, idx) => ({ 
+                                            ID: Date.now().toString() + 'V' + idx, 
+                                            ANI: d.ani, 
+                                            CLIENTE: d.cliente, 
+                                            DOC: d.doc, 
+                                            PAQUETE: d.paquete, 
+                                            REGION: d.region, 
+                                            CARRUSELERO: d.carruselero, 
+                                            FORMA_ENTREGA: d.formaEntrega, 
+                                            ESTADO: d.estado, 
+                                            SUB_ESTADO: d.subEstado, 
+                                            OBSERVACIONES: d.observaciones, 
+                                            ASESOR: d.asesor, 
+                                            N_PORTAR: l.n_portar, 
+                                            SEC: l.sec, 
+                                            TIPO_VENTA: l.tipoVenta, 
+                                            OPERADOR: l.operador, 
+                                            CF: l.cf, 
+                                            CAMPANA: l.campana, 
+                                            FECHA_ACTIVACION: fechaFinalIns 
+                                        }));
+                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
+                                        if (error) throw error; 
+                                        result = { success: true, message: 'Ventas registradas correctamente' };
+                                    }
+                                    
+                                    else if (prop === 'updateVentaInline') {
+                                        const [id, campo, valor] = args; let obj = {}; obj[campo] = valor;
+                                        if (campo === 'ESTADO') { let subs = window.DEP_ESTADOS ? window.DEP_ESTADOS[valor] : []; obj['SUB_ESTADO'] = subs && subs.length > 0 ? subs[0] : ''; }
+                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
+                                    }
+                                    
+                                    else if (prop === 'updateVentaCompleta') {
+                                        const [id, data] = args; let obj = { ANI: data.ani, N_PORTAR: data.n_portar, CLIENTE: data.cliente, DOC: data.doc, TIPO_VENTA: data.tipoVenta, OPERADOR: data.operador, REGION: data.region, CARRUSELERO: data.carruselero, CAMPANA: data.campana, FECHA_ACTIVACION: data.fechaActivacion, CF: data.cf, ESTADO: data.estado, SUB_ESTADO: data.subEstado, OBSERVACIONES: data.observaciones, REVISION: data.revision, SEC: data.sec, FORMA_ENTREGA: data.formaEntrega };
+                                        let { error } = await _supabase.from('BASE DE VENTAS').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true, message: 'Venta actualizada' };
+                                    }
+                                    
+                                    else if (prop === 'deleteVenta') {
+                                        const [id] = args; let { error } = await _supabase.from('BASE DE VENTAS').delete().eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DE VENTAS').delete().eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
+                                    }
+                                    
+                                    // COWORK BASE DITO - DESCARGA TOTAL PAGINADA POR BLOQUES HASTA 50,000 REGISTROS FILTRADOS POR CICLO
+                                    else if (prop === 'obtenerBaseFiltrada') {
+                                        const [f] = args; 
+                                        let cloudConf = { cicloDefault: '20', vistaDito: null, globalSort: [
+                                            { col: 'NOMBRE_CLIENTE', dir: 'asc' },
+                                            { col: 'MESES', dir: 'desc' },
+                                            { col: 'CICLO', dir: 'asc' }
+                                        ] };
+                                        try {
+                                            const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
+                                            if (cData && cData.length > 0 && cData[0].CONFIG) { try { cloudConf = { ...cloudConf, ...JSON.parse(cData[0].CONFIG) }; } catch(e){} }
+                                        } catch(e){}
+                                        
+                                        let vGlobal = cloudConf.vistaDito || {};
+                                        let ocultar = vGlobal.ocultarCheck !== undefined ? vGlobal.ocultarCheck : f.ocultarCheck;
+                                        let ciclos = vGlobal.ciclos || f.ciclos || [];
+                                        
+                                        if (ciclos.length === 0 && cloudConf.cicloDefault) {
+                                            ciclos = [cloudConf.cicloDefault];
+                                        }
+
+                                        let meses = vGlobal.meses || f.meses || [];
+
+                                        let allBaseV = [];
+                                        let step = 1000;
+                                        for (let i = 0; i < 50000; i += step) {
+                                            let query = _supabase.from('BASE DITO').select('*');
+                                            
+                                            if (ciclos.length === 1) {
+                                                query = query.eq('CICLO', parseInt(ciclos[0]));
+                                            } else if (ciclos.length > 1) {
+                                                query = query.in('CICLO', ciclos.map(c => parseInt(c)));
+                                            }
+                                            
+                                            let { data: chunk, error } = await query.range(i, i + step - 1);
+                                            if (error) throw error;
+                                            if (chunk && chunk.length > 0) {
+                                                allBaseV.push(...chunk);
+                                            }
+                                            if (!chunk || chunk.length < step) break;
+                                        }
+
+                                        let filtered = allBaseV.map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
+                                        
+                                        if (f.texto) { 
+                                            let t = String(f.texto).toLowerCase().trim(); 
+                                            filtered = filtered.filter(v => 
+                                                (String(v.DNI||'')).toLowerCase().includes(t) || 
+                                                (String(v.NOMBRE_CLIENTE||'')).toLowerCase().includes(t) || 
+                                                (String(v.NUMERO||'')).toLowerCase().includes(t)
+                                            ); 
+                                        }
+                                        
+                                        if (ocultar) { filtered = filtered.filter(v => String(v.GESTIONADO).toUpperCase() !== 'TRUE'); }
+                                        if (meses.length > 0) { filtered = filtered.filter(v => meses.includes(String(v.MES).toLowerCase())); }
+                                        
+                                        let dniMap = {};
+                                        filtered.forEach(v => { 
+                                            if(!v.DNI || String(v.DNI).trim() === '') return; 
+                                            let dniS = String(v.DNI).trim(); 
+                                            if(!dniMap[dniS]) dniMap[dniS] = new Set(); 
+                                            if(v.NUMERO) dniMap[dniS].add(String(v.NUMERO).trim()); 
+                                        });
+                                        filtered.forEach(v => { 
+                                            if(v.DNI && String(v.DNI).trim() !== '' && dniMap[String(v.DNI).trim()] && dniMap[String(v.DNI).trim()].size > 1) { 
+                                                v.isDuplicate = true; 
+                                            } else { v.isDuplicate = false; } 
+                                        });
+
+                                        let globalSort = cloudConf.globalSort || [];
+                                        let finalSortConfigs = [];
+
+                                        if (f.organizarEstadoCustom) {
+                                            // Orden personalizado por estado: INFORMADO > VENTA > WSP > OTROS, y agrupando alfabéticamente a los clientes (A-Z) para mantener registros juntos
+                                            const ordenEstadoVal = (est) => {
+                                                let e = String(est || '').trim().toUpperCase();
+                                                if (e === 'INFORMADO') return 1;
+                                                if (e === 'VENTA') return 2;
+                                                if (e === 'WSP') return 3;
+                                                return 4;
+                                            };
+                                            filtered.sort((a, b) => {
+                                                let diff = ordenEstadoVal(a.ESTADO) - ordenEstadoVal(b.ESTADO);
+                                                if (diff !== 0) return diff;
+                                                let nomA = String(a.NOMBRE_CLIENTE || '').trim().toLowerCase();
+                                                let nomB = String(b.NOMBRE_CLIENTE || '').trim().toLowerCase();
+                                                return nomA.localeCompare(nomB);
+                                            });
+                                        } else if (globalSort.length > 0) {
+                                            finalSortConfigs = globalSort;
+                                        } else if (f.sortCol) {
+                                            finalSortConfigs = [{col: f.sortCol, dir: f.sortAsc ? 'asc' : 'desc'}];
+                                        }
+
+                                        if (!f.organizarEstadoCustom && finalSortConfigs.length > 0) {
+                                            filtered.sort((a,b) => {
+                                                for(let i=0; i<finalSortConfigs.length; i++) {
+                                                    let col = finalSortConfigs[i].col; let dir = finalSortConfigs[i].dir === 'asc' ? 1 : -1;
+                                                    let v1 = a[col]; let v2 = b[col];
+                                                    
+                                                    if (v1 === null || v1 === undefined) v1 = ''; 
+                                                    if (v2 === null || v2 === undefined) v2 = '';
+                                                    v1 = String(v1).trim(); v2 = String(v2).trim();
+
+                                                    if (v1 === '' && v2 !== '') return 1;
+                                                    if (v1 !== '' && v2 === '') return -1;
+                                                    if (v1 === '' && v2 === '') continue;
+
+                                                    if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); } 
+                                                    else { v1 = v1.toLowerCase(); v2 = v2.toLowerCase(); }
+                                                    
+                                                    if (v1 < v2) return -1 * dir; 
+                                                    if (v1 > v2) return 1 * dir;
+                                                }
+                                                return 0;
+                                            });
+                                        }
+                                        
+                                        result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal }; 
+                                    }
+                                    
+                                    else if (prop === 'updateBaseVentasInline') {
+                                        const [id, campo, valor] = args; let obj = {}; obj[campo] = valor; let { error } = await _supabase.from('BASE DITO').update(obj).eq('id', id); if (error && error.code === '42703') { let res2 = await _supabase.from('BASE DITO').update(obj).eq('ID', id); if (res2.error) throw res2.error; } else if (error) throw error; result = { success: true };
+                                    }
+                                    
+                                    // BÚSQUEDA ROBUSTA EN BASE DITO POR DNI O CELULAR
+                                    else if (prop === 'buscarClienteBase') {
+                                        const [val] = args; 
+                                        const queryStr = `DNI.eq.${val},NUMERO.eq.${val}`;
+                                        const { data, error } = await _supabase.from('BASE DITO').select('*').or(queryStr);
+                                        if (error) throw error;
+                                        
+                                        let mapData = (data || []).map(d => ({
+                                            dni: d.DNI, 
+                                            nombre: d.NOMBRE_CLIENTE, 
+                                            celular: d.NUMERO, 
+                                            fv: d.FV, 
+                                            ciclo: d.CICLO, 
+                                            carruselero: d.CARRUSELERO
+                                        })); 
+                                        result = { success: true, data: mapData };
+                                    }
+                                    
+                                    else if (prop === 'procesarCargaMasiva') {
+                                        const [lines] = args; let headers = lines[0]; let inserts = [];
+                                        for(let i=1; i<lines.length; i++) { if(lines[i].length < 2) continue; let obj = {}; headers.forEach((h, idx) => { obj[h] = lines[i][idx] || null; }); inserts.push(obj); }
+                                        const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
+                                        if (error) throw error; result = { success: true, message: 'Carga masiva completada', ventasCargadas: inserts };
+                                    }
+                                    
+                                    else if (prop === 'procesarCargaMasivaBase') {
+                                        const [lines] = args; let headers = lines[0]; let inserts = [];
+                                        for(let i=1; i<lines.length; i++) { if(lines[i].length < 2) continue; let obj = {}; headers.forEach((h, idx) => { obj[h] = lines[i][idx] || null; }); inserts.push(obj); }
+                                        const { error } = await _supabase.from('BASE DITO').insert(inserts);
+                                        if (error) throw error; result = { success: true, message: 'Base Dito cargada' };
+                                    }
+
+                                    if (target.successCb) target.successCb(result);
+                                } catch (err) { console.error("Error Supabase:", err); if (target.failureCb) target.failureCb(err); else showToast("Fallo: " + err.message); }
+                            };
+                        }
+                    });
+                }
+            }
+        };
+
+        // ================= FUNCIONES DE RENDERIZADO Y LÓGICA DE UI =================
+        function formatRangoText(rango) {
+            let color = 'text-slate-500';
+            if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
+            return `<span class="font-black ${color}">${rango}</span>`;
+        }
+
+        function loadVentas() {
+            const tbody = document.getElementById('tablaCuerpo'); 
+            if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando ventas...</td></tr>';
+            if(!currentUser) return;
+            
+            google.script.run.withSuccessHandler(function(res) {
+                if(res && res.success) { 
+                    ventasGlobal = (res.ventas || []).map(v => ({
+                        ...v, 
+                        ID: String(v.ID !== undefined ? v.ID : (v.id !== undefined ? v.id : Date.now()))
+                    }));
+                    
+                    ventasGlobal.sort(function(a, b) {
+                        let idA = String(a.ID || '');
+                        let idB = String(b.ID || '');
+                        let numA = parseFloat(idA.replace(/[^0-9.]/g, '')) || 0;
+                        let numB = parseFloat(idB.replace(/[^0-9.]/g, '')) || 0;
+                        if(numA !== numB) return numB - numA;
+                        return idB.localeCompare(idA);
+                    });
+
+                    ventasFiltradasGlobal = [...ventasGlobal];
+                    aplicarFiltros(); 
+                    
+                    if(res.dashboard) {
+                        actualizarDashboardCard(res.dashboard); 
+                        if (res.dashboard.gerencia) { 
+                            renderGerenciaDashboard(res.dashboard.gerencia); 
+                            renderDashGrupal(res.dashboard); 
+                        } 
+                    }
+                } else { 
+                    if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-600">Error: ' + (res ? res.message : 'Desconocido') + '</td></tr>'; 
+                }
+            }).withFailureHandler(function(err) { 
+                if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-red-600">Falla: ' + err.message + '</td></tr>'; 
+            }).getDashboardData(currentUser.rol, currentUser.nombre);
+        }
+
+        function loadBaseVentas() {
+            aplicarFiltrosBase(false);
+            if(baseSyncInterval) clearInterval(baseSyncInterval);
+            
+            // Actualización automática cada 5 segundos
+            baseSyncInterval = setInterval(function() {
+                const vistaBase = document.getElementById('baseVentasView');
+                if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
+                    aplicarFiltrosBase(true);
+                }
+            }, 5000); 
+        }
+
+        let organizarEstadoActivado = false;
+        function organizarBaseEstado() {
+            organizarEstadoActivado = !organizarEstadoActivado;
+            const btn = event.currentTarget;
+            if (organizarEstadoActivado) {
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                btn.classList.add('bg-amber-600', 'hover:bg-amber-700');
+                showToast("Base organizada: INFORMADO > VENTA > WSP");
+            } else {
+                btn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                showToast("Orden estándar restablecido");
+            }
+            aplicarFiltrosBase(false);
+        }
+
+        function ejecutarBusquedaCliente() {
+            const inputEl = document.getElementById('inputBusquedaCliente'); 
+            let val = inputEl.value.trim(); 
+            if(!val) { showToast('Ingrese un DNI o Celular'); return; }
+            
+            for(let i=1; i<=3; i++) { 
+                document.getElementById('resBusqCel'+i).textContent = '-'; 
+                document.getElementById('resBusqFv'+i).textContent = '-'; 
+                document.getElementById('resBusqCiclo'+i).textContent = '-'; 
+                document.getElementById('resBusqCarr'+i).textContent = '-'; 
+            } 
+            document.getElementById('resBusqDni').textContent = '-'; 
+            document.getElementById('resBusqNombre').textContent = '-'; 
+            showToast('Buscando...');
+
+            google.script.run.withSuccessHandler(function(res) {
+                if(res.success && res.data.length > 0) {
+                    showToast('¡Cliente encontrado!'); 
+                    const d = res.data; 
+                    document.getElementById('resBusqDni').textContent = d[0].dni || '-'; 
+                    document.getElementById('resBusqNombre').textContent = d[0].nombre || '-';
+                    let limit = Math.min(d.length, 3);
+                    for(let i=0; i<limit; i++) { 
+                        let idx = i + 1; 
+                        document.getElementById('resBusqCel'+idx).textContent = d[i].celular || '-'; 
+                        document.getElementById('resBusqFv'+idx).textContent = d[i].fv || '-'; 
+                        document.getElementById('resBusqCiclo'+idx).textContent = d[i].ciclo || '-'; 
+                        document.getElementById('resBusqCarr'+idx).textContent = d[i].carruselero || '-'; 
+                    }
+                } else { showToast('No se encontraron registros para este cliente'); }
+            }).withFailureHandler(function(err){ showToast('Error: ' + err.message); }).buscarClienteBase(val);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
+            loadConfigUI();
+            const saved = localStorage.getItem('ffvv_user'); if (saved) { try { currentUser = JSON.parse(saved); initApp(); } catch(e) { localStorage.removeItem('ffvv_user'); } }
+            const loginForm = document.getElementById('loginForm'); if(loginForm) { loginForm.onsubmit = function(e) { e.preventDefault(); google.script.run.withSuccessHandler(function(res) { if(res && res.success) { localStorage.setItem('ffvv_user', JSON.stringify(res.user)); currentUser = res.user; initApp(); } else { const errEl = document.getElementById('loginError'); if(errEl) { errEl.textContent = res ? res.message : 'Error desconocido'; errEl.classList.remove('hidden'); } } }).loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); }; }
+            const logoutBtn = document.getElementById('logoutBtn'); if(logoutBtn) { logoutBtn.onclick = function() { localStorage.removeItem('ffvv_user'); location.reload(); }; }
+            
+            const sidebarToggle = document.getElementById('sidebarToggle'); 
+            if(sidebarToggle) { 
+                sidebarToggle.onclick = function() { 
+                    const sb = document.getElementById('sidebar'); 
+                    const mc = document.getElementById('mainContent'); 
+                    if(sb) sb.classList.toggle('sidebar-hidden'); 
+                    if(mc) mc.classList.toggle('md:pl-64'); 
+                }; 
+            }
+
+            document.querySelectorAll('.nav-link').forEach(function(link) { link.onclick = function(e) { e.preventDefault(); if(link.dataset.view) cambiarVista(link.dataset.view); }; });
+
+            const ventaForm = document.getElementById('ventaForm');
+            if(ventaForm) { 
+                ventaForm.onsubmit = function(e) { 
+                    e.preventDefault(); 
+                    const form = e.target; 
+                    const formData = new FormData(form); 
+                    const rows = form.querySelectorAll('.linea-row'); 
+                    let lineasDetalle = []; 
+                    rows.forEach(function(r) { 
+                        lineasDetalle.push({ 
+                            n_portar: r.querySelector('input[name="n_portar"]').value, 
+                            sec: r.querySelector('input[name="sec"]').value, 
+                            tipoVenta: r.querySelector('select[name="tipoVenta"]').value, 
+                            operador: r.querySelector('select[name="operador"]').value, 
+                            cf: r.querySelector('select[name="cf"]').value, 
+                            campana: r.querySelector('select[name="campana"]').value 
+                        }); 
+                    }); 
+                    
+                    let rawFecha = formData.get('fechaActivacion');
+                    let fechaFormatted = '';
+                    if (rawFecha) {
+                        let parts = rawFecha.split('-');
+                        fechaFormatted = parts[2] + '/' + parts[1] + '/' + parts[0];
+                    }
+
+                    const data = { 
+                        ani: formData.get('ani'), 
+                        cliente: formData.get('cliente'), 
+                        doc: formData.get('doc'), 
+                        paquete: formData.get('paquete'), 
+                        region: formData.get('region'), 
+                        carruselero: formData.get('carruselero'), 
+                        formaEntrega: formData.get('formaEntrega'), 
+                        estado: formData.get('estado'), 
+                        subEstado: formData.get('subEstado'), 
+                        observaciones: formData.get('observaciones'), 
+                        asesor: formData.get('asesor'), 
+                        fechaActivacionOpcional: fechaFormatted,
+                        lineasDetalle: lineasDetalle 
+                    }; 
+
+                    google.script.run.withSuccessHandler(function(res) { 
+                        if(res && res.success) { 
+                            form.reset(); 
+                            showToast(res.message); 
+                            cambiarVista('ventasList'); 
+                        } 
+                    }).saveVentasMultiples(data); 
+                }; 
+            }
+        });
+
+        function calculateClaroCycle() {
+            const dateVal = document.getElementById('claroActDate').value; if(!dateVal) return;
+            const dateParts = dateVal.split('-'); const year = parseInt(dateParts[0]); const month = parseInt(dateParts[1]) - 1; const day = parseInt(dateParts[2]);
+            let cycle = 0; if (day >= 28) cycle = 1; else if (day >= 26) cycle = 28; else if (day >= 25) cycle = 26; else if (day >= 24) cycle = 25; else if (day >= 22) cycle = 24; else if (day >= 20) cycle = 22; else if (day >= 19) cycle = 20; else if (day >= 18) cycle = 19; else if (day >= 16) cycle = 18; else if (day >= 14) cycle = 16; else if (day >= 12) cycle = 14; else if (day >= 11) cycle = 12; else if (day >= 9) cycle = 11; else if (day >= 8) cycle = 9; else if (day >= 5) cycle = 8; else if (day >= 4) cycle = 5; else if (day >= 3) cycle = 4; else if (day >= 1) cycle = 3;
+            let inicioDate; if (day >= cycle) { inicioDate = new Date(year, month + 1, cycle); } else { inicioDate = new Date(year, month, cycle); }
+            let finDate = new Date(inicioDate.getFullYear(), inicioDate.getMonth() + 1, cycle); finDate.setDate(finDate.getDate() - 1);
+            let actDateObj = new Date(year, month, day); let emisionDate = new Date(actDateObj); emisionDate.setDate(emisionDate.getDate() + 5); let vencimientoDate = new Date(actDateObj); vencimientoDate.setDate(vencimientoDate.getDate() + 18);
+            let diffTime = inicioDate.getTime() - actDateObj.getTime(); let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); if(diffDays < 0) diffDays = 0;
+            document.getElementById('claroResCiclo').textContent = cycle; document.getElementById('claroResInicio').textContent = inicioDate.getDate() + " de " + MESES_ES[inicioDate.getMonth()]; document.getElementById('claroResFin').textContent = finDate.getDate() + " de " + MESES_ES[finDate.getMonth()]; document.getElementById('claroResEmi').textContent = emisionDate.getDate() + " de " + MESES_ES[emisionDate.getMonth()]; document.getElementById('claroResVenc').textContent = vencimientoDate.getDate() + " de " + MESES_ES[vencimientoDate.getMonth()]; document.getElementById('claroResProrrateo').textContent = diffDays + (diffDays === 1 ? " día" : " días");
+        }
+
+        function renderMovistarCycles() {
+            const tbody = document.getElementById('movistarTbody'); if(!tbody) return;
+            const baseDate = new Date(); const year = baseDate.getFullYear(); const currentMonthIdx = baseDate.getMonth();
+            const m1Name = MESES_ES[(currentMonthIdx - 1 + 12) % 12]; const m2Name = MESES_ES[currentMonthIdx]; const m3Name = MESES_ES[(currentMonthIdx + 1) % 12]; const m4Name = MESES_ES[(currentMonthIdx + 2) % 12];
+            document.getElementById('movHeader1').textContent = 'PERIODO ' + m1Name.toUpperCase() + ' A ' + m2Name.toUpperCase() + ' (RECIBO ANTIGUO)'; document.getElementById('movHeader2').textContent = 'PERIODO ' + m2Name.toUpperCase() + ' A ' + m3Name.toUpperCase() + ' (RECIBO ACTUAL)'; document.getElementById('movHeader3').textContent = 'PERIODO ' + m3Name.toUpperCase() + ' A ' + m4Name.toUpperCase() + ' (RECIBO CON INCREMENTO)';
+            const cycles = [ { c: 5, p: 21, off: 0 }, { c: 9, p: 25, off: 0 }, { c: 12, p: 28, off: 0 }, { c: 15, p: 1, off: 1 }, { c: 17, p: 5, off: 1 }, { c: 20, p: 8, off: 1 }, { c: 23, p: 11, off: 1 }, { c: 27, p: 15, off: 1 }, { c: 31, p: 19, off: 1 } ];
+            let html = '';
+            cycles.forEach(function(cy) {
+                html += '<tr class="hover:bg-slate-100 transition text-center"><td class="px-2 py-1 border border-slate-200 font-bold text-slate-800 bg-slate-50">' + cy.c + '</td>';
+                for(let p = -1; p <= 1; p++) {
+                    let endMonthIdx = currentMonthIdx + p; let endDay = cy.c; if(cy.c === 31) { endDay = new Date(year, endMonthIdx + 1, 0).getDate(); }
+                    let startDay = cy.c === 31 ? 1 : cy.c + 1; let startMonthIdx = cy.c === 31 ? endMonthIdx : endMonthIdx - 1; let emitDay = cy.c === 31 ? 1 : cy.c + 1; let emitMonthIdx = cy.c === 31 ? endMonthIdx + 1 : endMonthIdx; let payMonthIdx = endMonthIdx + cy.off;
+                    html += '<td class="px-2 py-1 border border-slate-200 text-slate-700">' + startDay + ' ' + MESES_ES[(startMonthIdx + 12) % 12] + '</td><td class="px-2 py-1 border border-slate-200 text-slate-700">' + endDay + ' ' + MESES_ES[(endMonthIdx + 12) % 12] + '</td><td class="px-2 py-1 border border-slate-200 text-yellow-600 font-semibold">' + emitDay + ' ' + MESES_ES[(emitMonthIdx + 12) % 12] + '</td><td class="px-2 py-1 border border-slate-200 text-green-700 font-bold">' + cy.p + ' ' + MESES_ES[(payMonthIdx + 12) % 12] + '</td>';
+                }
+                html += '</tr>';
+            });
+            html += '<tr class="bg-slate-50"><td class="px-2 py-1 border border-slate-200"></td><td colspan="4" class="px-2 py-1 border border-slate-200 text-slate-500 font-bold uppercase text-center">PAGO QUE DEL MES PASADO S/39.90</td><td colspan="4" class="px-2 py-1 border border-slate-200 text-slate-500 font-bold uppercase text-center">MES CON DESFASE PAGA S/39.90</td><td colspan="4" class="px-2 py-1 border border-slate-200 text-slate-500 font-bold uppercase text-center">MES QUE LE COBRAN 79.90</td></tr>';
+            if(tbody) tbody.innerHTML = html;
+        }
+
+        function cambiarVista(viewId) {
+            document.querySelectorAll('.content-view').forEach(function(v) { v.classList.add('view-hidden'); });
+            const target = document.getElementById(viewId); if(target) target.classList.remove('view-hidden');
+            document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.remove('bg-red-50','text-red-700'); if(l.dataset.view === viewId) l.classList.add('bg-red-50','text-red-700'); });
+            
+            if(viewId === 'ventasList' || viewId === 'dashGrupalView') loadVentas();
+            if(viewId === 'baseVentasView') loadBaseVentas(); 
+            if(viewId === 'configView') loadConfigUI();
+            
+            if(window.innerWidth < 768) { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.add('sidebar-hidden'); if(mc) mc.classList.remove('md:pl-64'); }
+        }
+
+        document.addEventListener('click', function(e) {
+            const btnEst = document.getElementById('btnEstadoFiltro'); const listEst = document.getElementById('listaEstados'); if (btnEst && listEst && !btnEst.contains(e.target) && !listEst.contains(e.target)) { listEst.classList.add('hidden'); }
+            const btnCiclos = document.getElementById('lblCiclosBase') ? document.getElementById('lblCiclosBase').parentElement : null; const listCiclos = document.getElementById('listaCiclosBase'); if (btnCiclos && listCiclos && !btnCiclos.contains(e.target) && !listCiclos.contains(e.target)) { listCiclos.classList.add('hidden'); }
+            const btnMeses = document.getElementById('lblMesesBase') ? document.getElementById('lblMesesBase').parentElement : null; const listMeses = document.getElementById('listaMesesBase'); if (btnMeses && listMeses && !btnMeses.contains(e.target) && !listMeses.contains(e.target)) { listMeses.classList.add('hidden'); }
+        });
+
+        function initApp() {
+            const loginView = document.getElementById('loginView'); if(loginView) loginView.classList.add('view-hidden');
+            const mainView = document.getElementById('mainView'); if(mainView) mainView.classList.remove('view-hidden');
+            const uName = document.getElementById('userName'); if(uName && currentUser) uName.textContent = currentUser.nombre;
+            const uRol = document.getElementById('userRol'); if(uRol && currentUser) uRol.textContent = currentUser.rol;
+            const vAsesor = document.getElementById('ventaAsesor'); if(vAsesor && currentUser) vAsesor.value = currentUser.nombre;
+            
+            let conf = getConfig();
+            const elMes = document.getElementById('filtroMes'); 
+            if(elMes) { 
+                elMes.value = conf.mesGestion !== undefined ? conf.mesGestion : ''; 
+            }
+            
+            document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.add('hidden'); });
+
+            if (currentUser && currentUser.rol === 'CARRUSELERO') {
+                document.querySelectorAll('.nav-carruselero').forEach(function(l) { l.classList.remove('hidden'); });
+                document.getElementById('rolDisplaySidebar').textContent = 'CARRUSELERO';
+                cambiarVista('dashGrupalView');
+            } else if (currentUser && currentUser.rol === 'ASESOR') {
+                document.querySelectorAll('.nav-asesor').forEach(function(l) { l.classList.remove('hidden'); });
+                document.getElementById('rolDisplaySidebar').textContent = 'ASESOR DE VENTAS';
+                cambiarVista('ventasList');
+            } else { 
+                document.querySelectorAll('.nav-gerencia').forEach(function(l) { l.classList.remove('hidden'); });
+                document.getElementById('rolDisplaySidebar').textContent = 'ADMIN GERENCIA';
+                
+                const btnFijar = document.getElementById('btnFijarVista');
+                if (btnFijar) { btnFijar.classList.remove('hidden'); btnFijar.classList.add('flex'); }
+                
+                const menuCarga = document.getElementById('menuCargaMasiva'); if(menuCarga) menuCarga.classList.remove('hidden');
+                const gerenciaSec = document.getElementById('gerenciaDashboardSection'); if(gerenciaSec) gerenciaSec.classList.remove('hidden');
+                const divCargaBase = document.getElementById('divCargaBase'); if(divCargaBase) divCargaBase.classList.remove('hidden');
+                document.querySelectorAll('.gerencia-filter').forEach(function(el) { el.classList.remove('hidden'); });
+                cambiarVista('ventasList');
+            }
+            
+            google.script.run.withSuccessHandler(res => {
+                if(res) {
+                    const m = document.getElementById('confMeta'); if(m) m.value = res.metaCuota;
+                    const d = document.getElementById('confDias'); if(d) d.value = res.diasMes;
+                    const b = document.getElementById('confBono'); if(b) b.value = res.bonoMeta;
+                    const mg = document.getElementById('confMesGestion'); if(mg && res.mesGestion !== undefined) mg.value = res.mesGestion;
+                }
+            }).obtenerConfiguracion();
+        }
+
+        function initResize(e) {
+            e.stopPropagation();
+            const th = e.target.parentElement;
+            const startX = e.clientX;
+            const startWidth = th.offsetWidth;
+            const resizer = e.target;
+
+            resizer.classList.add('resizing');
+
+            function onMouseMove(event) {
+                const currentWidth = startWidth + (event.clientX - startX);
+                if (currentWidth > 40) {
+                    th.style.width = currentWidth + 'px';
+                }
+            }
+
+            function onMouseUp() {
+                resizer.classList.remove('resizing');
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
+        function fijarVistaGlobal() {
+            const chkOcultar = document.getElementById('chkOcultarGestionados');
+            const cBoxes = document.querySelectorAll('.chk-ciclo:checked');
+            const mBoxes = document.querySelectorAll('.chk-mes:checked');
+            let vista = { ocultarCheck: chkOcultar ? chkOcultar.checked : true, ciclos: Array.from(cBoxes).map(cb => cb.value), meses: Array.from(mBoxes).map(mb => mb.value) };
+            google.script.run.withSuccessHandler(() => { showToast('Vista fijada para toda la empresa'); }).guardarVistaGlobal(vista);
+        }
+
+        function forzarSincronizacionGeneral() {
+            showToast("Forzando sincronización de ciclo para todo el equipo...");
+            let cBoxes = document.querySelectorAll('.chk-ciclo:checked');
+            if(cBoxes.length > 0) {
+                let cicloForzado = cBoxes[0].value;
+                google.script.run.withSuccessHandler(() => {
+                    showToast("¡Ciclo global forzado con éxito!");
+                    aplicarFiltrosBase(false);
+                }).guardarConfiguracion({ cicloDefault: cicloForzado });
+            } else {
+                showToast("Selecciona al menos un ciclo en el filtro para forzarlo.");
+            }
+        }
+
+        function aplicarFiltrosBase(silencioso = false) {
+            const txtEl = document.getElementById('filtroTextoBase'); const txt = txtEl ? txtEl.value.trim() : '';
+            const chkOcultar = document.getElementById('chkOcultarGestionados'); const ocultar = chkOcultar ? chkOcultar.checked : true;
+            const cBoxes = document.querySelectorAll('.chk-ciclo:checked'); const ciclosCheckbox = Array.from(cBoxes).map(cb => cb.value);
+            const mBoxes = document.querySelectorAll('.chk-mes:checked'); const mesesCheckbox = Array.from(mBoxes).map(mb => mb.value);
+
+            const lblCiclos = document.getElementById('lblCiclosBase'); if(lblCiclos) lblCiclos.textContent = ciclosCheckbox.length === 0 ? "Todos los Ciclos" : (ciclosCheckbox.length === 1 ? "Ciclo " + ciclosCheckbox[0] : ciclosCheckbox.length + " Seleccionados");
+            const lblMeses = document.getElementById('lblMesesBase'); if(lblMeses) lblMeses.textContent = mesesCheckbox.length === 0 ? "Todos los Meses" : (mesesCheckbox.length === 1 ? mesesCheckbox[0] : mesesCheckbox.length + " Seleccionados");
+
+            const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc, organizarEstadoCustom: organizarEstadoActivado };
+            const tbody = document.getElementById('tablaCuerpoBase');
+            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Coworking Dito...</td></tr>';
+
+            google.script.run.withSuccessHandler(function(res) {
+                if(res && res.success) { 
+                    baseVentasGlobal = res.baseVentas || []; 
+                    
+                    // CONTADOR DE INFORMADOS
+                    let informadosCount = baseVentasGlobal.filter(v => String(v.ESTADO || '').trim().toUpperCase() === 'INFORMADO').length;
+                    const numInfEl = document.getElementById('numInformadosCount');
+                    const cardInfEl = document.getElementById('cardContadorInformados');
+                    if (numInfEl) numInfEl.textContent = informadosCount;
+                    if (cardInfEl) {
+                        if (informadosCount > 15) {
+                            cardInfEl.className = "px-4 py-2 bg-red-100 border border-red-300 rounded-lg text-sm font-black text-red-800 shadow-sm flex items-center gap-2 animate-pulse";
+                        } else {
+                            cardInfEl.className = "px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-black text-blue-800 shadow-sm flex items-center gap-2";
+                        }
+                    }
+
+                    if (res.vistaGlobal && !silencioso) {
+                        let vg = res.vistaGlobal;
+                        if(chkOcultar && vg.ocultarCheck !== undefined) chkOcultar.checked = vg.ocultarCheck;
+                    }
+                    if (!silencioso || txt !== '') { currentPageBase = 1; }
+                    renderBaseTablePaginated(); 
+                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Error al sincronizar base.</td></tr>'; }
+            }).withFailureHandler(function(err) {
+                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
+            }).obtenerBaseFiltrada(filtros);
+        }
+
+        function renderBaseTablePaginated() {
+            const total = baseVentasGlobal.length;
+            const totalPages = Math.ceil(total / itemsPerPageBase) || 1;
+            if(currentPageBase > totalPages) currentPageBase = totalPages;
+            
+            const start = (currentPageBase - 1) * itemsPerPageBase;
+            const end = start + itemsPerPageBase;
+            const paginatedItems = baseVentasGlobal.slice(start, end);
+            
+            renderBaseTable(paginatedItems); 
+            
+            const pagDiv = document.getElementById('paginacionBaseVentas');
+            if(pagDiv) {
+                let html = '<div class="text-sm md:text-base font-extrabold text-slate-800">Mostrando ' + (total === 0 ? 0 : start + 1) + ' a ' + Math.min(end, total) + ' de <span class="text-blue-600">' + total + '</span> registros</div>';
+                html += '<div class="flex gap-2 items-center">';
+                html += '<button onclick="cambiarPaginaBase(' + (currentPageBase - 1) + ')" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 font-bold shadow-sm disabled:opacity-50 transition" ' + (currentPageBase === 1 ? 'disabled' : '') + '><i class="fas fa-chevron-left mr-2"></i> Anterior</button>';
+                html += '<span class="px-4 text-sm md:text-base font-black text-slate-800 bg-slate-200 py-2 rounded-lg">Pág ' + currentPageBase + ' / ' + totalPages + '</span>';
+                html += '<button onclick="cambiarPaginaBase(' + (currentPageBase + 1) + ')" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 font-bold shadow-sm disabled:opacity-50 transition" ' + (currentPageBase === totalPages ? 'disabled' : '') + '>Siguiente <i class="fas fa-chevron-right ml-2"></i></button>';
+                html += '</div>';
+                pagDiv.innerHTML = html;
+            }
+        }
+
+        function cambiarPaginaBase(page) { currentPageBase = page; renderBaseTablePaginated(); }
+
+        function sortBase(columna) { 
+            if (currentUser && currentUser.rol === 'ASESOR' && columna !== 'OBS') {
+                showToast('Acceso Denegado: Solo puedes ordenar por Observaciones (OBS)');
+                return;
+            }
+            if (baseSortCol === columna) { baseSortAsc = !baseSortAsc; } else { baseSortCol = columna; baseSortAsc = true; } 
+            aplicarFiltrosBase(false); 
+        }
+        
+        function aplicarMultiSort() { 
+            let sortArr = [];
+            for(let i=1; i<=3; i++) {
+                let col = document.getElementById('sortCol'+i).value;
+                let dir = document.getElementById('sortDir'+i).value;
+                if(col) sortArr.push({col: col, dir: dir});
+            }
+            google.script.run.withSuccessHandler(() => { document.getElementById('modalMultiSort').classList.add('hidden'); showToast('Orden Múltiple aplicado al Cowork'); aplicarFiltrosBase(false); }).guardarConfiguracion({ globalSort: sortArr });
+        }
+
+        function renderBaseTable(lista) {
+            try {
+                const tb = document.getElementById('tablaCuerpoBase'); if(!tb) return;
+                if(lista.length === 0) { tb.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-slate-500 font-bold">No hay registros filtrados.</td></tr>'; return; }
+                const rol = currentUser.rol; const isGerencia = (rol === 'GERENCIA' || rol === 'SUPERVISOR'); const isAsesor = (rol === 'ASESOR'); const isCarruselero = (rol === 'CARRUSELERO');
+                const blockVendedor = (!isGerencia && !isAsesor) ? 'disabled' : ''; const blockGestion = (!isGerencia && !isCarruselero && !isAsesor) ? 'disabled' : ''; 
+                let optVendedores = ['GEAN', 'ANGELICA', 'SUNNY']; let optEstados = ['INFORMADO', 'DNC', 'NO CONTESTA', 'NO INTERESADO', 'VENTA', 'WSP']; let optCarruseleros = ['SARA', 'ANA', 'HUMBERTO'];
+
+                let htmlTemp = ''; 
+                lista.forEach(function(v) {
+                    try {
+                        let vKey = String(v.VENDEDOR || '').toUpperCase().trim();
+                        let vendClass = vKey === 'ANGELICA' ? 'vend-ANGELICA' : (vKey === 'GEAN' ? 'vend-GEAN' : (vKey === 'SUNNY' ? 'vend-SUNNY' : 'bg-transparent text-blue-600 font-black'));
+
+                        let htmlVend = '<option value=""></option>'; 
+                        for(let i=0; i<optVendedores.length; i++) { 
+                            let sel = v.VENDEDOR === optVendedores[i] ? 'selected' : ''; 
+                            let vSubClass = optVendedores[i] === 'ANGELICA' ? 'vend-ANGELICA' : (optVendedores[i] === 'GEAN' ? 'vend-GEAN' : 'vend-SUNNY');
+                            htmlVend += '<option value="' + optVendedores[i] + '" class="' + vSubClass + '" ' + sel + '>' + optVendedores[i] + '</option>'; 
+                        }
+                        
+                        let estadoClave = (v.ESTADO || '').replace(/\s+/g, ''); 
+                        let selectEstadoClass = v.ESTADO ? 'opt-' + estadoClave : 'bg-white text-slate-800';
+                        let htmlEstado = '<option value="" class="bg-white text-slate-800"></option>'; 
+                        
+                        for(let j=0; j<optEstados.length; j++) { 
+                            let o = optEstados[j]; 
+                            let sel = v.ESTADO === o ? 'selected' : ''; 
+                            let optColorClass = 'opt-' + o.replace(/\s+/g, ''); 
+                            htmlEstado += '<option value="' + o + '" class="' + optColorClass + ' font-bold" ' + sel + '>&nbsp;&nbsp;' + o + '</option>'; 
+                        }
+                        
+                        let carrColorClass = '';
+                        let cKey = String(v.CARRUSELERO || '').toUpperCase().trim();
+                        if(cKey === 'SARA') carrColorClass = 'carr-SARA';
+                        else if(cKey === 'ANA') carrColorClass = 'carr-ANA';
+                        else if(cKey === 'HUMBERTO') carrColorClass = 'carr-HUMBERTO';
+
+                        let htmlCarr = '<option value="" class="bg-white text-slate-800"></option>'; 
+                        for(let k=0; k<optCarruseleros.length; k++) { 
+                            let sel = v.CARRUSELERO === optCarruseleros[k] ? 'selected' : ''; 
+                            let cSubClass = optCarruseleros[k] === 'SARA' ? 'carr-SARA' : (optCarruseleros[k] === 'ANA' ? 'carr-ANA' : 'carr-HUMBERTO');
+                            htmlCarr += '<option value="' + optCarruseleros[k] + '" class="' + cSubClass + '" ' + sel + '>' + optCarruseleros[k] + '</option>'; 
+                        }
+                        
+                        const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
+                        let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
+
+                        // ORDEN: DNI, CLIENTE, NUMERO, FV, MESES, CICLO, ESTADO, HORA, OBS, GESTIONADO (CHECK), CARRUSELERO, VENDEDOR
+                        htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-300 ' + rowColor + '">' +
+                            '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
+                            '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
+                            '<td class="px-4 py-2 font-mono text-red-600 font-black">' + (v.NUMERO || '') + '</td>' +
+                            '<td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td>' +
+                            '<td class="px-3 py-2 text-center text-slate-700 font-bold w-16">' + (v.MESES || '') + '</td>' +
+                            '<td class="px-3 py-2 text-blue-700 font-black text-center w-16">' + (v.CICLO || '') + '</td>' +
+                            '<td class="px-2 py-2 w-32"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit font-black rounded text-xs \' + (this.value ? \'opt-\'+this.value.replace(/\\s+/g, \'\') : \'bg-transparent text-slate-800\');" class="inline-edit font-black rounded text-xs ' + selectEstadoClass + '" ' + blockGestion + '>' + htmlEstado + '</select></td>' +
+                            '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-20 bg-transparent" ' + blockGestion + '></td>' +
+                            '<td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-transparent" ' + blockGestion + '></td>' +
+                            '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit text-xs ' + carrColorClass + '\';" class="inline-edit text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value); this.className=\'inline-edit font-black text-xs ' + vendClass + '\';" class="inline-edit font-black text-xs ' + vendClass + '" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
+                            '</tr>';
+                    } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
+                });
+                tb.innerHTML = htmlTemp;
+            } catch(e) { console.error("Error en renderBaseTable:", e); }
+        }
+
+        function inlineUpdateBase(id, campo, valor) {
+            let row = baseVentasGlobal.find(r => String(r.ID) === String(id)); 
+            if(row) row[campo] = valor;
+            
+            const chk = document.getElementById('chkOcultarGestionados'); 
+            if (campo === 'GESTIONADO' && chk && chk.checked) { 
+                const tr = document.getElementById('row_base_' + id); 
+                if(tr) tr.remove(); 
+            } else { renderBaseTablePaginated(); }
+
+            google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
+        }
+
+        // RENDER DE VENTAS ACTIVAS
+        function renderTablePaginated() {
+            const total = ventasFiltradasGlobal.length;
+            const totalPages = Math.ceil(total / itemsPerPageVentas) || 1;
+            if(currentPageVentas > totalPages) currentPageVentas = totalPages;
+            
+            const start = (currentPageVentas - 1) * itemsPerPageVentas;
+            const end = start + itemsPerPageVentas;
+            const paginatedItems = ventasFiltradasGlobal.slice(start, end);
+            
+            renderTable(paginatedItems); 
+            
+            const pagDiv = document.getElementById('paginacionVentas');
+            if(pagDiv) {
+                let html = '<div class="text-sm md:text-base font-extrabold text-slate-800">Mostrando ' + (total === 0 ? 0 : start + 1) + ' a ' + Math.min(end, total) + ' de <span class="text-red-600">' + total + '</span> registros</div>';
+                html += '<div class="flex gap-2 items-center">';
+                html += '<button onclick="cambiarPagina(' + (currentPageVentas - 1) + ')" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 font-bold shadow-sm disabled:opacity-50 transition" ' + (currentPageVentas === 1 ? 'disabled' : '') + '><i class="fas fa-chevron-left mr-2"></i> Anterior</button>';
+                html += '<span class="px-4 text-sm md:text-base font-black text-slate-800 bg-slate-200 py-2 rounded-lg">Pág ' + currentPageVentas + ' / ' + totalPages + '</span>';
+                html += '<button onclick="cambiarPagina(' + (currentPageVentas + 1) + ')" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 font-bold shadow-sm disabled:opacity-50 transition" ' + (currentPageVentas === totalPages ? 'disabled' : '') + '>Siguiente <i class="fas fa-chevron-right ml-2"></i></button>';
+                html += '</div>';
+                pagDiv.innerHTML = html;
+            }
+        }
+
+        function cambiarPagina(page) { currentPageVentas = page; renderTablePaginated(); }
+
         function renderTable(ventas) {
             try {
                 const tb = document.getElementById('tablaCuerpo'); if(!tb) return;
@@ -579,72 +1566,6 @@
                 });
                 tb.innerHTML = htmlTemp;
             } catch(e) { console.error("Error en renderTable:", e); }
-        }
-
-        function renderTablePaginated() {
-            const total = ventasFiltradasGlobal.length;
-            const totalPages = Math.ceil(total / itemsPerPageVentas) || 1;
-            if(currentPageVentas > totalPages) currentPageVentas = totalPages;
-            
-            const start = (currentPageVentas - 1) * itemsPerPageVentas;
-            const end = start + itemsPerPageVentas;
-            const paginatedItems = ventasFiltradasGlobal.slice(start, end);
-            
-            renderTable(paginatedItems); 
-            
-            const pagDiv = document.getElementById('paginacionVentas');
-            if(pagDiv) {
-                let html = '<div class="text-sm md:text-base font-extrabold text-slate-800">Mostrando ' + (total === 0 ? 0 : start + 1) + ' a ' + Math.min(end, total) + ' de <span class="text-red-600">' + total + '</span> registros</div>';
-                html += '<div class="flex gap-2 items-center">';
-                html += '<button onclick="cambiarPagina(' + (currentPageVentas - 1) + ')" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 font-bold shadow-sm disabled:opacity-50 transition" ' + (currentPageVentas === 1 ? 'disabled' : '') + '><i class="fas fa-chevron-left mr-2"></i> Anterior</button>';
-                html += '<span class="px-4 text-sm md:text-base font-black text-slate-800 bg-slate-200 py-2 rounded-lg">Pág ' + currentPageVentas + ' / ' + totalPages + '</span>';
-                html += '<button onclick="cambiarPagina(' + (currentPageVentas + 1) + ')" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-100 font-bold shadow-sm disabled:opacity-50 transition" ' + (currentPageVentas === totalPages ? 'disabled' : '') + '>Siguiente <i class="fas fa-chevron-right ml-2"></i></button>';
-                html += '</div>';
-                pagDiv.innerHTML = html;
-            }
-        }
-
-        function cambiarPagina(page) { currentPageVentas = page; renderTablePaginated(); }
-
-        function aplicarFiltrosBase(silencioso = false) {
-            const txtEl = document.getElementById('filtroTextoBase'); const txt = txtEl ? txtEl.value.trim() : '';
-            const chkOcultar = document.getElementById('chkOcultarGestionados'); const ocultar = chkOcultar ? chkOcultar.checked : true;
-            const cBoxes = document.querySelectorAll('.chk-ciclo:checked'); const ciclosCheckbox = Array.from(cBoxes).map(cb => cb.value);
-            const mBoxes = document.querySelectorAll('.chk-mes:checked'); const mesesCheckbox = Array.from(mBoxes).map(mb => mb.value);
-
-            const lblCiclos = document.getElementById('lblCiclosBase'); if(lblCiclos) lblCiclos.textContent = ciclosCheckbox.length === 0 ? "Todos los Ciclos" : (ciclosCheckbox.length === 1 ? "Ciclo " + ciclosCheckbox[0] : ciclosCheckbox.length + " Seleccionados");
-            const lblMeses = document.getElementById('lblMesesBase'); if(lblMeses) lblMeses.textContent = mesesCheckbox.length === 0 ? "Todos los Meses" : (mesesCheckbox.length === 1 ? mesesCheckbox[0] : mesesCheckbox.length + " Seleccionados");
-
-            const filtros = { texto: txt, ocultarCheck: ocultar, ciclos: ciclosCheckbox, meses: mesesCheckbox, sortCol: baseSortCol, sortAsc: baseSortAsc, organizarEstadoCustom: organizarEstadoActivado };
-            const tbody = document.getElementById('tablaCuerpoBase');
-            if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-8 text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando Coworking Dito...</td></tr>';
-
-            google.script.run.withSuccessHandler(function(res) {
-                if(res && res.success) { 
-                    baseVentasGlobal = res.baseVentas || []; 
-                    
-                    let informadosCount = baseVentasGlobal.filter(v => String(v.ESTADO || '').trim().toUpperCase() === 'INFORMADO').length;
-                    const numInfEl = document.getElementById('numInformadosCount');
-                    const cardInfEl = document.getElementById('cardContadorInformados');
-                    if (numInfEl) numInfEl.textContent = informadosCount;
-                    if (cardInfEl) {
-                        if (informadosCount > 15) {
-                            cardInfEl.className = "px-4 py-2 bg-red-100 border border-red-300 rounded-lg text-sm font-black text-red-800 shadow-sm flex items-center gap-2 animate-pulse";
-                        } else {
-                            cardInfEl.className = "px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-black text-blue-800 shadow-sm flex items-center gap-2";
-                        }
-                    }
-
-                    if (res.vistaGlobal && !silencioso) {
-                        let vg = res.vistaGlobal;
-                        if(chkOcultar && vg.ocultarCheck !== undefined) chkOcultar.checked = vg.ocultarCheck;
-                    }
-                    if (!silencioso || txt !== '') { currentPageBase = 1; }
-                    renderBaseTablePaginated(); 
-                } else if (!silencioso && tbody) { tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Error al sincronizar base.</td></tr>'; }
-            }).withFailureHandler(function(err) {
-                if(!silencioso && tbody) tbody.innerHTML = '<tr><td colspan="12" class="text-center py-6 text-red-600 font-bold">Falla técnica: ' + err.message + '</td></tr>';
-            }).obtenerBaseFiltrada(filtros);
         }
 
         function inlineUpdate(id, campo, valor) { 
@@ -917,18 +1838,14 @@
         function closeModalWap() { const m = document.getElementById('modalWap'); if(m) m.classList.add('hidden'); }
         function copiarTextoWap() { let area = document.getElementById('wapTextContent'); if(area) { area.select(); document.execCommand('copy'); showToast('¡Texto copiado al portapapeles!'); } }
 
-        // Exponer explícitamente al ámbito global todas las funciones interactivas
+        // Exponer funciones globales de utilidad
         window.loadVentas = loadVentas;
         window.loadBaseVentas = loadBaseVentas;
         window.ejecutarBusquedaCliente = ejecutarBusquedaCliente;
-        window.autoFillDni = autoFillDni;
-        window.addLinea = addLinea;
         window.aplicarFiltros = aplicarFiltros;
         window.aplicarFiltrosBase = aplicarFiltrosBase;
         window.organizarBaseEstado = organizarBaseEstado;
         window.initResize = initResize;
-        window.renderTablePaginated = renderTablePaginated;
-        window.renderTable = renderTable;
     </script>
 </body>
 </html>
