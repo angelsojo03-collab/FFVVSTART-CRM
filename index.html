@@ -15,12 +15,10 @@
         .opt-INFORMADO { background-color: #0891b2 !important; color: white !important; } .opt-DNC { background-color: #dc2626 !important; color: white !important; } .opt-NOCONTESTA { background-color: #ea580c !important; color: white !important; } .opt-NOINTERESADO { background-color: #9333ea !important; color: white !important; } .opt-VENTA { background-color: #16a34a !important; color: white !important; } .opt-WSP { background-color: #eab308 !important; color: black !important; }
         .table-header { padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; text-align: center; } .table-cell { padding: 4px 8px; border: 1px solid #f1f5f9; text-align: center; }
         
-        /* Nuevos colores para carruseleros */
-        .carr-SARA { color: #db2777 !important; font-weight: 900 !important; } /* Rosa para Sara */
-        .carr-ANA { color: #ea580c !important; font-weight: 900 !important; } /* Naranja para Ana */
-        .carr-HUMBERTO { color: #2563eb !important; font-weight: 900 !important; } /* Azul masculino */
+        .carr-SARA { color: #db2777 !important; font-weight: 900 !important; }
+        .carr-ANA { color: #ea580c !important; font-weight: 900 !important; }
+        .carr-HUMBERTO { color: #2563eb !important; font-weight: 900 !important; }
         
-        /* Ajuste para que el select de estado tome el color completo */
         select.opt-INFORMADO, select.opt-DNC, select.opt-NOCONTESTA, select.opt-NOINTERESADO, select.opt-VENTA, select.opt-WSP { font-weight: 900 !important; border: none !important; }
     </style>
 </head>
@@ -64,7 +62,7 @@
             <div class="flex-1 overflow-y-auto p-4 md:p-8 relative min-w-0 w-full max-w-full overflow-x-hidden">
                 <div id="toastSync" class="fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-2xl hidden z-50 text-sm font-bold flex items-center gap-3"><i class="fas fa-check-circle text-green-400 text-lg"></i><span id="toastMsg">Sincronizado</span></div>
 
-                <!-- ================= CONFIGURACIÓN (SOLO GERENCIA) ================= -->
+                <!-- ================= CONFIGURACIÓN ================= -->
                 <div id="configView" class="content-view view-hidden space-y-6 w-full">
                     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-md border-t-4 border-slate-800 max-w-3xl mx-auto w-full">
                         <h2 class="text-2xl font-black text-slate-800 mb-2"><i class="fas fa-cogs text-red-600 mr-2"></i>Configuración Global</h2>
@@ -93,7 +91,7 @@
                                 <div><label class="block text-[10px] text-slate-500 mb-1 uppercase font-bold">Fin Ciclo</label><div id="claroResFin" class="px-3 py-1.5 bg-white border border-slate-200 rounded text-slate-700 font-bold text-center text-xs">-</div></div>
                                 <div><label class="block text-[10px] text-slate-500 mb-1 uppercase font-bold">Emisión</label><div id="claroResEmi" class="px-3 py-1.5 bg-white border border-slate-200 rounded text-yellow-700 font-bold text-center text-xs">-</div></div>
                                 <div><label class="block text-[10px] text-slate-500 mb-1 uppercase font-bold">Vencimiento</label><div id="claroResVenc" class="px-3 py-1.5 bg-white border border-slate-200 rounded text-red-600 font-black text-center text-xs">-</div></div>
-                                <div><label class="block text-[10px] text-slate-500 mb-1 uppercase font-bold" title="Días desde activación hasta inicio del ciclo">Días Prorrateo</label><div id="claroResProrrateo" class="px-3 py-1.5 bg-white border border-slate-200 rounded text-green-700 font-black text-center text-xs">-</div></div>
+                                <div><label class="block text-[10px] text-slate-500 mb-1 uppercase font-bold">Días Prorrateo</label><div id="claroResProrrateo" class="px-3 py-1.5 bg-white border border-slate-200 rounded text-green-700 font-black text-center text-xs">-</div></div>
                             </div>
                         </div>
                         <div class="pt-6 w-full">
@@ -115,7 +113,7 @@
                     </div>
                 </div>
 
-                <!-- ================= VISTA: BUSCADOR DE CLIENTES ================= -->
+                <!-- ================= VISTA: BUSCAR CLIENTE ================= -->
                 <div id="busquedaClienteView" class="content-view view-hidden space-y-6 w-full">
                     <div class="bg-white p-4 md:p-6 rounded-2xl shadow-md border-t-4 border-blue-600 space-y-4 w-full">
                         <h1 class="text-xl md:text-2xl font-black text-slate-800"><i class="fas fa-search text-blue-600 mr-2"></i>Buscar Cliente</h1>
@@ -130,7 +128,8 @@
                         </div>
                     </div>
                 </div>
-<!-- ================= VISTA: DASH GRUPAL ================= -->
+
+                <!-- ================= VISTA: DASH GRUPAL ================= -->
                 <div id="dashGrupalView" class="content-view view-hidden space-y-6 w-full">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                         <div class="bg-white border-t-4 border-blue-500 p-4 md:p-6 rounded-2xl shadow-md"><p class="text-xs text-slate-400 uppercase font-black tracking-widest mb-1">Meta Cuota Global</p><p class="text-2xl md:text-3xl font-black text-blue-600 truncate" id="dashMetaCfGrupal">S/ 0</p></div>
@@ -165,7 +164,6 @@
 
                 <!-- ================= VISTA: GESTIÓN DE VENTAS CRM =============== -->
                 <div id="ventasList" class="content-view space-y-6 view-hidden w-full">
-                    
                     <div id="panelReales" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-2">
                         <div class="bg-white border-t-4 border-blue-500 p-4 md:p-5 rounded-xl shadow-md"><p class="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">Meta Cuota</p><p class="text-xl md:text-2xl lg:text-3xl font-black text-blue-600 truncate" id="dashMetaCf">S/ 0</p></div>
                         <div class="bg-white border-t-4 border-green-500 p-4 md:p-5 rounded-xl shadow-md"><p class="text-[11px] text-slate-400 uppercase font-black tracking-widest mb-1">CF Vendido</p><p class="text-xl md:text-2xl lg:text-3xl font-black text-green-600 truncate" id="dashCfVendido">S/ 0.00</p></div>
@@ -252,7 +250,7 @@
                     </div>
                     <div class="border border-slate-200 rounded-2xl bg-white shadow-md overflow-hidden flex flex-col w-full">
                         <div class="overflow-x-auto w-full">
-                            <table class="w-full text-left border-collapse whitespace-nowrap text-xs md:text-sm min-w-max">
+                            <table class="w-full text-left border-collapse min-w-max">
                                 <thead class="bg-slate-100 text-slate-500 border-b border-slate-200 uppercase tracking-widest font-black">
                                     <tr>
                                         <th class="px-4 py-3 cursor-pointer hover:text-red-600" onclick="sortBase('DNI')">DNI <i class="fas fa-sort ml-1"></i></th>
@@ -345,14 +343,15 @@
                 </div>
             </div>
         </div>
-<!-- ================= MODALES ================= -->
+
+        <!-- MODALES -->
         <div id="modalMultiSort" class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div class="bg-white border border-slate-200 rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h2 class="text-2xl font-black text-red-600"><i class="fas fa-sort-amount-down mr-2"></i>Orden Múltiple</h2><button onclick="document.getElementById('modalMultiSort').classList.add('hidden')" class="text-slate-400 hover:text-red-600 text-xl"><i class="fas fa-times"></i></button></div>
                 <div class="space-y-5 pt-2">
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 1</label><div class="flex gap-3"><select id="sortCol1" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE" selected>Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir1" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc" selected>A-Z</option><option value="desc">Z-A</option></select></div></div>
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 2</label><div class="flex gap-3"><select id="sortCol2" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES" selected>Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir2" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">A-Z</option><option value="desc" selected>Z-A</option></select></div></div>
-                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 3</label><div class="flex gap-3"><select id="sortCol3" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO" selected>Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir3" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc" selected>A-Z</option><option value="desc">Z-A</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 1</label><div class="flex gap-3"><select id="sortCol1" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE" selected>Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir1" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc" selected>Menor a Mayor</option><option value="desc">Mayor a Menor</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 2</label><div class="flex gap-3"><select id="sortCol2" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES" selected>Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO">Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir2" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc">Menor a Mayor</option><option value="desc" selected>Mayor a Menor</option></select></div></div>
+                    <div><label class="block text-xs text-slate-500 font-black uppercase tracking-widest mb-2">Prioridad 3</label><div class="flex gap-3"><select id="sortCol3" class="flex-1 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="">(Ninguna)</option><option value="VENDEDOR">Vendedor</option><option value="DNI">DNI</option><option value="NOMBRE_CLIENTE">Cliente</option><option value="FV">FV</option><option value="MESES">Meses</option><option value="ESTADO">Estado</option><option value="CARRUSELERO">Carruselero</option><option value="CICLO" selected>Ciclo</option><option value="NUMERO">Número</option></select><select id="sortDir3" class="w-28 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 p-3"><option value="asc" selected>Menor a Mayor</option><option value="desc">Mayor a Menor</option></select></div></div>
                 </div>
                 <div class="pt-6 border-t border-slate-100 flex justify-end"><button onclick="aplicarMultiSort()" class="bg-red-600 hover:bg-red-700 text-white py-3 px-8 rounded-lg font-black text-sm transition shadow-lg w-full">Aplicar Filtros</button></div>
             </div>
@@ -379,7 +378,8 @@
                 </form>
             </div>
         </div>
-   <!-- SCRIPTS CORE -->
+
+    <!-- SCRIPTS CORE -->
     <script>
         const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
         const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -495,7 +495,6 @@
                 return matchEst && matchTipo && matchAsesor && matchMes && matchFecha && matchEntrega && matchRevision;
             });
             
-            // ORDENAMIENTO ESTRICTO: Las ventas más nuevas siempre arriba
             ventasFiltradasGlobal.sort(function(a, b) {
                 let idA = String(a.ID || a.id || '');
                 let idB = String(b.ID || b.id || '');
@@ -509,7 +508,6 @@
             renderTablePaginated();
         }
 
-        // MOTOR DE DESCARGA TOTAL SIN LÍMITES
         async function fetchAllRecords(table) {
             let all = [];
             for (let i = 0; i < 100000; i += 1000) {
@@ -561,9 +559,7 @@
                                             if (data && data.length > 0 && data[0].CONFIG) { try { curr = { ...curr, ...JSON.parse(data[0].CONFIG) }; } catch(e){} }
                                             const merged = { ...curr, ...newConf };
                                             await _supabase.from('CREDENCIALES').update({CONFIG: JSON.stringify(merged)}).eq('ROL', 'GERENCIA');
-                                        } catch(err) {
-                                            console.warn("Columna CONFIG no disponible en Supabase.");
-                                        }
+                                        } catch(err) {}
                                         result = { success: true };
                                     }
                                     else if (prop === 'guardarVistaGlobal') {
@@ -580,7 +576,6 @@
                                     
                                     else if (prop === 'getDashboardData') {
                                         const [rol, nombre] = args;
-                                        
                                         let cloudConf = { metaCuota: 4000, diasMes: 30, bonoMeta: 7000 };
                                         try {
                                             const {data: cData} = await _supabase.from('CREDENCIALES').select('CONFIG').eq('ROL', 'GERENCIA').limit(1);
@@ -609,8 +604,6 @@
                                             let tipo = (v.TIPO_VENTA || '').toUpperCase();
                                             let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
                                             let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
-                                            
-                                            // EXCLUYE NO PROCEDE
                                             let esValidoParaDashboard = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
 
                                             if (esValidoParaDashboard) { 
@@ -639,8 +632,6 @@
                                             let tipo = (v.TIPO_VENTA || '').toUpperCase();
                                             let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
                                             let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
-                                            
-                                            // EXCLUYE NO PROCEDE EN TODO EL DASHBOARD GERENCIAL
                                             let isEnt = (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE');
 
                                             if(v.ASESOR) {
@@ -697,7 +688,6 @@
                                     else if (prop === 'saveVentasMultiples') {
                                         const [d] = args; 
                                         let fechaFinalIns = d.fechaActivacionOpcional ? d.fechaActivacionOpcional : ('0'+new Date().getDate()).slice(-2) + '/' + ('0'+(new Date().getMonth()+1)).slice(-2) + '/' + new Date().getFullYear();
-                                        
                                         let inserts = d.lineasDetalle.map((l, idx) => ({ 
                                             ID: Date.now().toString() + 'V' + idx, 
                                             ANI: d.ani, 
@@ -871,7 +861,8 @@
                 }
             }
         };
-// ================= FUNCIONES DE RENDERIZADO Y LÓGICA DE UI =================
+
+        // ================= FUNCIONES DE RENDERIZADO Y LÓGICA DE UI =================
         function formatRangoText(rango) {
             let color = 'text-slate-500';
             if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
@@ -1167,7 +1158,7 @@
                         const chkState = (String(v.GESTIONADO).toUpperCase() === 'TRUE') ? 'checked' : ''; const safeCliente = (v.NOMBRE_CLIENTE || '').toString().replace(/['"\n\r]/g, ''); const safeObs = (v.OBS || '').toString().replace(/['"\n\r]/g, '');
                         let rowColor = v.isDuplicate ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-slate-50';
 
-                        // ORDEN SOLICITADO: DNI, CLIENTE, NUMERO (ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, CARRUSELERO, VENDEDOR, GESTIONADO
+                        // ORDEN: DNI, CLIENTE, NUMERO (ROJO), FV, MESES, CICLO, ESTADO, HORA, OBS, CARRUSELERO, VENDEDOR, GESTIONADO
                         htmlTemp += '<tr id="row_base_' + v.ID + '" class="transition h-10 border-b border-slate-100 ' + rowColor + '">' +
                             '<td class="px-4 py-2 font-mono text-slate-800 font-bold">' + (v.DNI || '') + '</td>' +
                             '<td class="px-4 py-2 font-black text-slate-900 max-w-[220px] truncate" title="' + safeCliente + '">' + safeCliente + '</td>' +
@@ -1264,15 +1255,8 @@
                     let rawObj = {}; 
                     headers.forEach((h, idx) => { rawObj[h] = lines[i][idx] || null; });
                     
-                    // Mapeo estricto por nombre de columna para evitar desplazamientos por orden de Excel
-                    let inserts = [];
-                for(let i=1; i<lines.length; i++) {
-                    if(lines[i].length < 2) continue;
-                    let rawObj = {}; 
-                    headers.forEach((h, idx) => { rawObj[h] = lines[i][idx] || null; });
-                    
                     let obj = {
-                        ID: Date.now().toString() + 'D' + i, // <-- AQUÍ SE AÑADE EL ID OBLIGATORIO
+                        ID: Date.now().toString() + 'D' + i,
                         VENDEDOR: rawObj['VENDEDOR'] || null,
                         DNI: rawObj['DNI'] ? parseInt(rawObj['DNI'].replace(/[^0-9]/g, '')) || null : null,
                         NOMBRE_CLIENTE: rawObj['NOMBRE_CLIENTE'] || rawObj['NOMBRE_CL'] || null,
@@ -1313,11 +1297,13 @@
             };
             reader.readAsText(fileInput.files[0]);
         }
+
         function descargarPlantillaBase() {
             let headers = "VENDEDOR;DNI;NOMBRE_CLIENTE;FV;MESES;OPERACION;SISACT;ESTADO;HORA;OBS;GESTIONADO;CARRUSELERO;CICLO;NUMERO;MES;OPERADOR;FECHA_OPSITEL\n";
             let ejemplo = "SUNNY;12345678;JUAN PEREZ;15/04/2026;3;PORTA;APROBADO;VENTA;10:00;obs prueba;FALSE;HUMBERTO;17;999888777;abril;CLARO;15/04/2026\n";
             let blob = new Blob([headers + ejemplo], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); let url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "plantilla_base_dito.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
+
         function ejecutarBusquedaCliente() {
             const inputEl = document.getElementById('inputBusquedaCliente'); let val = inputEl.value.trim(); if(!val) { showToast('Ingrese un DNI o Celular'); return; }
             if (val.length > 0 && val.length < 8 && !isNaN(val)) { val = val.padStart(8, '0'); inputEl.value = val; }
@@ -1756,7 +1742,7 @@
                     } catch(e) { console.error("Fila con error: ", e); }
                 });
                 tb.innerHTML = htmlTemp;
-            } catch(e) { console.error("Error en renderBaseTable:", e); }
+            } catch(e) { console.error("Error en renderTable:", e); }
         }
 
         function changeInlineEstado(id, nuevoEstado) { inlineUpdate(id, 'ESTADO', nuevoEstado); actualizarSubEstados('inlineEst_' + id, 'inlineSub_' + id); showToast('Estado actualizado'); }
