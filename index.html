@@ -1236,6 +1236,31 @@
             if (row) row.remove();
         }
 
+        // ================= CARGA MASIVA: DESCARGA DE PLANTILLAS CSV =================
+        function descargarPlantilla() {
+            const headers = ['ASESOR', 'ANI', 'N_PORTAR', 'CLIENTE', 'DOC', 'SEC', 'FORMA_ENTREGA', 'TIPO_VENTA', 'OPERADOR', 'REGION', 'CARRUSELERO', 'CAMPANA', 'CF', 'FECHA_ACTIVACION', 'ESTADO', 'SUB_ESTADO', 'OBSERVACIONES', 'REVISION'];
+            const csvContent = headers.join(',') + '\n';
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'plantilla_carga_masiva_ventas.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function descargarPlantillaBase() {
+            const headers = ['VENDEDOR', 'DNI', 'NOMBRE_CLIENTE', 'FV', 'MESES', 'OPERACION', 'SISACT', 'ESTADO', 'HORA', 'OBS', 'GESTIONADO', 'CARRUSELERO', 'CICLO', 'NUMERO', 'MES', 'OPERADOR', 'FECHA_OPSITEL'];
+            const csvContent = headers.join(',') + '\n';
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'plantilla_base_dito.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         // ================= CARGA MASIVA: LECTURA DE CSV Y ENVÍO A SUPABASE =================
         // Parser simple de CSV (soporta comas dentro de comillas) que produce una matriz [ [cabeceras], [fila1], [fila2], ... ]
         function parseCsvToLines(texto) {
@@ -2212,6 +2237,8 @@
         window.eliminarLinea = eliminarLinea;
         window.actualizarSubEstados = actualizarSubEstados;
         window.actualizarSubEstadosModal = actualizarSubEstadosModal;
+        window.descargarPlantilla = descargarPlantilla;
+        window.descargarPlantillaBase = descargarPlantillaBase;
         window.ejecutarCargaMasiva = ejecutarCargaMasiva;
         window.ejecutarCargaBase = ejecutarCargaBase;
         window.renderTable = renderTable;
