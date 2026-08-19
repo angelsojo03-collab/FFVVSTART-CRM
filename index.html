@@ -63,6 +63,7 @@
                 <a href="#" class="nav-link nav-asesor nav-carruselero nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="dashGrupalView"><i class="fas fa-chart-pie w-5 text-lg"></i><span class="font-bold">DASH GRUPAL</span></a>
                 <a href="#" class="nav-link nav-asesor nav-carruselero nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="ciclosView"><i class="fas fa-calendar-alt w-5 text-lg"></i><span class="font-bold">CICLOS FACTURACIÓN</span></a>
                 <a href="#" id="menuCargaMasiva" class="nav-link nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="cargaMasivaView"><i class="fas fa-file-excel w-5 text-lg"></i><span class="font-bold">CARGA MASIVA</span></a>
+                <a href="#" class="nav-link nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="avancesView"><i class="fas fa-chart-line w-5 text-lg"></i><span class="font-bold">AVANCES</span></a>
                 <a href="#" class="nav-link nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors border-t border-slate-200 mt-2 pt-4" data-view="configView"><i class="fas fa-cogs w-5 text-lg"></i><span class="font-bold">CONFIGURACIÓN</span></a>
             </nav>
         </aside>
@@ -77,6 +78,36 @@
             </header>
             <div class="flex-1 overflow-y-auto p-4 md:p-8 relative min-w-0 w-full max-w-full overflow-x-hidden">
                 <div id="toastSync" class="fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-2xl hidden z-50 text-sm font-bold flex items-center gap-3"><i class="fas fa-check-circle text-green-400 text-lg"></i><span id="toastMsg">Sincronizado</span></div>
+
+                <!-- ================= AVANCES (SOLO GERENCIA) ================= -->
+                <div id="avancesView" class="content-view view-hidden space-y-6 w-full">
+                    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-md border-t-4 border-red-600 w-full">
+                        <h2 class="text-2xl font-black text-slate-800 mb-2"><i class="fas fa-chart-line text-red-600 mr-2"></i>Avances de Comisión</h2>
+                        <p class="text-sm text-slate-500 font-bold mb-6 border-b border-slate-100 pb-4">Cálculo sobre ventas ENTREGADAS, excluyendo revisiones marcadas como "NO PROCEDE".</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-inner">
+                                <p class="text-[11px] uppercase font-black tracking-widest text-slate-500 mb-2">CF Vendido</p>
+                                <p id="avanceCfVendido" class="text-2xl font-black text-slate-800">S/ 0.00</p>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-inner">
+                                <p class="text-[11px] uppercase font-black tracking-widest text-blue-600 mb-2">Comisión (CF x 2)</p>
+                                <p id="avanceComision" class="text-2xl font-black text-blue-700">S/ 0.00</p>
+                            </div>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-5 shadow-inner">
+                                <p class="text-[11px] uppercase font-black tracking-widest text-yellow-700 mb-2">Total con IGV (x1.18)</p>
+                                <p id="avanceTotalIgv" class="text-2xl font-black text-yellow-700">S/ 0.00</p>
+                            </div>
+                            <div class="bg-orange-50 border border-orange-200 rounded-xl p-5 shadow-inner">
+                                <p class="text-[11px] uppercase font-black tracking-widest text-orange-700 mb-2">Detracción (10%)</p>
+                                <p id="avanceDetraccion" class="text-2xl font-black text-orange-700">S/ 0.00</p>
+                            </div>
+                            <div class="bg-green-50 border border-green-200 rounded-xl p-5 shadow-inner">
+                                <p class="text-[11px] uppercase font-black tracking-widest text-green-700 mb-2">Comisión Final</p>
+                                <p id="avanceComisionFinal" class="text-2xl font-black text-green-700">S/ 0.00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- ================= CONFIGURACIÓN ================= -->
                 <div id="configView" class="content-view view-hidden space-y-6 w-full">
@@ -97,6 +128,12 @@
                                         <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
                                         <option value="07">Julio</option><option value="08">Agosto</option><option value="09">Septiembre</option>
                                         <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Ciclo Predeterminado (Base Dito)</label>
+                                    <select id="confCicloDefault" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner">
+                                        <option value="5">5</option><option value="9">9</option><option value="12">12</option><option value="15">15</option><option value="17">17</option><option value="20">20</option><option value="23">23</option><option value="27">27</option><option value="31">31</option>
                                     </select>
                                 </div>
                             </div>
@@ -418,6 +455,19 @@
         const DEP_ESTADOS = { "P.ENTREGA": ["PENDIENTE PROGRAMACION A365", "PENDIENTE INGRESO DE VENTA A365", "ACuerdo DELIVERY GENERADO", "REGISTRO PRIMERA VISITA", "ASIGNADO CADENA", "ASIGNADO CAC", "ASIGNADO ACD", "A ESPERA DE ICCID"], "AGENDADO": ["CL DESEA PEDIDO PARA EL"], "ENTREGADO": ["P. DE PROGRAMACION", "OTRA FFVV ENTREGO", "PROCESO EXITOSO"], "REINGRESAR": ["CL SIN DNI O PROBLEMAS BIO", "CL AUSENTE EN DOMICILIO", "DIRECCION ERRONEA", "CANCELADO POR PROGRAMACION DE FECHA", "OPERADOR O MODALIDAD ERRONEA", "NO LLEGA PIN PORTABILIDAD", "CL NO RECOJE EN PDV", "CL CON DEUDA O SUSPENDIDO", "PLAZO MINIMO DE CONTRATACION", "NO CONTESTA A365"], "NO DESEA": ["CLIENTE DESISTE DE COMPRA"] };
         const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
+        // ================= SUB-ESTADOS DEPENDIENTES (ESTADO -> SUB-ESTADO) =================
+        function actualizarSubEstados(idPadre, idHijo) {
+            const padre = document.getElementById(idPadre);
+            const hijo = document.getElementById(idHijo);
+            if (!padre || !hijo) return;
+            const subs = DEP_ESTADOS[padre.value] || [];
+            hijo.innerHTML = subs.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+        }
+
+        function actualizarSubEstadosModal() {
+            actualizarSubEstados('editEstado', 'editSubEstado');
+        }
+
         const SUPABASE_URL = 'https://hzizxuadumbnetyapdnd.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1co4uYVkYwVPClzHxSSYCw_JVLBTU5k';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -466,12 +516,13 @@
 
         function saveConfig(e) { 
             e.preventDefault(); 
+            const cicloEl = document.getElementById('confCicloDefault');
             const c = { 
                 metaCuota: parseFloat(document.getElementById('confMeta').value) || 4000, 
                 diasMes: parseInt(document.getElementById('confDias').value) || 30, 
                 bonoMeta: parseFloat(document.getElementById('confBono').value) || 7000, 
                 mesGestion: document.getElementById('confMesGestion').value,
-                cicloDefault: '20',
+                cicloDefault: cicloEl ? cicloEl.value : '20',
                 globalSort: getConfig().globalSort 
             }; 
             localStorage.setItem('ffvv_config', JSON.stringify(c)); 
@@ -486,6 +537,7 @@
             const d = document.getElementById('confDias'); if(d) d.value = c.diasMes; 
             const b = document.getElementById('confBono'); if(b) b.value = c.bonoMeta; 
             const mg = document.getElementById('confMesGestion'); if(mg) mg.value = c.mesGestion || '';
+            const cc = document.getElementById('confCicloDefault'); if(cc) cc.value = c.cicloDefault || '20';
         }
         
         function aplicarFiltros() {
@@ -960,15 +1012,29 @@
                                     }
                                     
                                     else if (prop === 'procesarCargaMasiva') {
-                                        const [lines] = args; let headers = lines[0]; let inserts = [];
-                                        for(let i=1; i<lines.length; i++) { if(lines[i].length < 2) continue; let obj = {}; headers.forEach((h, idx) => { obj[h] = lines[i][idx] || null; }); inserts.push(obj); }
+                                        const [lines] = args; let headers = lines[0].map(h => String(h || '').trim()); let inserts = [];
+                                        for(let i=1; i<lines.length; i++) {
+                                            if(lines[i].length < 2) continue;
+                                            let obj = {};
+                                            headers.forEach((h, idx) => { obj[h] = (lines[i][idx] !== undefined && lines[i][idx] !== '') ? lines[i][idx] : null; });
+                                            // Se asigna un ID único dinámico a cada registro para evitar rechazos por clave duplicada/nula en Supabase
+                                            obj['ID'] = Date.now() + 'V' + i;
+                                            inserts.push(obj);
+                                        }
                                         const { error } = await _supabase.from('BASE DE VENTAS').insert(inserts);
                                         if (error) throw error; result = { success: true, message: 'Carga masiva completada', ventasCargadas: inserts };
                                     }
                                     
                                     else if (prop === 'procesarCargaMasivaBase') {
-                                        const [lines] = args; let headers = lines[0]; let inserts = [];
-                                        for(let i=1; i<lines.length; i++) { if(lines[i].length < 2) continue; let obj = {}; headers.forEach((h, idx) => { obj[h] = lines[i][idx] || null; }); inserts.push(obj); }
+                                        const [lines] = args; let headers = lines[0].map(h => String(h || '').trim()); let inserts = [];
+                                        for(let i=1; i<lines.length; i++) {
+                                            if(lines[i].length < 2) continue;
+                                            let obj = {};
+                                            headers.forEach((h, idx) => { obj[h] = (lines[i][idx] !== undefined && lines[i][idx] !== '') ? lines[i][idx] : null; });
+                                            // Se asigna un ID único dinámico a cada registro para evitar rechazos por clave duplicada/nula en Supabase
+                                            obj['ID'] = Date.now() + 'V' + i;
+                                            inserts.push(obj);
+                                        }
                                         const { error } = await _supabase.from('BASE DITO').insert(inserts);
                                         if (error) throw error; result = { success: true, message: 'Base Dito cargada' };
                                     }
@@ -983,6 +1049,29 @@
         };
 
         // ================= FUNCIONES DE RENDERIZADO Y LÓGICA DE UI =================
+        function renderAvances() {
+            let cfVendido = 0;
+            (ventasGlobal || []).forEach(function(v) {
+                let estadoVenta = String(v.ESTADO || '').trim().toUpperCase();
+                let revisionVenta = String(v.REVISION || '').trim().toUpperCase();
+                if (estadoVenta === 'ENTREGADO' && revisionVenta !== 'NO PROCEDE') {
+                    cfVendido += parseFloat(v.CF || 0);
+                }
+            });
+            let comision = cfVendido * 2;
+            let totalConIgv = comision * 1.18;
+            let detraccion = totalConIgv * 0.1;
+            let comisionFinal = totalConIgv - detraccion;
+
+            function fmt(n) { return 'S/ ' + (isFinite(n) ? n : 0).toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+
+            const elCf = document.getElementById('avanceCfVendido'); if(elCf) elCf.textContent = fmt(cfVendido);
+            const elCom = document.getElementById('avanceComision'); if(elCom) elCom.textContent = fmt(comision);
+            const elIgv = document.getElementById('avanceTotalIgv'); if(elIgv) elIgv.textContent = fmt(totalConIgv);
+            const elDet = document.getElementById('avanceDetraccion'); if(elDet) elDet.textContent = fmt(detraccion);
+            const elFinal = document.getElementById('avanceComisionFinal'); if(elFinal) elFinal.textContent = fmt(comisionFinal);
+        }
+
         function formatRangoText(rango) {
             let color = 'text-slate-500';
             if(rango === 'DIAMANTE') color = 'text-cyan-600'; else if(rango === 'ORO') color = 'text-yellow-500'; else if(rango === 'PLATA') color = 'text-slate-400'; else if(rango === 'COBRE') color = 'text-orange-600'; else if(String(rango).includes('<')) color = 'text-red-500';
@@ -1147,6 +1236,97 @@
             if (row) row.remove();
         }
 
+        // ================= CARGA MASIVA: LECTURA DE CSV Y ENVÍO A SUPABASE =================
+        // Parser simple de CSV (soporta comas dentro de comillas) que produce una matriz [ [cabeceras], [fila1], [fila2], ... ]
+        function parseCsvToLines(texto) {
+            let filas = texto.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
+            return filas.map(function(fila) {
+                let campos = []; let actual = ''; let dentroComillas = false;
+                for (let i = 0; i < fila.length; i++) {
+                    let ch = fila[i];
+                    if (ch === '"') { dentroComillas = !dentroComillas; }
+                    else if (ch === ',' && !dentroComillas) { campos.push(actual.trim()); actual = ''; }
+                    else { actual += ch; }
+                }
+                campos.push(actual.trim());
+                return campos;
+            });
+        }
+
+        function ejecutarCargaMasiva() {
+            const input = document.getElementById('csvFileInput');
+            const file = input && input.files ? input.files[0] : null;
+            if (!file) { showToast('Selecciona un archivo CSV primero'); return; }
+
+            const progCont = document.getElementById('progressContainerVentas'); if (progCont) progCont.classList.remove('hidden');
+            const progText = document.getElementById('progressTextVentas'); if (progText) progText.textContent = 'Leyendo archivo...';
+            const progBar = document.getElementById('progressBarVentas'); if (progBar) progBar.style.width = '30%';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = parseCsvToLines(e.target.result);
+                if (lines.length < 2) { showToast('El archivo no contiene registros válidos'); if (progCont) progCont.classList.add('hidden'); return; }
+
+                if (progText) progText.textContent = 'Subiendo registros a Supabase...';
+                if (progBar) progBar.style.width = '70%';
+
+                google.script.run.withSuccessHandler(function(res) {
+                    if (progBar) progBar.style.width = '100%';
+                    if (progText) progText.textContent = 'Carga completada';
+                    if (res && res.success) {
+                        showToast(res.message || 'Carga masiva completada');
+                        const tbody = document.getElementById('tablaCargaMasivaCuerpo');
+                        if (tbody && res.ventasCargadas) {
+                            tbody.innerHTML = res.ventasCargadas.map(function(v) {
+                                return '<tr><td class="px-4 py-2">' + (v.ID || '') + '</td><td class="px-4 py-2">' + (v.CLIENTE || '') + '</td><td class="px-4 py-2">' + (v.DOC || '') + '</td><td class="px-4 py-2">' + (v.N_PORTAR || '') + '</td><td class="px-4 py-2">' + (v.ASESOR || '') + '</td><td class="px-4 py-2">' + (v.TIPO_VENTA || '') + '</td><td class="px-4 py-2">' + (v.CF || '') + '</td></tr>';
+                            }).join('');
+                        }
+                    } else {
+                        showToast('Error en la carga: ' + (res ? res.message : 'desconocido'));
+                    }
+                    setTimeout(function() { if (progCont) progCont.classList.add('hidden'); }, 1500);
+                }).withFailureHandler(function(err) {
+                    showToast('Fallo la carga masiva: ' + err.message);
+                    if (progCont) progCont.classList.add('hidden');
+                }).procesarCargaMasiva(lines);
+            };
+            reader.readAsText(file);
+        }
+
+        function ejecutarCargaBase() {
+            const input = document.getElementById('csvBaseInput');
+            const file = input && input.files ? input.files[0] : null;
+            if (!file) { showToast('Selecciona un archivo CSV primero'); return; }
+
+            const progCont = document.getElementById('progressContainerBase'); if (progCont) progCont.classList.remove('hidden');
+            const progText = document.getElementById('progressTextBase'); if (progText) progText.textContent = 'Leyendo archivo...';
+            const progBar = document.getElementById('progressBarBase'); if (progBar) progBar.style.width = '30%';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = parseCsvToLines(e.target.result);
+                if (lines.length < 2) { showToast('El archivo no contiene registros válidos'); if (progCont) progCont.classList.add('hidden'); return; }
+
+                if (progText) progText.textContent = 'Subiendo registros a Supabase...';
+                if (progBar) progBar.style.width = '70%';
+
+                google.script.run.withSuccessHandler(function(res) {
+                    if (progBar) progBar.style.width = '100%';
+                    if (progText) progText.textContent = 'Carga completada';
+                    if (res && res.success) {
+                        showToast(res.message || 'Base Dito cargada');
+                    } else {
+                        showToast('Error en la carga: ' + (res ? res.message : 'desconocido'));
+                    }
+                    setTimeout(function() { if (progCont) progCont.classList.add('hidden'); }, 1500);
+                }).withFailureHandler(function(err) {
+                    showToast('Fallo la carga de Base Dito: ' + err.message);
+                    if (progCont) progCont.classList.add('hidden');
+                }).procesarCargaMasivaBase(lines);
+            };
+            reader.readAsText(file);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             if(typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
             loadConfigUI();
@@ -1258,8 +1438,9 @@
             if(viewId === 'ventasList' || viewId === 'dashGrupalView') loadVentas();
             if(viewId === 'baseVentasView') loadBaseVentas(); 
             if(viewId === 'configView') loadConfigUI();
-            if(viewId === 'newVenta') { const lc = document.getElementById('lineasContainer'); if(lc && lc.children.length === 0) addLinea(); }
+            if(viewId === 'newVenta') { const lc = document.getElementById('lineasContainer'); if(lc && lc.children.length === 0) addLinea(); actualizarSubEstados('formEstado', 'formSubEstado'); }
             if(viewId === 'ciclosView') renderMovistarCycles();
+            if(viewId === 'avancesView') renderAvances();
             
             if(window.innerWidth < 768) { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.add('sidebar-hidden'); if(mc) mc.classList.remove('md:pl-64'); }
         }
@@ -2029,6 +2210,10 @@
         window.autoFillDni = autoFillDni;
         window.addLinea = addLinea;
         window.eliminarLinea = eliminarLinea;
+        window.actualizarSubEstados = actualizarSubEstados;
+        window.actualizarSubEstadosModal = actualizarSubEstadosModal;
+        window.ejecutarCargaMasiva = ejecutarCargaMasiva;
+        window.ejecutarCargaBase = ejecutarCargaBase;
         window.renderTable = renderTable;
         window.renderTablePaginated = renderTablePaginated;
         window.renderBaseTable = renderBaseTable;
@@ -2048,6 +2233,7 @@
         window.initApp = initApp;
         window.calculateClaroCycle = calculateClaroCycle;
         window.renderMovistarCycles = renderMovistarCycles;
+        window.renderAvances = renderAvances;
         window.fijarVistaGlobal = fijarVistaGlobal;
         window.forzarSincronizacionGeneral = forzarSincronizacionGeneral;
         window.silentlyRefreshDashboards = silentlyRefreshDashboards;
