@@ -1520,13 +1520,17 @@
             
             google.script.run.withSuccessHandler(res => {
                 if(res) {
+                    // 1. OBLIGAMOS a guardar la configuración de Supabase en el caché local de todos los usuarios
+                    localStorage.setItem('ffvv_config', JSON.stringify(res));
+
+                    // 2. Actualizamos la interfaz
                     const m = document.getElementById('confMeta'); if(m) m.value = res.metaCuota;
                     const d = document.getElementById('confDias'); if(d) d.value = res.diasMes;
                     const b = document.getElementById('confBono'); if(b) b.value = res.bonoMeta;
                     const mg = document.getElementById('confMesGestion'); if(mg && res.mesGestion !== undefined) mg.value = res.mesGestion;
+                    const cc = document.getElementById('confCicloDefault'); if(cc && res.cicloDefault !== undefined) cc.value = res.cicloDefault;
                 }
             }).obtenerConfiguracion();
-        }
 
         function initResize(e) {
             e.stopPropagation();
