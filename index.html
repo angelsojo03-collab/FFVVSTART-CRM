@@ -795,7 +795,7 @@
                                         });
                                         dash.gerencia.asesoresDetalle.sort((a,b) => b.cf - a.cf);
                                         dash.gerencia.carruselerosDetalle = carrMap; 
-                                        Object.keys(diasMap).sort().forEach(d => { dash.gerencia.diasOrdenados.push({dia: d, cantidad: diasMap[d]}); });
+                                        Object.keys(diasMap).sort((a, b) => Number(a) - Number(b)).forEach(d => { dash.gerencia.diasOrdenados.push({dia: d, cantidad: diasMap[d]}); });
 
                                         result = { success: true, ventas: myVentas.sort((a, b) => Number(b.ID || 0) - Number(a.ID || 0)), dashboard: dash };
                                     }
@@ -1121,10 +1121,13 @@
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
             
-            // Actualización automática cada 5 segundos
+            // Actualización automática cada 5 segundos (se omite mientras el usuario está editando una celda,
+            // para lograr un comportamiento fluido tipo Google Sheet sin interrupciones ni parpadeos)
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
-                if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
+                const activo = document.activeElement;
+                const editandoAhora = activo && vistaBase && vistaBase.contains(activo) && (activo.tagName === 'INPUT' || activo.tagName === 'SELECT');
+                if (vistaBase && !vistaBase.classList.contains('view-hidden') && !editandoAhora) {
                     aplicarFiltrosBase(true);
                 }
             }, 5000); 
@@ -1586,7 +1589,12 @@
         function aplicarFiltrosBase(silencioso = false) {
             const txtEl = document.getElementById('filtroTextoBase'); const txt = txtEl ? txtEl.value.trim() : '';
             const chkOcultar = document.getElementById('chkOcultarGestionados'); const ocultar = chkOcultar ? chkOcultar.checked : true;
-            const cBoxes = document.querySelectorAll('.chk-ciclo:checked'); const ciclosCheckbox = Array.from(cBoxes).map(cb => cb.value);
+            const cBoxes = document.querySelectorAll('.chk-ciclo:checked'); let ciclosCheckbox = Array.from(cBoxes).map(cb => cb.value);
+            // Si no hay ciclos seleccionados manualmente, se consulta primero el ciclo configurado en el almacenamiento local
+            if (ciclosCheckbox.length === 0) {
+                let cicloLocal = getConfig().cicloDefault;
+                if (cicloLocal) ciclosCheckbox = [cicloLocal];
+            }
             const mBoxes = document.querySelectorAll('.chk-mes:checked'); const mesesCheckbox = Array.from(mBoxes).map(mb => mb.value);
 
             const lblCiclos = document.getElementById('lblCiclosBase'); if(lblCiclos) lblCiclos.textContent = ciclosCheckbox.length === 0 ? "Todos los Ciclos" : (ciclosCheckbox.length === 1 ? "Ciclo " + ciclosCheckbox[0] : ciclosCheckbox.length + " Seleccionados");
@@ -1600,8 +1608,8 @@
                 if(res && res.success) { 
                     baseVentasGlobal = res.baseVentas || []; 
                     
-                    // CONTADOR DE INFORMADOS
-                    let informadosCount = baseVentasGlobal.filter(v => String(v.ESTADO || '').trim().toUpperCase() === 'INFORMADO').length;
+                    // CONTADOR DE INFORMADOS (ESTADO = INFORMADO Y VENDEDOR vacío/sin asignar)
+                    let informadosCount = baseVentasGlobal.filter(v => String(v.ESTADO || '').trim().toUpperCase() === 'INFORMADO' && String(v.VENDEDOR || '').trim() === '').length;
                     const numInfEl = document.getElementById('numInformadosCount');
                     const cardInfEl = document.getElementById('cardContadorInformados');
                     if (numInfEl) numInfEl.textContent = informadosCount;
@@ -1756,7 +1764,10 @@
             if (campo === 'GESTIONADO' && chk && chk.checked) { 
                 const tr = document.getElementById('row_base_' + id); 
                 if(tr) tr.remove(); 
-            } else { renderBaseTablePaginated(); }
+            }
+            // Nota: no se vuelve a renderizar toda la tabla paginada en cada edición (comportamiento tipo Google Sheet).
+            // El propio elemento editado (select/input) ya refleja su nuevo valor y clase in-place vía el onchange del HTML,
+            // y baseVentasGlobal queda sincronizado en memoria; solo se elimina la fila si corresponde ocultar gestionados.
 
             google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
