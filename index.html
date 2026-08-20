@@ -1503,19 +1503,20 @@
             const btnMeses = document.getElementById('lblMesesBase') ? document.getElementById('lblMesesBase').parentElement : null; const listMeses = document.getElementById('listaMesesBase'); if (btnMeses && listMeses && !btnMeses.contains(e.target) && !listMeses.contains(e.target)) { listMeses.classList.add('hidden'); }
         });
 
-        // ================= RASTREO DE PRODUCTIVIDAD / INACTIVIDAD =================
-        window.registrarLog = function(tipo, detalle) {
+        // ================= RASTREO DE PRODUCTIVIDAD / INACTIVIDAD (DIRECTO A SUPABASE) =================
+        window.registrarLog = async function(tipo, detalle) {
             if (!currentUser) return;
-            const payload = {
-                USUARIO: currentUser.nombre,
-                ROL: currentUser.rol,
-                TIPO: tipo,
-                DETALLE: detalle
-            };
-            google.script.run
-                .withSuccessHandler(function(){})
-                .withFailureHandler(function(err){ console.error("Fallo log:", err); })
-                .registrarLogProductividad(payload);
+            try {
+                const { error } = await _supabase.from('LOGS_PRODUCTIVIDAD').insert([{
+                    USUARIO: currentUser.nombre,
+                    ROL: currentUser.rol,
+                    TIPO: tipo,
+                    DETALLE: detalle
+                }]);
+                if (error) console.error("Error al registrar log en Supabase:", error);
+            } catch (err) {
+                console.error("Excepción al registrar log:", err);
+            }
         };
 
         window.cargarProductividad = function() {
