@@ -1959,6 +1959,22 @@
             }
         }
 
+        // Helper puro: construye labels/datos del gráfico "Ventas por Día" a partir de diasOrdenados
+        // (reutilizado por renderGerenciaDashboard y renderDashGrupal para evitar código duplicado; no cambia el comportamiento)
+        function buildDiasChartData(diasOrdenados) {
+            let labelsDias = []; let dataDias = [];
+            (diasOrdenados || []).forEach(function(d) { labelsDias.push('Día ' + d.dia); dataDias.push(d.cantidad); });
+            return { labels: labelsDias, data: dataDias };
+        }
+
+        // Helper puro: construye labels/datos/máximo del gráfico "% Avance de Cuota por Asesor"
+        // (reutilizado por renderGerenciaDashboard y renderDashGrupal; no cambia el comportamiento)
+        function buildAsesoresChartData(asesoresDetalle) {
+            let labelsAse = []; let dataAse = []; let maxAse = 0;
+            (asesoresDetalle || []).forEach(function(a) { labelsAse.push(a.nombre); dataAse.push(a.avance); if(parseFloat(a.avance) > maxAse) maxAse = parseFloat(a.avance); });
+            return { labels: labelsAse, data: dataAse, max: maxAse };
+        }
+
         function renderGerenciaDashboard(g) {
             if(!g) return;
             let conf = getConfig();
@@ -2009,10 +2025,10 @@
             const ctxDiasEl = document.getElementById('chartDias');
             if (ctxDiasEl) {
                 if (chartDiasInstance) chartDiasInstance.destroy();
-                let labelsDias = []; let dataDias = []; g.diasOrdenados.forEach(function(d) { labelsDias.push('Día ' + d.dia); dataDias.push(d.cantidad); });
+                let diasChart = buildDiasChartData(g.diasOrdenados);
                 chartDiasInstance = new Chart(ctxDiasEl.getContext('2d'), { 
                     type: 'bar', 
-                    data: { labels: labelsDias, datasets: [{ label: 'Ventas Entregadas', data: dataDias, backgroundColor: '#dc2626', borderRadius: 4 }] }, 
+                    data: { labels: diasChart.labels, datasets: [{ label: 'Ventas Entregadas', data: diasChart.data, backgroundColor: '#dc2626', borderRadius: 4 }] }, 
                     plugins: [ChartDataLabels],
                     options: { 
                         responsive: true, maintainAspectRatio: false, 
@@ -2028,11 +2044,10 @@
             const ctxAsesoresEl = document.getElementById('chartAsesores');
             if (ctxAsesoresEl) {
                 if (chartAsesoresInstance) chartAsesoresInstance.destroy();
-                let labelsAse = []; let dataAse = []; let maxAse = 0;
-                g.asesoresDetalle.forEach(function(a) { labelsAse.push(a.nombre); dataAse.push(a.avance); if(parseFloat(a.avance) > maxAse) maxAse = parseFloat(a.avance); });
+                let aseChart = buildAsesoresChartData(g.asesoresDetalle);
                 chartAsesoresInstance = new Chart(ctxAsesoresEl.getContext('2d'), { 
                     type: 'bar', 
-                    data: { labels: labelsAse, datasets: [{ label: '% Avance Cuota', data: dataAse, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
+                    data: { labels: aseChart.labels, datasets: [{ label: '% Avance Cuota', data: aseChart.data, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
                     plugins: [ChartDataLabels],
                     options: { 
                         indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
@@ -2040,7 +2055,7 @@
                             legend: { display: false }, 
                             datalabels: { color: '#ffffff', anchor: 'end', align: 'start', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value + '%'; } }
                         }, 
-                        scales: { x: { ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, min: 0, max: maxAse + 20 }, y: { ticks: { color: '#64748b', font: { weight: 'bold'} } } } 
+                        scales: { x: { ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, min: 0, max: aseChart.max + 20 }, y: { ticks: { color: '#64748b', font: { weight: 'bold'} } } } 
                     } 
                 });
             }
@@ -2103,10 +2118,10 @@
             const ctxDiasEl = document.getElementById('chartDiasGrupal');
             if (ctxDiasEl) {
                 if (chartDiasGrupalInstance) chartDiasGrupalInstance.destroy();
-                let labelsDias = []; let dataDias = []; g.diasOrdenados.forEach(function(d) { labelsDias.push('Día ' + d.dia); dataDias.push(d.cantidad); });
+                let diasChart = buildDiasChartData(g.diasOrdenados);
                 chartDiasGrupalInstance = new Chart(ctxDiasEl.getContext('2d'), { 
                     type: 'bar', 
-                    data: { labels: labelsDias, datasets: [{ label: 'Ventas Entregadas', data: dataDias, backgroundColor: '#dc2626', borderRadius: 4 }] }, 
+                    data: { labels: diasChart.labels, datasets: [{ label: 'Ventas Entregadas', data: diasChart.data, backgroundColor: '#dc2626', borderRadius: 4 }] }, 
                     plugins: [ChartDataLabels],
                     options: { 
                         responsive: true, maintainAspectRatio: false, 
@@ -2122,11 +2137,10 @@
             const ctxAsesoresEl = document.getElementById('chartAsesoresGrupal');
             if (ctxAsesoresEl) {
                 if (chartAsesoresGrupalInstance) chartAsesoresGrupalInstance.destroy();
-                let labelsAse = []; let dataAse = []; let maxAse = 0;
-                g.asesoresDetalle.forEach(function(a) { labelsAse.push(a.nombre); dataAse.push(a.avance); if(parseFloat(a.avance) > maxAse) maxAse = parseFloat(a.avance); });
+                let aseChart = buildAsesoresChartData(g.asesoresDetalle);
                 chartAsesoresGrupalInstance = new Chart(ctxAsesoresEl.getContext('2d'), { 
                     type: 'bar', 
-                    data: { labels: labelsAse, datasets: [{ label: '% Avance Cuota', data: dataAse, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
+                    data: { labels: aseChart.labels, datasets: [{ label: '% Avance Cuota', data: aseChart.data, backgroundColor: '#0ea5e9', borderRadius: 4 }] }, 
                     plugins: [ChartDataLabels],
                     options: { 
                         indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
@@ -2134,7 +2148,7 @@
                             legend: { display: false }, 
                             datalabels: { color: '#ffffff', anchor: 'end', align: 'start', font: { weight: 'bold', size: 14 }, formatter: function(value) { return value + '%'; } }
                         }, 
-                        scales: { x: { ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, min: 0, max: maxAse + 20 }, y: { ticks: { color: '#64748b', font: { weight: 'bold'} } } } 
+                        scales: { x: { ticks: { color: '#64748b', callback: function(value) { return value + '%'; } }, min: 0, max: aseChart.max + 20 }, y: { ticks: { color: '#64748b', font: { weight: 'bold'} } } } 
                     } 
                 });
             }
@@ -2277,6 +2291,8 @@
         window.silentlyRefreshDashboards = silentlyRefreshDashboards;
         window.actualizarDashboardCard = actualizarDashboardCard;
         window.renderGerenciaDashboard = renderGerenciaDashboard;
+        window.buildDiasChartData = buildDiasChartData;
+        window.buildAsesoresChartData = buildAsesoresChartData;
         window.renderDashGrupal = renderDashGrupal;
         window.abrirModalWhatsApp = abrirModalWhatsApp;
         window.closeModalWap = closeModalWap;
