@@ -998,6 +998,12 @@
                                         if (error) throw error; result = { success: true, message: 'Base Dito cargada' };
                                     }
 
+                                    else if (prop === 'registrarLogProductividad') {
+                                        const [payload] = args;
+                                        try { await _supabase.from('LOGS_PRODUCTIVIDAD').insert([payload]); } catch(err) {}
+                                        result = { success: true };
+                                    }
+
                                     if (target.successCb) target.successCb(result);
                                 } catch (err) { console.error("Error Supabase:", err); if (target.failureCb) target.failureCb(err); else showToast("Fallo: " + err.message); }
                             };
@@ -1387,6 +1393,7 @@
                         if(res && res.success) { 
                             form.reset(); 
                             showToast(res.message); 
+                            registrarLog('ACCION', 'Registró Venta en CRM');
                             cambiarVista('ventasList'); 
                         } 
                     }).saveVentasMultiples(data); 
@@ -1445,6 +1452,19 @@
             const btnCiclos = document.getElementById('lblCiclosBase') ? document.getElementById('lblCiclosBase').parentElement : null; const listCiclos = document.getElementById('listaCiclosBase'); if (btnCiclos && listCiclos && !btnCiclos.contains(e.target) && !listCiclos.contains(e.target)) { listCiclos.classList.add('hidden'); }
             const btnMeses = document.getElementById('lblMesesBase') ? document.getElementById('lblMesesBase').parentElement : null; const listMeses = document.getElementById('listaMesesBase'); if (btnMeses && listMeses && !btnMeses.contains(e.target) && !listMeses.contains(e.target)) { listMeses.classList.add('hidden'); }
         });
+
+        // ================= RASTREO DE PRODUCTIVIDAD / INACTIVIDAD =================
+        window.registrarLog = function(tipo, detalle) {
+            if (!currentUser) return;
+            const payload = {
+                USUARIO: currentUser.nombre,
+                ROL: currentUser.rol,
+                TIPO: tipo,
+                DETALLE: detalle,
+                FECHA_HORA: new Date().toLocaleString('es-PE')
+            };
+            google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).registrarLogProductividad(payload);
+        };
 
         function initApp() {
             const loginView = document.getElementById('loginView'); if(loginView) loginView.classList.add('view-hidden');
@@ -1506,6 +1526,28 @@
                     if (vistaBase && !vistaBase.classList.contains('view-hidden')) { aplicarFiltrosBase(false); }
                 }
             }).obtenerConfiguracion();
+
+            // ================= RASTREADOR DE INACTIVIDAD (TIMER INTELIGENTE) =================
+            let tiempoInactivo = 0;
+            document.addEventListener('mousemove', function() { tiempoInactivo = 0; });
+            document.addEventListener('keydown', function() { tiempoInactivo = 0; });
+            document.addEventListener('click', function() { tiempoInactivo = 0; });
+
+            setInterval(function() {
+                tiempoInactivo++;
+
+                if (tiempoInactivo === 5) {
+                    registrarLog('INACTIVIDAD', '5 minutos de inactividad');
+                }
+                if (currentUser && currentUser.rol === 'CARRUSELERO' && tiempoInactivo === 10) {
+                    alert('POR FAVOR RETOMA GESTIÓN YA QUE SE VALIDÓ TIEMPO DE INACTIVIDAD PROLONGADO');
+                    registrarLog('INACTIVIDAD', '10 minutos de inactividad');
+                }
+                if (currentUser && currentUser.rol === 'ASESOR' && tiempoInactivo === 20) {
+                    alert('Llevas 20 minutos sin actividad, por favor retoma gestión.');
+                    registrarLog('INACTIVIDAD', '20 minutos de inactividad');
+                }
+            }, 60000);
         }
 
         function initResize(e) {
@@ -1771,6 +1813,8 @@
             // Nota: no se vuelve a renderizar toda la tabla paginada en cada edición (comportamiento tipo Google Sheet).
             // El propio elemento editado (select/input) ya refleja su nuevo valor y clase in-place vía el onchange del HTML,
             // y baseVentasGlobal queda sincronizado en memoria; solo se elimina la fila si corresponde ocultar gestionados.
+
+            registrarLog('ACCION', 'Gestión en Base Dito: ' + campo + ' a ' + valor);
 
             google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
@@ -2243,6 +2287,8 @@
             const textEl = document.getElementById('wapTextContent'); if(textEl) textEl.value = mensajeCompleto;
             const linkEl = document.getElementById('wapDirectLink'); if(linkEl) linkEl.href = "https://wa.me/51" + ani;
             const modalEl = document.getElementById('modalWap'); if(modalEl) modalEl.classList.remove('hidden');
+
+            registrarLog('ACCION', 'Generó mensaje de WhatsApp');
         }
 
         function closeModalWap() { const m = document.getElementById('modalWap'); if(m) m.classList.add('hidden'); }
