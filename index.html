@@ -124,7 +124,7 @@
                         </div>
 
                         <!-- TARJETAS DE RESUMEN DE PRODUCTIVIDAD (dinámicas según usuarios con actividad en la fecha) -->
-                        <div id="productividadResumenCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+                        <div id="productividadResumenCards" class="space-y-6 mb-8"></div>
 
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-xs md:text-sm text-left min-w-max">
@@ -1545,16 +1545,28 @@
                 return (h > 0 ? h + 'h ' : '') + m + 'm';
             }
 
+            // Excluye a Gerencia / Administrador / Supervisor: solo interesan Asesores y Carruseleros
+            const logsFiltrados = logs.filter(function(log) {
+                const rolUp = String(log.ROL || '').trim().toUpperCase();
+                const userUp = String(log.USUARIO || '').trim().toUpperCase();
+                if (rolUp === 'GERENCIA' || rolUp === 'SUPERVISOR' || rolUp.includes('ADMIN')) return false;
+                if (userUp.includes('ADMIN') || userUp.includes('GERENCIA')) return false;
+                return true;
+            });
+
+            if (logsFiltrados.length === 0) { cont.innerHTML = ''; return; }
+
             // Agrupar logs por usuario
             let porUsuario = {};
-            logs.forEach(function(log) {
+            logsFiltrados.forEach(function(log) {
                 const usuario = log.USUARIO || 'Sin usuario';
                 if (!porUsuario[usuario]) porUsuario[usuario] = { rol: log.ROL || '', items: [] };
                 porUsuario[usuario].items.push({ fecha: new Date(log.FECHA_HORA), TIPO: log.TIPO, DETALLE: log.DETALLE });
             });
 
-            let cardsHtml = '';
             const ahora = new Date();
+            let cardsCarruseleros = '';
+            let cardsAsesores = '';
 
             Object.keys(porUsuario).forEach(function(usuario) {
                 let items = porUsuario[usuario].items.sort((a, b) => a.fecha - b.fecha);
@@ -1569,6 +1581,7 @@
 
                 let pauseMs = 0;
                 let productivoMs = 0;
+                let improductivoMin = 0;
                 let currentState = 'CONECTADO';
                 let stateStart = items[0].fecha;
 
@@ -1583,6 +1596,11 @@
                         currentState = match ? match[1].trim().toUpperCase() : 'CONECTADO';
                     }
 
+                    if (String(currentItem.TIPO || '').trim().toUpperCase() === 'INACTIVIDAD') {
+                        const matchMin = String(currentItem.DETALLE || '').match(/(\d+)\s*minuto/i);
+                        if (matchMin) improductivoMin += parseInt(matchMin[1], 10);
+                    }
+
                     if (currentState === 'BAÑO' || currentState === 'BREAK') {
                         pauseMs += duration;
                     } else {
@@ -1590,7 +1608,7 @@
                     }
                 }
 
-                cardsHtml += '<div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">' +
+                const tarjetaHtml = '<div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">' +
                     '<p class="font-black text-slate-800 text-base uppercase truncate">' + usuario + '</p>' +
                     '<p class="text-[11px] uppercase font-black tracking-widest text-red-600 mb-3">' + rol + '</p>' +
                     '<div class="space-y-1 text-xs font-bold text-slate-600">' +
@@ -1598,11 +1616,33 @@
                         '<p><i class="fas fa-sign-out-alt text-slate-500 mr-1"></i> Último registro: <span class="text-slate-800">' + items[items.length - 1].fecha.toLocaleTimeString('es-PE') + '</span></p>' +
                         '<p><i class="fas fa-bolt text-blue-600 mr-1"></i> Tiempo productivo: <span class="text-slate-800">' + formatDuracion(productivoMs) + '</span></p>' +
                         '<p><i class="fas fa-pause-circle text-orange-600 mr-1"></i> Tiempo en pausas: <span class="text-slate-800">' + formatDuracion(pauseMs) + '</span></p>' +
+                        '<p><i class="fas fa-clock text-red-500 mr-1"></i> Tiempo improductivo: <span class="text-slate-800">' + formatDuracion(improductivoMin * 60000) + '</span></p>' +
                     '</div>' +
                 '</div>';
+
+                const rolUp = String(rol).trim().toUpperCase();
+                if (rolUp === 'CARRUSELERO') {
+                    cardsCarruseleros += tarjetaHtml;
+                } else {
+                    cardsAsesores += tarjetaHtml;
+                }
             });
 
-            cont.innerHTML = cardsHtml;
+            let html = '';
+            if (cardsCarruseleros) {
+                html += '<div>' +
+                    '<h3 class="text-sm font-black uppercase tracking-widest text-slate-700 mb-3">⚡ Resumen de Carruseleros</h3>' +
+                    '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">' + cardsCarruseleros + '</div>' +
+                '</div>';
+            }
+            if (cardsAsesores) {
+                html += '<div>' +
+                    '<h3 class="text-sm font-black uppercase tracking-widest text-slate-700 mb-3">💼 Resumen de Vendedores (Asesores)</h3>' +
+                    '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cardsAsesores + '</div>' +
+                '</div>';
+            }
+
+            cont.innerHTML = html;
         }
 
         window.cargarProductividad = function() {
