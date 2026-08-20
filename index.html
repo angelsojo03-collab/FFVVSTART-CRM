@@ -911,10 +911,22 @@
                                             } else { v.isDuplicate = false; } 
                                         });
 
-                                        // ORDENAMIENTO AUTOMÁTICO FIJO Y OBLIGATORIO (no depende de botones ni configuración):
-                                        // Prioridad 1: MESES descendente (mayor a menor)
-                                        // Prioridad 2: NOMBRE_CLIENTE ascendente (A a la Z)
+                                        // ORDENAMIENTO AUTOMÁTICO FIJO Y OBLIGATORIO:
+                                        // Prioridad 1: ESTADO (INFORMADO > VENTA > WSP > Otros)
+                                        // Prioridad 2: MESES descendente (mayor a menor)
+                                        // Prioridad 3: NOMBRE_CLIENTE ascendente (A a la Z)
                                         filtered.sort((a, b) => {
+                                            const getEstVal = (e) => {
+                                                let est = String(e || '').trim().toUpperCase();
+                                                if (est === 'INFORMADO') return 1;
+                                                if (est === 'VENTA') return 2;
+                                                if (est === 'WSP') return 3;
+                                                return 4;
+                                            };
+                                            
+                                            let diffEstado = getEstVal(a.ESTADO) - getEstVal(b.ESTADO);
+                                            if (diffEstado !== 0) return diffEstado;
+
                                             let mesesA = parseFloat(a.MESES); if (isNaN(mesesA)) mesesA = -Infinity;
                                             let mesesB = parseFloat(b.MESES); if (isNaN(mesesB)) mesesB = -Infinity;
                                             if (mesesA !== mesesB) return mesesB - mesesA;
@@ -1067,9 +1079,9 @@
         function loadBaseVentas() {
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
+            if(window.baseHardSyncInterval) clearInterval(window.baseHardSyncInterval);
             
-            // Actualización automática cada 5 segundos (se omite mientras el usuario está editando una celda,
-            // para lograr un comportamiento fluido tipo Google Sheet sin interrupciones ni parpadeos)
+            // Actualización suave cada 5s (no interrumpe si el usuario edita)
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
                 const activo = document.activeElement;
@@ -1078,6 +1090,14 @@
                     aplicarFiltrosBase(true);
                 }
             }, 5000); 
+
+            // Actualización OBLIGATORIA cada 1 minuto (60000 ms) para forzar el reordenamiento de "INFORMADOS"
+            window.baseHardSyncInterval = setInterval(function() {
+                const vistaBase = document.getElementById('baseVentasView');
+                if (vistaBase && !vistaBase.classList.contains('view-hidden')) {
+                    aplicarFiltrosBase(true);
+                }
+            }, 60000);
         }
 
         let organizarEstadoActivado = false;
