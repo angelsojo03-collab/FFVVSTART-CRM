@@ -64,6 +64,7 @@
                 <a href="#" class="nav-link nav-asesor nav-carruselero nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="ciclosView"><i class="fas fa-calendar-alt w-5 text-lg"></i><span class="font-bold">CICLOS FACTURACIÓN</span></a>
                 <a href="#" id="menuCargaMasiva" class="nav-link nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="cargaMasivaView"><i class="fas fa-file-excel w-5 text-lg"></i><span class="font-bold">CARGA MASIVA</span></a>
                 <a href="#" class="nav-link nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="avancesView"><i class="fas fa-chart-line w-5 text-lg"></i><span class="font-bold">AVANCES</span></a>
+                <a href="#" class="nav-link nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors" data-view="productividadView"><i class="fas fa-user-clock w-5 text-lg"></i><span class="font-bold">PRODUCTIVIDAD</span></a>
                 <a href="#" class="nav-link nav-gerencia px-4 py-3.5 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-red-50 hover:text-red-700 hidden transition-colors border-t border-slate-200 mt-2 pt-4" data-view="configView"><i class="fas fa-cogs w-5 text-lg"></i><span class="font-bold">CONFIGURACIÓN</span></a>
             </nav>
         </aside>
@@ -105,6 +106,35 @@
                                 <p class="text-[11px] uppercase font-black tracking-widest text-green-700 mb-2">Comisión Final</p>
                                 <p id="avanceComisionFinal" class="text-2xl font-black text-green-700">S/ 0.00</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= PRODUCTIVIDAD (SOLO GERENCIA) ================= -->
+                <div id="productividadView" class="content-view view-hidden space-y-6 w-full">
+                    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-md border-t-4 border-red-600 w-full">
+                        <h2 class="text-2xl font-black text-slate-800 mb-2"><i class="fas fa-user-clock text-red-600 mr-2"></i>Rastreo de Productividad</h2>
+                        <p class="text-sm text-slate-500 font-bold mb-6 border-b border-slate-100 pb-4">Consulta las acciones y periodos de inactividad registrados por el equipo, día por día.</p>
+                        <div class="flex flex-wrap gap-3 items-end mb-6">
+                            <div>
+                                <label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Fecha</label>
+                                <input type="date" id="fechaProductividad" class="px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner">
+                            </div>
+                            <button onclick="cargarProductividad()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-search"></i> Buscar</button>
+                        </div>
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-xs md:text-sm text-left min-w-max">
+                                <thead class="text-slate-400 border-b border-slate-200 font-black tracking-wider uppercase">
+                                    <tr>
+                                        <th class="py-2 pr-4">Hora</th>
+                                        <th class="py-2 pr-4">Usuario</th>
+                                        <th class="py-2 pr-4">Rol</th>
+                                        <th class="py-2 pr-4">Tipo</th>
+                                        <th class="py-2 pr-4">Detalle</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaProductividadCuerpo" class="divide-y divide-slate-100 text-slate-800"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1004,6 +1034,13 @@
                                         result = { success: true };
                                     }
 
+                                    else if (prop === 'obtenerLogsProductividad') {
+                                        const [fecha] = args;
+                                        const { data, error } = await _supabase.from('LOGS_PRODUCTIVIDAD').select('*').ilike('FECHA_HORA', '%' + fecha + '%').order('FECHA_HORA', { ascending: true });
+                                        if (error) throw error;
+                                        result = { success: true, logs: data || [] };
+                                    }
+
                                     if (target.successCb) target.successCb(result);
                                 } catch (err) { console.error("Error Supabase:", err); if (target.failureCb) target.failureCb(err); else showToast("Fallo: " + err.message); }
                             };
@@ -1443,6 +1480,14 @@
             if(viewId === 'newVenta') { const lc = document.getElementById('lineasContainer'); if(lc && lc.children.length === 0) addLinea(); actualizarSubEstados('formEstado', 'formSubEstado'); }
             if(viewId === 'ciclosView') renderMovistarCycles();
             if(viewId === 'avancesView') renderAvances();
+            if(viewId === 'productividadView') { 
+                const fechaEl = document.getElementById('fechaProductividad');
+                if (fechaEl && !fechaEl.value) { 
+                    const hoy = new Date(); 
+                    fechaEl.value = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+                }
+                cargarProductividad(); 
+            }
             
             if(window.innerWidth < 768) { const sb = document.getElementById('sidebar'); const mc = document.getElementById('mainContent'); if(sb) sb.classList.add('sidebar-hidden'); if(mc) mc.classList.remove('md:pl-64'); }
         }
@@ -1464,6 +1509,39 @@
                 FECHA_HORA: new Date().toLocaleString('es-PE')
             };
             google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).registrarLogProductividad(payload);
+        };
+
+        window.cargarProductividad = function() {
+            const fechaInput = document.getElementById('fechaProductividad');
+            if (!fechaInput || !fechaInput.value) { showToast('Selecciona una fecha'); return; }
+            const partes = fechaInput.value.split('-'); // input date: YYYY-MM-DD
+            const fechaBuscada = partes[2] + '/' + partes[1] + '/' + partes[0]; // -> DD/MM/YYYY (formato de FECHA_HORA)
+
+            const tbody = document.getElementById('tablaProductividadCuerpo');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-slate-400 font-bold">Cargando...</td></tr>';
+
+            google.script.run.withSuccessHandler(function(res) {
+                if (!tbody) return;
+                if (res && res.success && res.logs && res.logs.length > 0) {
+                    tbody.innerHTML = res.logs.map(function(log) {
+                        const esInactividad = String(log.TIPO || '').trim().toUpperCase() === 'INACTIVIDAD';
+                        const colorClase = esInactividad ? 'text-red-600 font-black' : 'text-slate-800';
+                        let horaSolo = '';
+                        if (log.FECHA_HORA) { let partesFH = String(log.FECHA_HORA).split(','); horaSolo = partesFH.length > 1 ? partesFH[1].trim() : log.FECHA_HORA; }
+                        return '<tr class="' + colorClase + '">' +
+                            '<td class="py-2 pr-4">' + horaSolo + '</td>' +
+                            '<td class="py-2 pr-4 font-bold">' + (log.USUARIO || '') + '</td>' +
+                            '<td class="py-2 pr-4">' + (log.ROL || '') + '</td>' +
+                            '<td class="py-2 pr-4">' + (log.TIPO || '') + '</td>' +
+                            '<td class="py-2 pr-4">' + (log.DETALLE || '') + '</td>' +
+                        '</tr>';
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 font-bold">Sin registros para esta fecha</td></tr>';
+                }
+            }).withFailureHandler(function(err) {
+                if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-red-500 font-bold">Error al cargar: ' + err.message + '</td></tr>';
+            }).obtenerLogsProductividad(fechaBuscada);
         };
 
         function initApp() {
