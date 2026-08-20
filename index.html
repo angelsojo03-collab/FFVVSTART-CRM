@@ -1507,11 +1507,19 @@
         window.registrarLog = async function(tipo, detalle) {
             if (!currentUser) return;
             try {
+                // Obtener la fecha y hora exacta en formato ISO local para Perú (GMT-5)
+                const ahora = new Date();
+                // Ajustar offset para Perú (-5 horas)
+                const utc = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
+                const horaPeru = new Date(utc + (3600000 * -5));
+                const fechaIsoLocal = horaPeru.toISOString().replace('Z', '-05:00');
+
                 const { error } = await _supabase.from('LOGS_PRODUCTIVIDAD').insert([{
                     USUARIO: currentUser.nombre,
                     ROL: currentUser.rol,
                     TIPO: tipo,
-                    DETALLE: detalle
+                    DETALLE: detalle,
+                    FECHA_HORA: fechaIsoLocal
                 }]);
                 if (error) console.error("Error al registrar log en Supabase:", error);
             } catch (err) {
