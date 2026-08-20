@@ -298,11 +298,9 @@
                         </div>
                         <div class="flex flex-wrap gap-3 items-center">
                             <!-- TARJETA CONTADOR DE INFORMADOS -->
-                            <div id="cardContadorInformados" class="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-black text-blue-800 shadow-sm flex items-center gap-2">
-                                <i class="fas fa-info-circle text-blue-600"></i> Informados: <span id="numInformadosCount" class="text-base text-blue-900">0</span> / 15
+                            <div id="cardContadorInformados" class="px-6 py-4 bg-blue-50 border-2 border-blue-300 rounded-xl text-xl font-black text-blue-800 shadow-md flex items-center gap-3">
+                                <i class="fas fa-info-circle text-blue-600 text-2xl"></i> Informados: <span id="numInformadosCount" class="text-3xl text-blue-900">0</span> / 15
                             </div>
-                            <button onclick="forzarSincronizacionGeneral()" class="px-4 md:px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-sync"></i> Forzar Ciclo Global</button>
-                            <button onclick="document.getElementById('modalMultiSort').classList.remove('hidden')" class="px-4 md:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2" title="Organizar Base: orden fijo (Cliente, Meses, Ciclo) + prioridad por Estado + fijar vista global"><i class="fas fa-sort-alpha-down"></i> Organizar Base</button>
                             <button onclick="aplicarFiltrosBase(false)" class="px-4 md:px-5 py-2.5 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-sync-alt"></i> Actualizar Base</button>
                         </div>
                     </div>
@@ -913,69 +911,18 @@
                                             } else { v.isDuplicate = false; } 
                                         });
 
-                                        let globalSort = cloudConf.globalSort || [];
-                                        let finalSortConfigs = [];
-                                        let organizarPorEstado = f.organizarEstadoCustom || cloudConf.organizarEstadoGlobal;
+                                        // ORDENAMIENTO AUTOMÁTICO FIJO Y OBLIGATORIO (no depende de botones ni configuración):
+                                        // Prioridad 1: MESES descendente (mayor a menor)
+                                        // Prioridad 2: NOMBRE_CLIENTE ascendente (A a la Z)
+                                        filtered.sort((a, b) => {
+                                            let mesesA = parseFloat(a.MESES); if (isNaN(mesesA)) mesesA = -Infinity;
+                                            let mesesB = parseFloat(b.MESES); if (isNaN(mesesB)) mesesB = -Infinity;
+                                            if (mesesA !== mesesB) return mesesB - mesesA;
 
-                                        if (organizarPorEstado) {
-                                            // Prioridad de Estado: INFORMADO > VENTA > WSP > OTROS, y dentro de cada grupo se aplica
-                                            // el orden fijo configurado (Cliente A-Z, Meses desc, Ciclo asc) para mantener registros ordenados.
-                                            const ordenEstadoVal = (est) => {
-                                                let e = String(est || '').trim().toUpperCase();
-                                                if (e === 'INFORMADO') return 1;
-                                                if (e === 'VENTA') return 2;
-                                                if (e === 'WSP') return 3;
-                                                return 4;
-                                            };
-                                            let secundario = globalSort.length > 0 ? globalSort : [{col: 'NOMBRE_CLIENTE', dir: 'asc'}];
-                                            filtered.sort((a, b) => {
-                                                let diff = ordenEstadoVal(a.ESTADO) - ordenEstadoVal(b.ESTADO);
-                                                if (diff !== 0) return diff;
-                                                for (let i=0; i<secundario.length; i++) {
-                                                    let col = secundario[i].col; let dir = secundario[i].dir === 'asc' ? 1 : -1;
-                                                    let v1 = a[col]; let v2 = b[col];
-                                                    if (v1 === null || v1 === undefined) v1 = '';
-                                                    if (v2 === null || v2 === undefined) v2 = '';
-                                                    v1 = String(v1).trim(); v2 = String(v2).trim();
-                                                    if (v1 === '' && v2 !== '') return 1;
-                                                    if (v1 !== '' && v2 === '') return -1;
-                                                    if (v1 === '' && v2 === '') continue;
-                                                    if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); }
-                                                    else { v1 = v1.toLowerCase(); v2 = v2.toLowerCase(); }
-                                                    if (v1 < v2) return -1 * dir;
-                                                    if (v1 > v2) return 1 * dir;
-                                                }
-                                                return 0;
-                                            });
-                                        } else if (globalSort.length > 0) {
-                                            finalSortConfigs = globalSort;
-                                        } else if (f.sortCol) {
-                                            finalSortConfigs = [{col: f.sortCol, dir: f.sortAsc ? 'asc' : 'desc'}];
-                                        }
-
-                                        if (!organizarPorEstado && finalSortConfigs.length > 0) {
-                                            filtered.sort((a,b) => {
-                                                for(let i=0; i<finalSortConfigs.length; i++) {
-                                                    let col = finalSortConfigs[i].col; let dir = finalSortConfigs[i].dir === 'asc' ? 1 : -1;
-                                                    let v1 = a[col]; let v2 = b[col];
-                                                    
-                                                    if (v1 === null || v1 === undefined) v1 = ''; 
-                                                    if (v2 === null || v2 === undefined) v2 = '';
-                                                    v1 = String(v1).trim(); v2 = String(v2).trim();
-
-                                                    if (v1 === '' && v2 !== '') return 1;
-                                                    if (v1 !== '' && v2 === '') return -1;
-                                                    if (v1 === '' && v2 === '') continue;
-
-                                                    if (!isNaN(v1) && !isNaN(v2)) { v1 = Number(v1); v2 = Number(v2); } 
-                                                    else { v1 = v1.toLowerCase(); v2 = v2.toLowerCase(); }
-                                                    
-                                                    if (v1 < v2) return -1 * dir; 
-                                                    if (v1 > v2) return 1 * dir;
-                                                }
-                                                return 0;
-                                            });
-                                        }
+                                            let nomA = String(a.NOMBRE_CLIENTE || '').trim().toLowerCase();
+                                            let nomB = String(b.NOMBRE_CLIENTE || '').trim().toLowerCase();
+                                            return nomA.localeCompare(nomB);
+                                        });
                                         
                                         result = { success: true, baseVentas: filtered, vistaGlobal: vGlobal }; 
                                     }
@@ -1640,10 +1587,21 @@
                     if (numInfEl) numInfEl.textContent = informadosCount;
                     if (cardInfEl) {
                         if (informadosCount > 15) {
-                            cardInfEl.className = "px-4 py-2 bg-red-100 border border-red-300 rounded-lg text-sm font-black text-red-800 shadow-sm flex items-center gap-2 animate-pulse";
+                            cardInfEl.className = "px-6 py-4 bg-red-100 border-2 border-red-400 rounded-xl text-xl font-black text-red-800 shadow-md flex items-center gap-3 animate-pulse";
                         } else {
-                            cardInfEl.className = "px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm font-black text-blue-800 shadow-sm flex items-center gap-2";
+                            cardInfEl.className = "px-6 py-4 bg-blue-50 border-2 border-blue-300 rounded-xl text-xl font-black text-blue-800 shadow-md flex items-center gap-3";
                         }
+                    }
+
+                    // POP-UP ANTI-SPAM: se dispara una sola vez al cruzar el límite de 16 leads INFORMADOS,
+                    // y se resetea automáticamente cuando el contador vuelve a bajar a 15 o menos.
+                    if (informadosCount >= 16) {
+                        if (!window.alertaInformadosMostrada) {
+                            window.alertaInformadosMostrada = true;
+                            alert("⚠️ ¡ALERTA! Ya hay muchos leads INFORMADOS (16+). Por favor, hagan una pausa hasta que bajen.");
+                        }
+                    } else {
+                        window.alertaInformadosMostrada = false;
                     }
 
                     if (res.vistaGlobal && !silencioso) {
