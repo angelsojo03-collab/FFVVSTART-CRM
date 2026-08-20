@@ -1030,13 +1030,18 @@
 
                                     else if (prop === 'registrarLogProductividad') {
                                         const [payload] = args;
-                                        try { await _supabase.from('LOGS_PRODUCTIVIDAD').insert([payload]); } catch(err) {}
+                                        const { error } = await _supabase.from('LOGS_PRODUCTIVIDAD').insert([payload]);
+                                        if (error) { console.error("Error BD Logs:", error); throw error; }
                                         result = { success: true };
                                     }
 
                                     else if (prop === 'obtenerLogsProductividad') {
-                                        const [fecha] = args;
-                                        const { data, error } = await _supabase.from('LOGS_PRODUCTIVIDAD').select('*').ilike('FECHA_HORA', '%' + fecha + '%').order('FECHA_HORA', { ascending: true });
+                                        const [fecha] = args; // Recibe formato 'YYYY-MM-DD'
+                                        const { data, error } = await _supabase.from('LOGS_PRODUCTIVIDAD')
+                                            .select('*')
+                                            .gte('FECHA_HORA', fecha + 'T00:00:00')
+                                            .lte('FECHA_HORA', fecha + 'T23:59:59')
+                                            .order('FECHA_HORA', { ascending: true });
                                         if (error) throw error;
                                         result = { success: true, logs: data || [] };
                                     }
@@ -1505,17 +1510,18 @@
                 USUARIO: currentUser.nombre,
                 ROL: currentUser.rol,
                 TIPO: tipo,
-                DETALLE: detalle,
-                FECHA_HORA: new Date().toLocaleString('es-PE')
+                DETALLE: detalle
             };
-            google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).registrarLogProductividad(payload);
+            google.script.run
+                .withSuccessHandler(function(){})
+                .withFailureHandler(function(err){ console.error("Fallo log:", err); })
+                .registrarLogProductividad(payload);
         };
 
         window.cargarProductividad = function() {
             const fechaInput = document.getElementById('fechaProductividad');
             if (!fechaInput || !fechaInput.value) { showToast('Selecciona una fecha'); return; }
-            const partes = fechaInput.value.split('-'); // input date: YYYY-MM-DD
-            const fechaBuscada = partes[2] + '/' + partes[1] + '/' + partes[0]; // -> DD/MM/YYYY (formato de FECHA_HORA)
+            const fechaBuscada = fechaInput.value; 
 
             const tbody = document.getElementById('tablaProductividadCuerpo');
             if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-slate-400 font-bold">Cargando...</td></tr>';
@@ -1526,8 +1532,13 @@
                     tbody.innerHTML = res.logs.map(function(log) {
                         const esInactividad = String(log.TIPO || '').trim().toUpperCase() === 'INACTIVIDAD';
                         const colorClase = esInactividad ? 'text-red-600 font-black' : 'text-slate-800';
+                        
                         let horaSolo = '';
-                        if (log.FECHA_HORA) { let partesFH = String(log.FECHA_HORA).split(','); horaSolo = partesFH.length > 1 ? partesFH[1].trim() : log.FECHA_HORA; }
+                        if (log.FECHA_HORA) { 
+                            let d = new Date(log.FECHA_HORA);
+                            horaSolo = d.toLocaleTimeString('es-PE');
+                        }
+                        
                         return '<tr class="' + colorClase + '">' +
                             '<td class="py-2 pr-4">' + horaSolo + '</td>' +
                             '<td class="py-2 pr-4 font-bold">' + (log.USUARIO || '') + '</td>' +
