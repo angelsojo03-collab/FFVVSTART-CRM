@@ -1558,36 +1558,48 @@
             });
 
             let cardsHtml = '';
+            const ahora = new Date();
+
             Object.keys(porUsuario).forEach(function(usuario) {
                 let items = porUsuario[usuario].items.sort((a, b) => a.fecha - b.fecha);
                 const rol = porUsuario[usuario].rol;
                 const primerLogin = items[0].fecha;
-                const ultimoCierre = items[items.length - 1].fecha;
+                let ultimoCierre = items[items.length - 1].fecha;
+                
+                // Si el último registro fue hace menos de 10 minutos, considerarnos que sigue activo (usamos hora actual para el cálculo)
+                if ((ahora - ultimoCierre) < 10 * 60 * 1000) {
+                    ultimoCierre = ahora;
+                }
 
                 let pauseMs = 0;
+                let productivoMs = 0;
                 let currentState = 'CONECTADO';
-                let stateStart = primerLogin;
-                items.forEach(function(item) {
-                    if (String(item.TIPO || '').trim().toUpperCase() === 'ESTADO') {
-                        const elapsed = item.fecha - stateStart;
-                        if (currentState === 'BAÑO' || currentState === 'BREAK') pauseMs += elapsed;
-                        const match = String(item.DETALLE || '').match(/estado:\s*(.+)$/i);
-                        currentState = match ? match[1].trim().toUpperCase() : 'CONECTADO';
-                        stateStart = item.fecha;
-                    }
-                });
-                const elapsedFinal = ultimoCierre - stateStart;
-                if (currentState === 'BAÑO' || currentState === 'BREAK') pauseMs += elapsedFinal;
+                let stateStart = items[0].fecha;
 
-                const totalMs = ultimoCierre - primerLogin;
-                const productivoMs = Math.max(0, totalMs - pauseMs);
+                for (let i = 0; i < items.length; i++) {
+                    let currentItem = items[i];
+                    let nextTime = (i + 1 < items.length) ? items[i + 1].fecha : ultimoCierre;
+                    let duration = nextTime - currentItem.fecha;
+                    if (duration < 0) duration = 0;
+
+                    if (String(currentItem.TIPO || '').trim().toUpperCase() === 'ESTADO') {
+                        const match = String(currentItem.DETALLE || '').match(/estado:\s*(.+)$/i);
+                        currentState = match ? match[1].trim().toUpperCase() : 'CONECTADO';
+                    }
+
+                    if (currentState === 'BAÑO' || currentState === 'BREAK') {
+                        pauseMs += duration;
+                    } else {
+                        productivoMs += duration;
+                    }
+                }
 
                 cardsHtml += '<div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">' +
                     '<p class="font-black text-slate-800 text-base uppercase truncate">' + usuario + '</p>' +
                     '<p class="text-[11px] uppercase font-black tracking-widest text-red-600 mb-3">' + rol + '</p>' +
                     '<div class="space-y-1 text-xs font-bold text-slate-600">' +
                         '<p><i class="fas fa-sign-in-alt text-green-600 mr-1"></i> Primer registro: <span class="text-slate-800">' + primerLogin.toLocaleTimeString('es-PE') + '</span></p>' +
-                        '<p><i class="fas fa-sign-out-alt text-slate-500 mr-1"></i> Último registro: <span class="text-slate-800">' + ultimoCierre.toLocaleTimeString('es-PE') + '</span></p>' +
+                        '<p><i class="fas fa-sign-out-alt text-slate-500 mr-1"></i> Último registro: <span class="text-slate-800">' + items[items.length - 1].fecha.toLocaleTimeString('es-PE') + '</span></p>' +
                         '<p><i class="fas fa-bolt text-blue-600 mr-1"></i> Tiempo productivo: <span class="text-slate-800">' + formatDuracion(productivoMs) + '</span></p>' +
                         '<p><i class="fas fa-pause-circle text-orange-600 mr-1"></i> Tiempo en pausas: <span class="text-slate-800">' + formatDuracion(pauseMs) + '</span></p>' +
                     '</div>' +
