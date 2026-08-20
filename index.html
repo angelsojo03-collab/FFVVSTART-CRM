@@ -1044,10 +1044,13 @@
 
                                     else if (prop === 'obtenerLogsProductividad') {
                                         const [fecha] = args; // Recibe formato 'YYYY-MM-DD'
+                                        const inicioDia = fecha + 'T00:00:00';
+                                        const finDia = fecha + 'T23:59:59';
+                                        
                                         const { data, error } = await _supabase.from('LOGS_PRODUCTIVIDAD')
                                             .select('*')
-                                            .gte('FECHA_HORA', fecha + 'T00:00:00')
-                                            .lte('FECHA_HORA', fecha + 'T23:59:59')
+                                            .gte('FECHA_HORA', inicioDia)
+                                            .lte('FECHA_HORA', finDia)
                                             .order('FECHA_HORA', { ascending: true });
                                         if (error) throw error;
                                         result = { success: true, logs: data || [] };
@@ -1749,6 +1752,15 @@
                     // CAPACITACION: sin límite de alerta, no se dispara nada por tiempo.
                 }
             }, 60000);
+
+            // ================= LATIDO DE ACTIVIDAD (HEARTBEAT) =================
+            // Cada 5 minutos, si el usuario está CONECTADO y no ha estado inactivo, registra un log
+            // continuo para garantizar evidencia de actividad en la plataforma.
+            setInterval(function() {
+                if (estadoConexionActual === 'CONECTADO' && tiempoInactivo < 5) {
+                    registrarLog('ACCION', 'Sigue conectado en la plataforma');
+                }
+            }, 300000);
         }
 
         function initResize(e) {
