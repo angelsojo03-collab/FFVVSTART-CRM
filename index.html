@@ -1520,10 +1520,23 @@
             
             google.script.run.withSuccessHandler(res => {
                 if(res) {
+                    // Sobrescribe el localStorage local con la configuración de la nube (Supabase),
+                    // para que TODOS los roles (Gerencia, Asesores, Carruseleros) queden sincronizados
+                    // con el mismo Ciclo predeterminado y demás parámetros globales.
+                    let confActual = getConfig();
+                    let confSincronizada = Object.assign({}, confActual, res);
+                    localStorage.setItem('ffvv_config', JSON.stringify(confSincronizada));
+
                     const m = document.getElementById('confMeta'); if(m) m.value = res.metaCuota;
                     const d = document.getElementById('confDias'); if(d) d.value = res.diasMes;
                     const b = document.getElementById('confBono'); if(b) b.value = res.bonoMeta;
                     const mg = document.getElementById('confMesGestion'); if(mg && res.mesGestion !== undefined) mg.value = res.mesGestion;
+                    const cc = document.getElementById('confCicloDefault'); if(cc && res.cicloDefault !== undefined) cc.value = res.cicloDefault;
+
+                    // Refresca la vista de Base Dito si el usuario ya se encuentra en ella, para aplicar
+                    // el ciclo sincronizado sin necesidad de recargar la página manualmente.
+                    const vistaBase = document.getElementById('baseVentasView');
+                    if (vistaBase && !vistaBase.classList.contains('view-hidden')) { aplicarFiltrosBase(false); }
                 }
             }).obtenerConfiguracion();
         }
