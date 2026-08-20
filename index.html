@@ -113,32 +113,40 @@
                 <!-- ================= PRODUCTIVIDAD (SOLO GERENCIA) ================= -->
                 <div id="productividadView" class="content-view view-hidden space-y-6 w-full">
                     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-md border-t-4 border-red-600 w-full">
-                        <h2 class="text-2xl font-black text-slate-800 mb-2"><i class="fas fa-user-clock text-red-600 mr-2"></i>Rastreo de Productividad</h2>
-                        <p class="text-sm text-slate-500 font-bold mb-6 border-b border-slate-100 pb-4">Consulta las acciones y periodos de inactividad registrados por el equipo, día por día.</p>
-                        <div class="flex flex-wrap gap-3 items-end mb-6">
-                            <div>
-                                <label class="block text-xs text-slate-500 uppercase font-black tracking-widest mb-2">Fecha</label>
-                                <input type="date" id="fechaProductividad" class="px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 font-bold shadow-inner">
+                        <div class="flex items-center gap-3 mb-1">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                                <i class="fas fa-user-clock text-red-600 text-lg"></i>
                             </div>
-                            <button onclick="cargarProductividad()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-search"></i> Buscar</button>
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight">Rastreo de Productividad</h2>
+                        </div>
+                        <p class="text-sm text-slate-500 font-semibold mb-6 border-b border-slate-100 pb-5">Consulta las acciones y periodos de inactividad registrados por el equipo, día por día.</p>
+                        <div class="flex flex-wrap gap-3 items-end mb-8">
+                            <div>
+                                <label class="block text-[11px] text-slate-500 uppercase font-black tracking-widest mb-2">Fecha</label>
+                                <input type="date" id="fechaProductividad" class="px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100 font-bold shadow-inner transition">
+                            </div>
+                            <button onclick="cargarProductividad()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-black transition shadow-sm hover:shadow-md flex items-center gap-2"><i class="fas fa-search"></i> Buscar</button>
                         </div>
 
                         <!-- TARJETAS DE RESUMEN DE PRODUCTIVIDAD (dinámicas según usuarios con actividad en la fecha) -->
-                        <div id="productividadResumenCards" class="space-y-6 mb-8"></div>
+                        <div id="productividadResumenCards" class="space-y-8 mb-10"></div>
 
-                        <div class="overflow-x-auto w-full">
-                            <table class="w-full text-xs md:text-sm text-left min-w-max">
-                                <thead class="text-slate-400 border-b border-slate-200 font-black tracking-wider uppercase">
-                                    <tr>
-                                        <th class="py-2 pr-4">Hora</th>
-                                        <th class="py-2 pr-4">Usuario</th>
-                                        <th class="py-2 pr-4">Rol</th>
-                                        <th class="py-2 pr-4">Tipo</th>
-                                        <th class="py-2 pr-4">Detalle</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaProductividadCuerpo" class="divide-y divide-slate-100 text-slate-800"></tbody>
-                            </table>
+                        <div>
+                            <h3 class="text-[11px] uppercase font-black tracking-widest text-slate-400 mb-3 flex items-center gap-2"><i class="fas fa-list-ul"></i> Bitácora detallada</h3>
+                            <div class="overflow-x-auto w-full border border-slate-200 rounded-xl">
+                                <table class="w-full text-xs md:text-sm text-left min-w-max">
+                                    <thead class="text-slate-500 bg-slate-50 border-b border-slate-200 font-black tracking-wider uppercase">
+                                        <tr>
+                                            <th class="py-3 px-4">Hora</th>
+                                            <th class="py-3 px-4">Usuario</th>
+                                            <th class="py-3 px-4">Rol</th>
+                                            <th class="py-3 px-4">Tipo</th>
+                                            <th class="py-3 px-4">Detalle</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaProductividadCuerpo" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1608,15 +1616,20 @@
                     }
                 }
 
-                const tarjetaHtml = '<div class="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">' +
-                    '<p class="font-black text-slate-800 text-base uppercase truncate">' + usuario + '</p>' +
-                    '<p class="text-[11px] uppercase font-black tracking-widest text-red-600 mb-3">' + rol + '</p>' +
-                    '<div class="space-y-1 text-xs font-bold text-slate-600">' +
-                        '<p><i class="fas fa-sign-in-alt text-green-600 mr-1"></i> Primer registro: <span class="text-slate-800">' + primerLogin.toLocaleTimeString('es-PE') + '</span></p>' +
-                        '<p><i class="fas fa-sign-out-alt text-slate-500 mr-1"></i> Último registro: <span class="text-slate-800">' + items[items.length - 1].fecha.toLocaleTimeString('es-PE') + '</span></p>' +
-                        '<p><i class="fas fa-bolt text-blue-600 mr-1"></i> Tiempo productivo: <span class="text-slate-800">' + formatDuracion(productivoMs) + '</span></p>' +
-                        '<p><i class="fas fa-pause-circle text-orange-600 mr-1"></i> Tiempo en pausas: <span class="text-slate-800">' + formatDuracion(pauseMs) + '</span></p>' +
-                        '<p><i class="fas fa-clock text-red-500 mr-1"></i> Tiempo improductivo: <span class="text-slate-800">' + formatDuracion(improductivoMin * 60000) + '</span></p>' +
+                const tarjetaHtml = '<div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-slate-300 transition-all">' +
+                    '<div class="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100">' +
+                        '<div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0"><i class="fas fa-user text-red-600 text-sm"></i></div>' +
+                        '<div class="min-w-0">' +
+                            '<p class="font-black text-slate-800 text-sm uppercase truncate">' + usuario + '</p>' +
+                            '<p class="text-[10px] uppercase font-black tracking-widest text-red-500">' + rol + '</p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="space-y-2.5 text-xs font-bold text-slate-500">' +
+                        '<p class="flex items-center justify-between"><span><i class="fas fa-sign-in-alt text-green-600 mr-1.5 w-4 inline-block text-center"></i>Primer registro</span><span class="text-slate-800 font-black">' + primerLogin.toLocaleTimeString('es-PE') + '</span></p>' +
+                        '<p class="flex items-center justify-between"><span><i class="fas fa-sign-out-alt text-slate-400 mr-1.5 w-4 inline-block text-center"></i>Último registro</span><span class="text-slate-800 font-black">' + items[items.length - 1].fecha.toLocaleTimeString('es-PE') + '</span></p>' +
+                        '<p class="flex items-center justify-between"><span><i class="fas fa-bolt text-blue-600 mr-1.5 w-4 inline-block text-center"></i>Tiempo productivo</span><span class="text-slate-800 font-black">' + formatDuracion(productivoMs) + '</span></p>' +
+                        '<p class="flex items-center justify-between"><span><i class="fas fa-pause-circle text-orange-500 mr-1.5 w-4 inline-block text-center"></i>Tiempo en pausas</span><span class="text-slate-800 font-black">' + formatDuracion(pauseMs) + '</span></p>' +
+                        '<p class="flex items-center justify-between pt-2.5 mt-1 border-t border-slate-100"><span><i class="fas fa-clock text-red-500 mr-1.5 w-4 inline-block text-center"></i>Tiempo improductivo</span><span class="text-red-600 font-black">' + formatDuracion(improductivoMin * 60000) + '</span></p>' +
                     '</div>' +
                 '</div>';
 
@@ -1631,13 +1644,13 @@
             let html = '';
             if (cardsCarruseleros) {
                 html += '<div>' +
-                    '<h3 class="text-sm font-black uppercase tracking-widest text-slate-700 mb-3">⚡ Resumen de Carruseleros</h3>' +
-                    '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">' + cardsCarruseleros + '</div>' +
+                    '<div class="flex items-center gap-2 mb-4"><span class="w-1.5 h-5 rounded-full bg-amber-400"></span><h3 class="text-sm font-black uppercase tracking-widest text-slate-700">⚡ Resumen de Carruseleros</h3></div>' +
+                    '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cardsCarruseleros + '</div>' +
                 '</div>';
             }
             if (cardsAsesores) {
                 html += '<div>' +
-                    '<h3 class="text-sm font-black uppercase tracking-widest text-slate-700 mb-3">💼 Resumen de Vendedores (Asesores)</h3>' +
+                    '<div class="flex items-center gap-2 mb-4"><span class="w-1.5 h-5 rounded-full bg-blue-500"></span><h3 class="text-sm font-black uppercase tracking-widest text-slate-700">💼 Resumen de Vendedores (Asesores)</h3></div>' +
                     '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cardsAsesores + '</div>' +
                 '</div>';
             }
@@ -1651,7 +1664,7 @@
             const fechaBuscada = fechaInput.value; 
 
             const tbody = document.getElementById('tablaProductividadCuerpo');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-slate-400 font-bold">Cargando...</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i>Cargando registros...</td></tr>';
 
             google.script.run.withSuccessHandler(function(res) {
                 if (!tbody) return;
@@ -1659,7 +1672,12 @@
                     renderResumenProductividad(res.logs);
                     tbody.innerHTML = res.logs.map(function(log) {
                         const esInactividad = String(log.TIPO || '').trim().toUpperCase() === 'INACTIVIDAD';
-                        const colorClase = esInactividad ? 'text-red-600 font-black' : 'text-slate-800';
+                        const tipoUp = String(log.TIPO || '').trim().toUpperCase();
+                        let badgeClase = 'bg-slate-100 text-slate-600';
+                        if (tipoUp === 'INACTIVIDAD') badgeClase = 'bg-red-50 text-red-600';
+                        else if (tipoUp === 'ACCION') badgeClase = 'bg-blue-50 text-blue-600';
+                        else if (tipoUp === 'ESTADO') badgeClase = 'bg-amber-50 text-amber-700';
+                        const filaClase = esInactividad ? 'bg-red-50/40' : 'hover:bg-slate-50';
                         
                         let horaSolo = '';
                         if (log.FECHA_HORA) { 
@@ -1667,20 +1685,20 @@
                             horaSolo = d.toLocaleTimeString('es-PE');
                         }
                         
-                        return '<tr class="' + colorClase + '">' +
-                            '<td class="py-2 pr-4">' + horaSolo + '</td>' +
-                            '<td class="py-2 pr-4 font-bold">' + (log.USUARIO || '') + '</td>' +
-                            '<td class="py-2 pr-4">' + (log.ROL || '') + '</td>' +
-                            '<td class="py-2 pr-4">' + (log.TIPO || '') + '</td>' +
-                            '<td class="py-2 pr-4">' + (log.DETALLE || '') + '</td>' +
+                        return '<tr class="' + filaClase + ' transition-colors">' +
+                            '<td class="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">' + horaSolo + '</td>' +
+                            '<td class="py-3 px-4 font-black text-slate-800 whitespace-nowrap">' + (log.USUARIO || '') + '</td>' +
+                            '<td class="py-3 px-4 text-slate-500 font-bold whitespace-nowrap">' + (log.ROL || '') + '</td>' +
+                            '<td class="py-3 px-4"><span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wide ' + badgeClase + '">' + (log.TIPO || '') + '</span></td>' +
+                            '<td class="py-3 px-4 text-slate-600 font-semibold whitespace-normal break-words max-w-xs">' + (log.DETALLE || '') + '</td>' +
                         '</tr>';
                     }).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 font-bold">Sin registros para esta fecha</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="py-12 text-center"><div class="flex flex-col items-center gap-2 text-slate-300"><i class="fas fa-inbox text-4xl"></i><span class="text-sm font-bold text-slate-400">Sin registros para esta fecha</span></div></td></tr>';
                     const cont = document.getElementById('productividadResumenCards'); if(cont) cont.innerHTML = '';
                 }
             }).withFailureHandler(function(err) {
-                if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-red-500 font-bold">Error al cargar: ' + err.message + '</td></tr>';
+                if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center"><div class="flex flex-col items-center gap-2 text-red-400"><i class="fas fa-triangle-exclamation text-3xl"></i><span class="text-sm font-bold">Error al cargar: ' + err.message + '</span></div></td></tr>';
             }).obtenerLogsProductividad(fechaBuscada);
         };
 
