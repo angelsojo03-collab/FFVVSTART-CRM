@@ -1716,7 +1716,22 @@
         // ================= MONITOREO EN VIVO DEL EQUIPO =================
         // Detecta el último estado (CONECTADO/BAÑO/BREAK/CAPACITACION) reportado por cada usuario
         // a partir del log 'ESTADO' más reciente del día seleccionado.
-        function renderMonitoreoVivo(logs) {
+        // Helper compartido: determina el instante de referencia para medir ausencia/tiempo productivo.
+        // Si la fecha analizada es HOY, usa la hora actual real (monitoreo en vivo).
+        // Si es una fecha pasada, usa el último registro de TODO el equipo ese día (fin de la jornada analizada).
+        function obtenerFinReferencia(fechaBuscada, logsDelDia) {
+            const hoy = new Date();
+            const hoyStr = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+            if (fechaBuscada === hoyStr) return hoy;
+            let maxFecha = null;
+            (logsDelDia || []).forEach(function(l) {
+                const f = new Date(l.FECHA_HORA);
+                if (!maxFecha || f > maxFecha) maxFecha = f;
+            });
+            return maxFecha || hoy;
+        }
+
+        function renderMonitoreoVivo(logs, fechaBuscada) {
             const cont = document.getElementById('monitoreoVivoContainer');
             if (!cont) return;
             if (!logs || logs.length === 0) { cont.innerHTML = ''; return; }
@@ -1733,9 +1748,12 @@
             let porUsuario = {};
             logsFiltrados.forEach(function(log) {
                 const usuario = log.USUARIO || 'Sin usuario';
-                if (!porUsuario[usuario]) porUsuario[usuario] = { rol: log.ROL || '', estado: 'CONECTADO', ultimaFechaEstado: null };
+                if (!porUsuario[usuario]) porUsuario[usuario] = { rol: log.ROL || '', estado: 'CONECTADO', ultimaFechaEstado: null, ultimoLogGeneral: null };
+                const fecha = new Date(log.FECHA_HORA);
+                if (!porUsuario[usuario].ultimoLogGeneral || fecha > porUsuario[usuario].ultimoLogGeneral) {
+                    porUsuario[usuario].ultimoLogGeneral = fecha;
+                }
                 if (String(log.TIPO || '').trim().toUpperCase() === 'ESTADO') {
-                    const fecha = new Date(log.FECHA_HORA);
                     if (!porUsuario[usuario].ultimaFechaEstado || fecha > porUsuario[usuario].ultimaFechaEstado) {
                         const match = String(log.DETALLE || '').match(/estado:\s*(.+)$/i);
                         porUsuario[usuario].estado = match ? match[1].trim().toUpperCase() : 'CONECTADO';
@@ -1744,11 +1762,24 @@
                 }
             });
 
+            // Regla de desconexión por ausencia: si pasó más de 1 hora sin ningún log y no está en pausa
+            // (BAÑO/BREAK/CAPACITACION), se marca automáticamente como DESCONECTADO.
+            const finReferencia = obtenerFinReferencia(fechaBuscada, logsFiltrados);
+            Object.keys(porUsuario).forEach(function(usuario) {
+                const info = porUsuario[usuario];
+                const enPausa = (info.estado === 'BAÑO' || info.estado === 'BREAK' || info.estado === 'CAPACITACION');
+                const gapMs = finReferencia - info.ultimoLogGeneral;
+                if (!enPausa && gapMs > 60 * 60 * 1000) {
+                    info.estado = 'DESCONECTADO';
+                }
+            });
+
             const estilos = {
                 'CONECTADO': { punto: 'bg-green-500', fondo: 'bg-green-50', texto: 'text-green-700', label: '🟢 Conectado' },
                 'BAÑO': { punto: 'bg-orange-500', fondo: 'bg-orange-50', texto: 'text-orange-700', label: '🚻 Baño' },
                 'BREAK': { punto: 'bg-red-500', fondo: 'bg-red-50', texto: 'text-red-700', label: '☕ Break' },
-                'CAPACITACION': { punto: 'bg-blue-500', fondo: 'bg-blue-50', texto: 'text-blue-700', label: '🎓 Capacitación' }
+                'CAPACITACION': { punto: 'bg-blue-500', fondo: 'bg-blue-50', texto: 'text-blue-700', label: '🎓 Capacitación' },
+                'DESCONECTADO': { punto: 'bg-red-600', fondo: 'bg-red-100', texto: 'text-red-700', label: '🔴 Desconectado' }
             };
 
             let html = '<div class="flex items-center gap-2 mb-4">' +
@@ -1769,7 +1800,7 @@
             cont.innerHTML = html;
         }
 
-        function renderResumenProductividad(logs) {
+        function renderResumenProductividad(logs, fechaBuscada) {
             const cont = document.getElementById('productividadResumenCards');
             if (!cont) return;
             if (!logs || logs.length === 0) { cont.innerHTML = ''; return; }
@@ -1801,7 +1832,7 @@
                 porUsuario[usuario].items.push({ fecha: new Date(log.FECHA_HORA), TIPO: log.TIPO, DETALLE: log.DETALLE });
             });
 
-            const ahora = new Date();
+            const finReferencia = obtenerFinReferencia(fechaBuscada, logsFiltrados);
             let cardsCarruseleros = '';
             let cardsAsesores = '';
 
@@ -1811,9 +1842,11 @@
                 const primerLogin = items[0].fecha;
                 let ultimoCierre = items[items.length - 1].fecha;
                 
-                // Si el último registro fue hace menos de 10 minutos, considerarnos que sigue activo (usamos hora actual para el cálculo)
-                if ((ahora - ultimoCierre) < 10 * 60 * 1000) {
-                    ultimoCierre = ahora;
+                // Regla de ausencia (>1 hora sin ningún log): el cronometraje se detiene estrictamente en el
+                // último registro válido y ese periodo de silencio NO se suma al tiempo productivo.
+                const gapAusencia = finReferencia - ultimoCierre;
+                if (gapAusencia > 0 && gapAusencia <= 60 * 60 * 1000) {
+                    ultimoCierre = finReferencia;
                 }
 
                 let pauseMs = 0;
@@ -1898,8 +1931,8 @@
             google.script.run.withSuccessHandler(function(res) {
                 if (!tbody) return;
                 if (res && res.success && res.logs && res.logs.length > 0) {
-                    renderMonitoreoVivo(res.logs);
-                    renderResumenProductividad(res.logs);
+                    renderMonitoreoVivo(res.logs, fechaBuscada);
+                    renderResumenProductividad(res.logs, fechaBuscada);
                     tbody.innerHTML = res.logs.map(function(log) {
                         const esInactividad = String(log.TIPO || '').trim().toUpperCase() === 'INACTIVIDAD';
                         const tipoUp = String(log.TIPO || '').trim().toUpperCase();
@@ -1925,8 +1958,10 @@
                     }).join('');
                 } else {
                     tbody.innerHTML = '<tr><td colspan="5" class="py-12 text-center"><div class="flex flex-col items-center gap-2 text-slate-300"><i class="fas fa-inbox text-4xl"></i><span class="text-sm font-bold text-slate-400">Sin registros para esta fecha</span></div></td></tr>';
-                    const cont = document.getElementById('productividadResumenCards'); if(cont) cont.innerHTML = '';
-                    const contMon = document.getElementById('monitoreoVivoContainer'); if(contMon) contMon.innerHTML = '';
+                    const cont = document.getElementById('productividadResumenCards');
+                    if(cont) cont.innerHTML = '<div class="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center"><i class="fas fa-power-off text-3xl text-red-400 mb-2"></i><p class="font-black text-slate-500 text-sm">Sin actividad registrada en esta fecha. Todo el personal figura como <span class="text-red-600">🔴 Desconectado</span> — no hay datos que arrastrar de días anteriores.</p></div>';
+                    const contMon = document.getElementById('monitoreoVivoContainer');
+                    if(contMon) contMon.innerHTML = '<div class="flex items-center gap-2 mb-1"><span class="w-2.5 h-2.5 rounded-full bg-red-600"></span><p class="text-xs font-black uppercase tracking-widest text-red-600">🔴 Todo el equipo Desconectado — sin actividad en esta fecha</p></div>';
                 }
             }).withFailureHandler(function(err) {
                 if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center"><div class="flex flex-col items-center gap-2 text-red-400"><i class="fas fa-triangle-exclamation text-3xl"></i><span class="text-sm font-bold">Error al cargar: ' + err.message + '</span></div></td></tr>';
