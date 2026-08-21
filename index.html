@@ -31,6 +31,25 @@
         .resizer { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: col-resize; user-select: none; touch-action: none; }
         .resizer:hover, .resizer.resizing { background-color: #ef4444; }
         .divide-y > tr:not(:last-child) > * { border-bottom-width: 1px; border-color: #cbd5e1 !important; }
+
+        /* ================= MODO OSCURO (persistido en localStorage 'ffvv_theme') ================= */
+        body.dark-mode { background-color: #0f172a; }
+        body.dark-mode .bg-white { background-color: #1e293b !important; }
+        body.dark-mode .bg-slate-50 { background-color: #0f172a !important; }
+        body.dark-mode .bg-slate-100 { background-color: #1e293b !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(239,68,68,0.12) !important; }
+        body.dark-mode .bg-blue-50 { background-color: rgba(59,130,246,0.12) !important; }
+        body.dark-mode .bg-green-50 { background-color: rgba(34,197,94,0.12) !important; }
+        body.dark-mode .bg-orange-50, body.dark-mode .bg-amber-50 { background-color: rgba(249,115,22,0.12) !important; }
+        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600 { color: #e2e8f0 !important; }
+        body.dark-mode .text-slate-500, body.dark-mode .text-slate-400, body.dark-mode .text-slate-300 { color: #94a3b8 !important; }
+        body.dark-mode .border-slate-200, body.dark-mode .border-slate-100, body.dark-mode .border-slate-300 { border-color: #334155 !important; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+        body.dark-mode .shadow-md, body.dark-mode .shadow-sm, body.dark-mode .shadow-inner { box-shadow: none !important; }
+
+        /* ================= TOAST DE NUEVA VENTA (ANIMACIÓN DE ENTRADA) ================= */
+        @keyframes toastSlideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-venta-anim { animation: toastSlideIn 0.35s ease-out; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -74,11 +93,14 @@
             <header class="bg-white border-b border-slate-200 sticky top-0 z-30 flex-shrink-0 shadow-sm w-full">
                 <div class="px-6 py-4 flex items-center justify-between">
                     <button id="sidebarToggle" class="text-slate-600 hover:text-red-600 text-2xl transition-colors focus:outline-none"><i class="fas fa-bars"></i></button>
-                    <div class="flex items-center gap-4"><span class="text-sm font-bold"><span id="userRol" class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded border border-red-200 mr-2 uppercase"></span><span id="userName" class="text-slate-700 uppercase hidden sm:inline-block">Usuario</span></span><select id="selectEstadoConexion" onchange="cambiarEstadoConexion(this.value)" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black uppercase text-slate-700 focus:outline-none focus:border-red-600 shadow-inner"><option value="CONECTADO">🟢 CONECTADO</option><option value="BAÑO">🚻 BAÑO</option><option value="BREAK">☕ BREAK</option><option value="CAPACITACION">🎓 CAPACITACIÓN</option></select><button id="logoutBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-200 text-sm shadow-md flex items-center gap-2"><i class="fas fa-power-off"></i> <span class="hidden sm:inline-block">Salir</span></button></div>
+                    <div class="flex items-center gap-4"><span class="text-sm font-bold"><span id="userRol" class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded border border-red-200 mr-2 uppercase"></span><span id="userName" class="text-slate-700 uppercase hidden sm:inline-block">Usuario</span></span><select id="selectEstadoConexion" onchange="cambiarEstadoConexion(this.value)" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black uppercase text-slate-700 focus:outline-none focus:border-red-600 shadow-inner"><option value="CONECTADO">🟢 CONECTADO</option><option value="BAÑO">🚻 BAÑO</option><option value="BREAK">☕ BREAK</option><option value="CAPACITACION">🎓 CAPACITACIÓN</option></select><button id="btnThemeToggle" onclick="toggleTheme()" title="Cambiar tema" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm hover:bg-slate-100 transition shadow-inner">💡</button><button id="logoutBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-200 text-sm shadow-md flex items-center gap-2"><i class="fas fa-power-off"></i> <span class="hidden sm:inline-block">Salir</span></button></div>
                 </div>
             </header>
             <div class="flex-1 overflow-y-auto p-4 md:p-8 relative min-w-0 w-full max-w-full overflow-x-hidden">
                 <div id="toastSync" class="fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-2xl hidden z-50 text-sm font-bold flex items-center gap-3"><i class="fas fa-check-circle text-green-400 text-lg"></i><span id="toastMsg">Sincronizado</span></div>
+
+                <!-- CONTENEDOR DE NOTIFICACIONES FLOTANTES EN TIEMPO REAL (NUEVA VENTA) -->
+                <div id="toastVentaContainer" class="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm pointer-events-none"></div>
 
                 <!-- ================= AVANCES (SOLO GERENCIA) ================= -->
                 <div id="avancesView" class="content-view view-hidden space-y-6 w-full">
@@ -127,6 +149,9 @@
                             </div>
                             <button onclick="cargarProductividad()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-black transition shadow-sm hover:shadow-md flex items-center gap-2"><i class="fas fa-search"></i> Buscar</button>
                         </div>
+
+                        <!-- MONITOREO EN VIVO DEL EQUIPO (estado actual detectado en los logs del día) -->
+                        <div id="monitoreoVivoContainer" class="mb-8"></div>
 
                         <!-- TARJETAS DE RESUMEN DE PRODUCTIVIDAD (dinámicas según usuarios con actividad en la fecha) -->
                         <div id="productividadResumenCards" class="space-y-8 mb-10"></div>
@@ -297,7 +322,7 @@
 
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 md:p-5 rounded-2xl shadow-md border border-slate-200 mt-6 w-full">
                         <div><h1 class="text-xl md:text-2xl font-black text-slate-800"><i class="fas fa-list text-red-600 mr-2"></i>Gestión de Ventas Activas</h1><p class="text-sm text-slate-500 font-bold mt-1">Filtra, edita estados y añade observaciones operativas.</p></div>
-                        <div class="flex flex-wrap gap-3"><button onclick="loadVentas()" class="px-4 py-2 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-sync-alt"></i> Actualizar</button><button onclick="cambiarVista('newVenta')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-black transition shadow-md flex items-center gap-2"><i class="fas fa-plus"></i> Registrar</button></div>
+                        <div class="flex flex-wrap gap-3"><button onclick="loadVentas()" class="px-4 py-2 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-sync-alt"></i> Actualizar</button><button onclick="verMisCambios()" class="px-4 py-2 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-black transition shadow-sm flex items-center gap-2"><i class="fas fa-clock"></i> Mis Últimos Cambios</button><button onclick="cambiarVista('newVenta')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-black transition shadow-md flex items-center gap-2"><i class="fas fa-plus"></i> Registrar</button></div>
                     </div>
                     
                     <div class="bg-white p-4 md:p-5 rounded-2xl shadow-md border border-slate-200 flex flex-wrap items-center gap-3 md:gap-4 w-full">
@@ -475,9 +500,24 @@
                 <div class="flex justify-between gap-4 pt-2"><button onclick="copiarTextoWap()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-lg text-sm font-black shadow-md"><i class="fas fa-copy mr-2"></i> Copiar Texto</button><button onclick="closeModalWap()" class="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 py-3 rounded-lg text-sm font-black shadow-sm">Cerrar</button></div>
             </div>
         </div>
+
+        <div id="modalMisCambios" class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white border border-slate-200 rounded-2xl p-8 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl space-y-5">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h2 class="text-2xl font-black text-slate-800"><i class="fas fa-clock text-red-600 mr-2"></i>Mis Últimos Cambios</h2><button onclick="closeModalMisCambios()" class="text-slate-400 hover:text-red-600 text-xl"><i class="fas fa-times"></i></button></div>
+                <p class="text-xs text-slate-500 font-bold -mt-2">Últimas acciones registradas a tu nombre. Úsalo para verificar si modificaste algo por error.</p>
+                <div id="misCambiosBox" class="space-y-1 text-xs"></div>
+            </div>
+        </div>
         <div id="modalEdit" class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div class="bg-white border border-slate-200 rounded-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-                <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-black text-slate-800"><i class="fas fa-edit text-blue-600 mr-2"></i>Editar Registro</h2><button onclick="closeModalEdit()" class="text-slate-400 hover:text-red-600 text-xl"><i class="fas fa-times"></i></button></div>
+                <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                    <h2 class="text-2xl font-black text-slate-800"><i class="fas fa-edit text-blue-600 mr-2"></i>Editar Registro</h2>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="verHistorialCliente()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-black flex items-center gap-1.5 transition"><i class="fas fa-history"></i> Historial</button>
+                        <button onclick="closeModalEdit()" class="text-slate-400 hover:text-red-600 text-xl"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <div id="historialClienteBox" class="hidden mb-6 bg-slate-50 border border-slate-200 rounded-lg p-4 max-h-48 overflow-y-auto text-xs space-y-1"></div>
                 <form id="editForm" class="space-y-6">
                     <input type="hidden" id="editId">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
@@ -540,6 +580,38 @@
             setTimeout(function() { 
                 t.classList.add('hidden'); 
             }, 2500); 
+        }
+
+        // ================= NOTIFICACIÓN FLOTANTE DE NUEVA VENTA (TIEMPO REAL) =================
+        function mostrarToastNuevaVenta(v) {
+            const cont = document.getElementById('toastVentaContainer');
+            if (!cont || !v) return;
+            const toastId = 'toastVenta_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const div = document.createElement('div');
+            div.id = toastId;
+            div.className = 'toast-venta-anim pointer-events-auto bg-white border-l-4 border-green-500 rounded-xl shadow-2xl p-4 relative';
+            div.innerHTML =
+                '<button onclick="document.getElementById(\'' + toastId + '\').remove()" class="absolute top-2.5 right-2.5 text-slate-300 hover:text-red-500 text-sm"><i class="fas fa-times"></i></button>' +
+                '<p class="font-black text-green-700 text-sm mb-2 pr-4">🎉 ¡Nueva Venta Registrada!</p>' +
+                '<div class="text-xs font-bold text-slate-500 space-y-1">' +
+                    '<p><span class="text-slate-400">Asesor:</span> <span class="text-slate-800">' + (v.ASESOR || '-') + '</span></p>' +
+                    '<p><span class="text-slate-400">Cliente:</span> <span class="text-slate-800">' + (v.CLIENTE || '-') + '</span></p>' +
+                    '<p><span class="text-slate-400">Plan:</span> <span class="text-slate-800">S/ ' + (v.CF || '-') + '</span></p>' +
+                    '<p><span class="text-slate-400">Carruselero:</span> <span class="text-slate-800">' + (v.CARRUSELERO || '-') + '</span></p>' +
+                '</div>';
+            cont.appendChild(div);
+            setTimeout(function() { const el = document.getElementById(toastId); if (el) el.remove(); }, 5000);
+        }
+
+        let realtimeVentasIniciado = false;
+        function iniciarRealtimeVentas() {
+            if (realtimeVentasIniciado) return;
+            realtimeVentasIniciado = true;
+            _supabase.channel('ventas-realtime')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'BASE DE VENTAS' }, function(payload) {
+                    mostrarToastNuevaVenta(payload.new || {});
+                })
+                .subscribe();
         }
 
         function getConfig() { 
@@ -1391,6 +1463,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             if(typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
             loadConfigUI();
+            applyTheme(localStorage.getItem('ffvv_theme') || 'light');
             const saved = localStorage.getItem('ffvv_user'); if (saved) { try { currentUser = JSON.parse(saved); initApp(); } catch(e) { localStorage.removeItem('ffvv_user'); } }
             const loginForm = document.getElementById('loginForm'); if(loginForm) { loginForm.onsubmit = function(e) { e.preventDefault(); google.script.run.withSuccessHandler(function(res) { if(res && res.success) { localStorage.setItem('ffvv_user', JSON.stringify(res.user)); currentUser = res.user; initApp(); } else { const errEl = document.getElementById('loginError'); if(errEl) { errEl.textContent = res ? res.message : 'Error desconocido'; errEl.classList.remove('hidden'); } } }).loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); }; }
             const logoutBtn = document.getElementById('logoutBtn'); if(logoutBtn) { logoutBtn.onclick = function() { localStorage.removeItem('ffvv_user'); location.reload(); }; }
@@ -1431,6 +1504,22 @@
                     if (rawFecha) {
                         let parts = rawFecha.split('-');
                         fechaFormatted = parts[2] + '/' + parts[1] + '/' + parts[0];
+                    }
+
+                    // ================= VALIDACIÓN DE VENTA DUPLICADA (mismo DNI + mismo N° a Portar) =================
+                    const docIngresado = String(formData.get('doc') || '').trim();
+                    let ventaDuplicada = null;
+                    for (let i = 0; i < lineasDetalle.length; i++) {
+                        const nPortarLinea = String(lineasDetalle[i].n_portar || '').trim();
+                        if (!docIngresado || !nPortarLinea) continue;
+                        const match = ventasGlobal.find(function(v) {
+                            return String(v.DOC || '').trim() === docIngresado && String(v.N_PORTAR || '').trim() === nPortarLinea;
+                        });
+                        if (match) { ventaDuplicada = match; break; }
+                    }
+                    if (ventaDuplicada) {
+                        const continuar = confirm('⚠️ ¡Atención! Ya existe una venta registrada con este DNI y número a portar. Hay un registro previo realizado por ' + (ventaDuplicada.ASESOR || 'otro asesor') + '. ¿Desea continuar y volver a registrar de todos modos?');
+                        if (!continuar) { return; }
                     }
 
                     const data = { 
@@ -1522,6 +1611,25 @@
         });
 
         // ================= RASTREO DE PRODUCTIVIDAD / INACTIVIDAD (DIRECTO A SUPABASE) =================
+        // ================= SELECTOR DE TEMA (CLARO / OSCURO) =================
+        function applyTheme(theme) {
+            const btn = document.getElementById('btnThemeToggle');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                if (btn) btn.textContent = '🌙';
+            } else {
+                document.body.classList.remove('dark-mode');
+                if (btn) btn.textContent = '💡';
+            }
+        }
+
+        window.toggleTheme = function() {
+            const esOscuroActual = document.body.classList.contains('dark-mode');
+            const nuevoTema = esOscuroActual ? 'light' : 'dark';
+            localStorage.setItem('ffvv_theme', nuevoTema);
+            applyTheme(nuevoTema);
+        };
+
         window.registrarLog = async function(tipo, detalle) {
             if (!currentUser) return;
             try {
@@ -1540,6 +1648,62 @@
 
         // Helper: calcula métricas por usuario (primer/último registro, tiempo productivo, tiempo en pausas)
         // a partir de los logs del día y las renderiza como tarjetas en #productividadResumenCards.
+        // ================= MONITOREO EN VIVO DEL EQUIPO =================
+        // Detecta el último estado (CONECTADO/BAÑO/BREAK/CAPACITACION) reportado por cada usuario
+        // a partir del log 'ESTADO' más reciente del día seleccionado.
+        function renderMonitoreoVivo(logs) {
+            const cont = document.getElementById('monitoreoVivoContainer');
+            if (!cont) return;
+            if (!logs || logs.length === 0) { cont.innerHTML = ''; return; }
+
+            const logsFiltrados = logs.filter(function(log) {
+                const rolUp = String(log.ROL || '').trim().toUpperCase();
+                const userUp = String(log.USUARIO || '').trim().toUpperCase();
+                if (rolUp === 'GERENCIA' || rolUp === 'SUPERVISOR' || rolUp.includes('ADMIN')) return false;
+                if (userUp.includes('ADMIN') || userUp.includes('GERENCIA')) return false;
+                return true;
+            });
+            if (logsFiltrados.length === 0) { cont.innerHTML = ''; return; }
+
+            let porUsuario = {};
+            logsFiltrados.forEach(function(log) {
+                const usuario = log.USUARIO || 'Sin usuario';
+                if (!porUsuario[usuario]) porUsuario[usuario] = { rol: log.ROL || '', estado: 'CONECTADO', ultimaFechaEstado: null };
+                if (String(log.TIPO || '').trim().toUpperCase() === 'ESTADO') {
+                    const fecha = new Date(log.FECHA_HORA);
+                    if (!porUsuario[usuario].ultimaFechaEstado || fecha > porUsuario[usuario].ultimaFechaEstado) {
+                        const match = String(log.DETALLE || '').match(/estado:\s*(.+)$/i);
+                        porUsuario[usuario].estado = match ? match[1].trim().toUpperCase() : 'CONECTADO';
+                        porUsuario[usuario].ultimaFechaEstado = fecha;
+                    }
+                }
+            });
+
+            const estilos = {
+                'CONECTADO': { punto: 'bg-green-500', fondo: 'bg-green-50', texto: 'text-green-700', label: '🟢 Conectado' },
+                'BAÑO': { punto: 'bg-orange-500', fondo: 'bg-orange-50', texto: 'text-orange-700', label: '🚻 Baño' },
+                'BREAK': { punto: 'bg-red-500', fondo: 'bg-red-50', texto: 'text-red-700', label: '☕ Break' },
+                'CAPACITACION': { punto: 'bg-blue-500', fondo: 'bg-blue-50', texto: 'text-blue-700', label: '🎓 Capacitación' }
+            };
+
+            let html = '<div class="flex items-center gap-2 mb-4">' +
+                '<span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>' +
+                '<h3 class="text-sm font-black uppercase tracking-widest text-slate-700">Monitoreo en Vivo del Equipo</h3>' +
+            '</div>';
+            html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">';
+            Object.keys(porUsuario).forEach(function(usuario) {
+                const info = porUsuario[usuario];
+                const est = estilos[info.estado] || estilos['CONECTADO'];
+                html += '<div class="flex items-center gap-3 ' + est.fondo + ' border border-slate-200 rounded-lg p-3">' +
+                    '<span class="w-2.5 h-2.5 rounded-full ' + est.punto + ' shrink-0"></span>' +
+                    '<div class="min-w-0"><p class="font-black text-slate-800 text-xs uppercase truncate">' + usuario + '</p><p class="text-[10px] font-bold ' + est.texto + '">' + est.label + '</p></div>' +
+                '</div>';
+            });
+            html += '</div>';
+
+            cont.innerHTML = html;
+        }
+
         function renderResumenProductividad(logs) {
             const cont = document.getElementById('productividadResumenCards');
             if (!cont) return;
@@ -1669,6 +1833,7 @@
             google.script.run.withSuccessHandler(function(res) {
                 if (!tbody) return;
                 if (res && res.success && res.logs && res.logs.length > 0) {
+                    renderMonitoreoVivo(res.logs);
                     renderResumenProductividad(res.logs);
                     tbody.innerHTML = res.logs.map(function(log) {
                         const esInactividad = String(log.TIPO || '').trim().toUpperCase() === 'INACTIVIDAD';
@@ -1696,6 +1861,7 @@
                 } else {
                     tbody.innerHTML = '<tr><td colspan="5" class="py-12 text-center"><div class="flex flex-col items-center gap-2 text-slate-300"><i class="fas fa-inbox text-4xl"></i><span class="text-sm font-bold text-slate-400">Sin registros para esta fecha</span></div></td></tr>';
                     const cont = document.getElementById('productividadResumenCards'); if(cont) cont.innerHTML = '';
+                    const contMon = document.getElementById('monitoreoVivoContainer'); if(contMon) contMon.innerHTML = '';
                 }
             }).withFailureHandler(function(err) {
                 if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center"><div class="flex flex-col items-center gap-2 text-red-400"><i class="fas fa-triangle-exclamation text-3xl"></i><span class="text-sm font-bold">Error al cargar: ' + err.message + '</span></div></td></tr>';
@@ -1723,6 +1889,7 @@
             const selEstado = document.getElementById('selectEstadoConexion'); if(selEstado) selEstado.value = 'CONECTADO';
             
             renderMovistarCycles();
+            iniciarRealtimeVentas();
             
             let conf = getConfig();
             const elMes = document.getElementById('filtroMes'); 
@@ -2225,7 +2392,69 @@
             const secEl = document.getElementById('editSec'); if(secEl) secEl.value = v.SEC || ''; const formEl = document.getElementById('editFormaEntrega'); if(formEl) formEl.value = v.FORMA_ENTREGA || 'DELIVERY';
             actualizarSubEstadosModal(); document.getElementById('editSubEstado').value = v.SUB_ESTADO || ''; document.getElementById('editObservaciones').value = v.OBSERVACIONES || ''; document.getElementById('modalEdit').classList.remove('hidden');
         }
-        function closeModalEdit() { document.getElementById('modalEdit').classList.add('hidden'); }
+        function closeModalEdit() { document.getElementById('modalEdit').classList.add('hidden'); const box = document.getElementById('historialClienteBox'); if(box) { box.classList.add('hidden'); box.innerHTML = ''; } }
+
+        // ================= "MIS ÚLTIMOS CAMBIOS" (AUTOVERIFICACIÓN DEL ASESOR) =================
+        function closeModalMisCambios() { const m = document.getElementById('modalMisCambios'); if(m) m.classList.add('hidden'); }
+
+        window.verMisCambios = async function() {
+            const modal = document.getElementById('modalMisCambios');
+            const box = document.getElementById('misCambiosBox');
+            if (!modal || !box || !currentUser) return;
+            modal.classList.remove('hidden');
+            box.innerHTML = '<p class="text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-1"></i> Cargando tus últimos cambios...</p>';
+            try {
+                const { data, error } = await _supabase.from('LOGS_PRODUCTIVIDAD').select('*').eq('USUARIO', currentUser.nombre).order('FECHA_HORA', { ascending: false }).limit(20);
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    box.innerHTML = '<div class="flex flex-col items-center gap-2 text-slate-300 py-8"><i class="fas fa-inbox text-3xl"></i><span class="text-xs font-bold text-slate-400">Aún no tienes cambios registrados.</span></div>';
+                    return;
+                }
+                box.innerHTML = data.map(function(log) {
+                    const fecha = new Date(log.FECHA_HORA).toLocaleString('es-PE');
+                    const tipoUp = String(log.TIPO || '').trim().toUpperCase();
+                    let badgeClase = 'bg-slate-100 text-slate-600';
+                    if (tipoUp === 'INACTIVIDAD') badgeClase = 'bg-red-50 text-red-600';
+                    else if (tipoUp === 'ACCION') badgeClase = 'bg-blue-50 text-blue-600';
+                    else if (tipoUp === 'ESTADO') badgeClase = 'bg-amber-50 text-amber-700';
+                    return '<div class="flex items-start gap-3 border-b border-slate-100 last:border-0 py-2.5">' +
+                        '<span class="inline-block px-2 py-1 rounded-full text-[10px] font-black uppercase shrink-0 ' + badgeClase + '">' + (log.TIPO || '') + '</span>' +
+                        '<div class="min-w-0"><p class="text-slate-700 font-semibold break-words">' + (log.DETALLE || '') + '</p><p class="text-slate-400 font-bold text-[10px] mt-0.5">' + fecha + '</p></div>' +
+                    '</div>';
+                }).join('');
+            } catch (err) {
+                box.innerHTML = '<p class="text-red-500 font-bold">Error al cargar tus cambios: ' + err.message + '</p>';
+            }
+        };
+
+        // ================= HISTORIAL DE MODIFICACIONES (TRAZABILIDAD DE VENTA) =================
+        window.verHistorialCliente = async function() {
+            const box = document.getElementById('historialClienteBox');
+            if (!box) return;
+            const docEl = document.getElementById('editDoc'); const clienteEl = document.getElementById('editCliente');
+            const doc = docEl ? docEl.value.trim() : '';
+            const cliente = clienteEl ? clienteEl.value.trim() : '';
+            const termino = doc || cliente;
+
+            box.classList.remove('hidden');
+            if (!termino) { box.innerHTML = '<p class="text-slate-400 font-bold">Sin datos suficientes (DOC/Cliente) para buscar historial.</p>'; return; }
+
+            box.innerHTML = '<p class="text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-1"></i> Buscando historial...</p>';
+            try {
+                const { data, error } = await _supabase.from('LOGS_PRODUCTIVIDAD').select('*').ilike('DETALLE', '%' + termino + '%').order('FECHA_HORA', { ascending: false }).limit(15);
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    box.innerHTML = '<p class="text-slate-400 font-bold">No se encontraron modificaciones registradas para este cliente.</p>';
+                    return;
+                }
+                box.innerHTML = data.map(function(log) {
+                    const fecha = new Date(log.FECHA_HORA).toLocaleString('es-PE');
+                    return '<div class="border-b border-slate-200 last:border-0 py-1.5"><span class="font-black text-slate-700">' + fecha + '</span> — <span class="text-slate-500 font-bold">' + (log.USUARIO || '') + '</span>: <span class="text-slate-600">' + (log.DETALLE || '') + '</span></div>';
+                }).join('');
+            } catch (err) {
+                box.innerHTML = '<p class="text-red-500 font-bold">Error al cargar historial: ' + err.message + '</p>';
+            }
+        };
         function eliminarVenta(id) { if(confirm('¿Estás seguro de eliminar este registro?')) { google.script.run.withSuccessHandler(function(res) { if(res.success) loadVentas(); }).deleteVenta(id); } }
 
         function silentlyRefreshDashboards() {
@@ -2605,6 +2834,11 @@
         window.initApp = initApp;
         window.calculateClaroCycle = calculateClaroCycle;
         window.renderMovistarCycles = renderMovistarCycles;
+        window.closeModalMisCambios = closeModalMisCambios;
+        window.renderMonitoreoVivo = renderMonitoreoVivo;
+        window.mostrarToastNuevaVenta = mostrarToastNuevaVenta;
+        window.iniciarRealtimeVentas = iniciarRealtimeVentas;
+        window.applyTheme = applyTheme;
         window.renderAvances = renderAvances;
         window.fijarVistaGlobal = fijarVistaGlobal;
         window.forzarSincronizacionGeneral = forzarSincronizacionGeneral;
