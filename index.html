@@ -37,14 +37,40 @@
         body.dark-mode .bg-white { background-color: #1e293b !important; }
         body.dark-mode .bg-slate-50 { background-color: #0f172a !important; }
         body.dark-mode .bg-slate-100 { background-color: #1e293b !important; }
-        body.dark-mode .bg-red-50 { background-color: rgba(239,68,68,0.12) !important; }
-        body.dark-mode .bg-blue-50 { background-color: rgba(59,130,246,0.12) !important; }
-        body.dark-mode .bg-green-50 { background-color: rgba(34,197,94,0.12) !important; }
-        body.dark-mode .bg-orange-50, body.dark-mode .bg-amber-50 { background-color: rgba(249,115,22,0.12) !important; }
-        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600 { color: #e2e8f0 !important; }
-        body.dark-mode .text-slate-500, body.dark-mode .text-slate-400, body.dark-mode .text-slate-300 { color: #94a3b8 !important; }
+        body.dark-mode .bg-red-50 { background-color: rgba(239,68,68,0.14) !important; }
+        body.dark-mode .bg-blue-50 { background-color: rgba(59,130,246,0.14) !important; }
+        body.dark-mode .bg-green-50 { background-color: rgba(34,197,94,0.14) !important; }
+        body.dark-mode .bg-orange-50, body.dark-mode .bg-amber-50 { background-color: rgba(249,115,22,0.14) !important; }
+
+        /* Jerarquía de texto: títulos claros, texto secundario gris-azulado legible sobre fondos oscuros */
+        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600 { color: #f1f5f9 !important; }
+        body.dark-mode .text-slate-500, body.dark-mode .text-slate-400, body.dark-mode .text-slate-300 { color: #cbd5e1 !important; }
         body.dark-mode .border-slate-200, body.dark-mode .border-slate-100, body.dark-mode .border-slate-300 { border-color: #334155 !important; }
-        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #1e293b !important; color: #e2e8f0 !important; border-color: #334155 !important; }
+
+        /* Colores semánticos (badges, íconos, alertas): versiones más claras/saturadas para contraste sobre fondo oscuro */
+        body.dark-mode .text-red-400, body.dark-mode .text-red-500, body.dark-mode .text-red-600, body.dark-mode .text-red-700, body.dark-mode .text-red-800 { color: #f87171 !important; }
+        body.dark-mode .text-green-400, body.dark-mode .text-green-600, body.dark-mode .text-green-700 { color: #4ade80 !important; }
+        body.dark-mode .text-blue-600, body.dark-mode .text-blue-700, body.dark-mode .text-blue-800, body.dark-mode .text-blue-900 { color: #60a5fa !important; }
+        body.dark-mode .text-orange-500, body.dark-mode .text-orange-600, body.dark-mode .text-orange-700 { color: #fb923c !important; }
+        body.dark-mode .text-amber-500, body.dark-mode .text-amber-700 { color: #fbbf24 !important; }
+        body.dark-mode .text-yellow-500, body.dark-mode .text-yellow-600, body.dark-mode .text-yellow-700 { color: #facc15 !important; }
+        body.dark-mode .text-purple-600, body.dark-mode .text-purple-800 { color: #c084fc !important; }
+        body.dark-mode .text-pink-600 { color: #f472b6 !important; }
+        body.dark-mode .text-emerald-600 { color: #34d399 !important; }
+        body.dark-mode .text-cyan-600 { color: #22d3ee !important; }
+
+        /* Inputs, selects y textareas: fondo oscuro distinguible, texto claro, placeholder legible */
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background-color: #1e293b !important; color: #f1f5f9 !important; border-color: #334155 !important; }
+        body.dark-mode input::placeholder, body.dark-mode textarea::placeholder { color: #64748b !important; opacity: 1; }
+        body.dark-mode select.inline-edit, body.dark-mode input.inline-edit, body.dark-mode textarea.inline-edit { background-color: transparent !important; }
+        body.dark-mode select.inline-edit:hover:not(:disabled), body.dark-mode select.inline-edit:focus:not(:disabled), body.dark-mode input.inline-edit:hover:not(:disabled), body.dark-mode input.inline-edit:focus:not(:disabled) { background-color: #1e293b !important; }
+
+        /* Tablas: separadores y filas resaltadas (hover) visibles sobre fondo oscuro */
+        body.dark-mode .divide-y > tr:not(:last-child) > * { border-color: #334155 !important; }
+        body.dark-mode .divide-slate-100 > * + * { border-color: #334155 !important; }
+        body.dark-mode tr.hover\:bg-slate-50:hover, body.dark-mode .hover\:bg-slate-50:hover { background-color: #1e293b !important; }
+        body.dark-mode .bg-red-50\/40 { background-color: rgba(239,68,68,0.10) !important; }
+
         body.dark-mode .shadow-md, body.dark-mode .shadow-sm, body.dark-mode .shadow-inner { box-shadow: none !important; }
 
         /* ================= TOAST DE NUEVA VENTA (ANIMACIÓN DE ENTRADA) ================= */
@@ -1979,13 +2005,13 @@
             }, 60000);
 
             // ================= LATIDO DE ACTIVIDAD (HEARTBEAT) =================
-            // Cada 5 minutos, si el usuario está CONECTADO y no ha estado inactivo, registra un log
-            // continuo para garantizar evidencia de actividad en la plataforma.
+            // Cada 3 minutos, si el usuario está CONECTADO, registra un log automático para que el
+            // Monitoreo en Vivo y el cálculo de tiempo productivo reflejen actividad real (revisando leads, base, etc.).
             setInterval(function() {
-                if (estadoConexionActual === 'CONECTADO' && tiempoInactivo < 5) {
-                    registrarLog('ACCION', 'Sigue conectado en la plataforma');
+                if (estadoConexionActual === 'CONECTADO') {
+                    registrarLog('ACCION', 'Sigue activo en la plataforma');
                 }
-            }, 300000);
+            }, 180000);
         }
 
         function initResize(e) {
