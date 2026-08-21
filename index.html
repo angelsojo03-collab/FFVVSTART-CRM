@@ -43,7 +43,7 @@
         body.dark-mode .bg-orange-50, body.dark-mode .bg-amber-50 { background-color: rgba(249,115,22,0.14) !important; }
 
         /* Jerarquía de texto: títulos claros, texto secundario gris-azulado legible sobre fondos oscuros */
-        body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600 { color: #f1f5f9 !important; }
+        body.dark-mode .text-slate-900, body.dark-mode .text-slate-800, body.dark-mode .text-slate-700, body.dark-mode .text-slate-600 { color: #ffffff !important; }
         body.dark-mode .text-slate-500, body.dark-mode .text-slate-400, body.dark-mode .text-slate-300 { color: #cbd5e1 !important; }
         body.dark-mode .border-slate-200, body.dark-mode .border-slate-100, body.dark-mode .border-slate-300 { border-color: #334155 !important; }
 
@@ -2256,7 +2256,7 @@
                             htmlEstado += '<option value="' + o + '" class="' + optColorClass + ' font-bold" ' + sel + '>&nbsp;&nbsp;' + o + '</option>'; 
                         }
                         
-                        let carrColorClass = '';
+                        let carrColorClass = 'bg-transparent text-purple-800 font-black';
                         let cKey = String(v.CARRUSELERO || '').toUpperCase().trim();
                         if(cKey === 'SARA') carrColorClass = 'carr-SARA';
                         else if(cKey === 'ANA') carrColorClass = 'carr-ANA';
@@ -2284,8 +2284,8 @@
                             '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-20 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit text-xs ' + carrColorClass + '\';" class="inline-edit text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value); this.className=\'inline-edit font-black text-xs ' + vendClass + '\';" class="inline-edit font-black text-xs ' + vendClass + '" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit text-xs \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'bg-transparent text-purple-800 font-black\')));" class="inline-edit text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
+                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value); this.className=\'inline-edit font-black text-xs \' + (this.value === \'ANGELICA\' ? \'vend-ANGELICA\' : (this.value === \'GEAN\' ? \'vend-GEAN\' : (this.value === \'SUNNY\' ? \'vend-SUNNY\' : \'bg-transparent text-blue-600 font-black\')));" class="inline-edit font-black text-xs ' + vendClass + '" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
