@@ -15,14 +15,14 @@
         .opt-INFORMADO { background-color: #0891b2 !important; color: white !important; } .opt-DNC { background-color: #dc2626 !important; color: white !important; } .opt-NOCONTESTA { background-color: #ea580c !important; color: white !important; } .opt-NOINTERESADO { background-color: #9333ea !important; color: white !important; } .opt-VENTA { background-color: #16a34a !important; color: white !important; } .opt-WSP { background-color: #eab308 !important; color: black !important; }
         .table-header { padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; text-align: center; } .table-cell { padding: 4px 8px; border: 1px solid #f1f5f9; text-align: center; }
         
-        /* COLORES PERSONALIZADOS PARA CARRUSELEROS Y VENDEDORES */
-        .carr-SARA { background-color: #d8b4fe !important; color: #581c87 !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
-        .carr-ANA { background-color: #fed7aa !important; color: #9a3412 !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
-        .carr-HUMBERTO { background-color: #bbf7d0 !important; color: #166534 !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        /* COLORES PERSONALIZADOS PARA CARRUSELEROS Y VENDEDORES (sólidos y de alto contraste en cualquier modo) */
+        .carr-SARA { background-color: #9333ea !important; color: #ffffff !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .carr-ANA { background-color: #ea580c !important; color: #ffffff !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .carr-HUMBERTO { background-color: #16a34a !important; color: #ffffff !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
 
-        .vend-ANGELICA { background-color: #fbcfe8 !important; color: #831843 !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
-        .vend-GEAN { background-color: #bfdbfe !important; color: #1e3a8a !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
-        .vend-SUNNY { background-color: #99f6e4 !important; color: #134e4a !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .vend-ANGELICA { background-color: #db2777 !important; color: #ffffff !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .vend-GEAN { background-color: #2563eb !important; color: #ffffff !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
+        .vend-SUNNY { background-color: #0d9488 !important; color: #ffffff !important; font-weight: 900 !important; border-radius: 4px; padding: 2px 6px; }
         
         select.opt-INFORMADO, select.opt-DNC, select.opt-NOCONTESTA, select.opt-NOINTERESADO, select.opt-VENTA, select.opt-WSP { font-weight: 900 !important; border: none !important; }
 
@@ -64,6 +64,34 @@
         body.dark-mode input::placeholder, body.dark-mode textarea::placeholder { color: #64748b !important; opacity: 1; }
         body.dark-mode select.inline-edit, body.dark-mode input.inline-edit, body.dark-mode textarea.inline-edit { background-color: transparent !important; }
         body.dark-mode select.inline-edit:hover:not(:disabled), body.dark-mode select.inline-edit:focus:not(:disabled), body.dark-mode input.inline-edit:hover:not(:disabled), body.dark-mode input.inline-edit:focus:not(:disabled) { background-color: #1e293b !important; }
+
+        /* Badges de Carruseleros/Vendedores: deben conservar su color sólido incluso dentro de un <select> en modo oscuro
+           (se repiten aquí con mayor especificidad para ganarle a la regla genérica de "select" de arriba) */
+        body.dark-mode .carr-SARA { background-color: #9333ea !important; color: #ffffff !important; }
+        body.dark-mode .carr-ANA { background-color: #ea580c !important; color: #ffffff !important; }
+        body.dark-mode .carr-HUMBERTO { background-color: #16a34a !important; color: #ffffff !important; }
+        body.dark-mode .vend-ANGELICA { background-color: #db2777 !important; color: #ffffff !important; }
+        body.dark-mode .vend-GEAN { background-color: #2563eb !important; color: #ffffff !important; }
+        body.dark-mode .vend-SUNNY { background-color: #0d9488 !important; color: #ffffff !important; }
+
+        /* Fondos claros de filas/tarjetas por estado (Ventas, Base Dito) y sus variantes hover: versión oscura equivalente */
+        body.dark-mode .bg-yellow-50 { background-color: rgba(234,179,8,0.14) !important; }
+        body.dark-mode .bg-red-100 { background-color: rgba(239,68,68,0.20) !important; }
+        body.dark-mode .bg-green-100 { background-color: rgba(34,197,94,0.20) !important; }
+        body.dark-mode .bg-orange-100 { background-color: rgba(249,115,22,0.20) !important; }
+        body.dark-mode .bg-yellow-100 { background-color: rgba(234,179,8,0.20) !important; }
+        body.dark-mode .bg-purple-100 { background-color: rgba(168,85,247,0.18) !important; }
+        body.dark-mode .bg-purple-200 { background-color: rgba(168,85,247,0.28) !important; }
+        body.dark-mode .bg-slate-200 { background-color: #334155 !important; }
+        body.dark-mode .hover\:bg-slate-50:hover { background-color: #1e293b !important; }
+        body.dark-mode .hover\:bg-slate-100:hover { background-color: #334155 !important; }
+        body.dark-mode .hover\:bg-slate-200:hover { background-color: #334155 !important; }
+        body.dark-mode .hover\:bg-red-50:hover { background-color: rgba(239,68,68,0.18) !important; }
+        body.dark-mode .hover\:bg-red-100:hover { background-color: rgba(239,68,68,0.26) !important; }
+        body.dark-mode .hover\:bg-green-100:hover { background-color: rgba(34,197,94,0.26) !important; }
+        body.dark-mode .hover\:bg-orange-100:hover { background-color: rgba(249,115,22,0.26) !important; }
+        body.dark-mode .hover\:bg-yellow-100:hover { background-color: rgba(234,179,8,0.26) !important; }
+        body.dark-mode .hover\:bg-purple-200:hover { background-color: rgba(168,85,247,0.34) !important; }
 
         /* Tablas: separadores y filas resaltadas (hover) visibles sobre fondo oscuro */
         body.dark-mode .divide-y > tr:not(:last-child) > * { border-color: #334155 !important; }
