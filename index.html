@@ -65,23 +65,25 @@
         body.dark-mode select.inline-edit, body.dark-mode input.inline-edit, body.dark-mode textarea.inline-edit { background-color: transparent !important; }
         body.dark-mode select.inline-edit:hover:not(:disabled), body.dark-mode select.inline-edit:focus:not(:disabled), body.dark-mode input.inline-edit:hover:not(:disabled), body.dark-mode input.inline-edit:focus:not(:disabled) { background-color: #1e293b !important; }
 
-        /* Badges de Carruseleros/Vendedores: deben conservar su color sólido incluso dentro de un <select> en modo oscuro
-           (se repiten aquí con mayor especificidad para ganarle a la regla genérica de "select" de arriba) */
-        body.dark-mode .carr-SARA { background-color: #9333ea !important; color: #ffffff !important; }
-        body.dark-mode .carr-ANA { background-color: #ea580c !important; color: #ffffff !important; }
-        body.dark-mode .carr-HUMBERTO { background-color: #16a34a !important; color: #ffffff !important; }
-        body.dark-mode .vend-ANGELICA { background-color: #db2777 !important; color: #ffffff !important; }
-        body.dark-mode .vend-GEAN { background-color: #2563eb !important; color: #ffffff !important; }
-        body.dark-mode .vend-SUNNY { background-color: #0d9488 !important; color: #ffffff !important; }
+        /* Badges de Carruseleros/Vendedores: deben conservar su color sólido incluso dentro de un <select> en modo oscuro.
+           Se usa el selector compuesto "select.inline-edit.carr-XXX" para superar en especificidad a la regla
+           "body.dark-mode select.inline-edit" (fondo transparente) declarada arriba, que de otro modo gana y deja
+           el <select> sin color al estar cerrado. */
+        body.dark-mode select.inline-edit.carr-SARA, body.dark-mode .carr-SARA { background-color: #9333ea !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.carr-ANA, body.dark-mode .carr-ANA { background-color: #ea580c !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.carr-HUMBERTO, body.dark-mode .carr-HUMBERTO { background-color: #16a34a !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.vend-ANGELICA, body.dark-mode .vend-ANGELICA { background-color: #db2777 !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.vend-GEAN, body.dark-mode .vend-GEAN { background-color: #2563eb !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.vend-SUNNY, body.dark-mode .vend-SUNNY { background-color: #0d9488 !important; color: #ffffff !important; }
 
-        /* Badges de Estado (opt-*): mismo refuerzo de especificidad para que el <select> cerrado conserve su color
-           en modo oscuro, en vez de caer en el fondo/color genérico de "select" */
-        body.dark-mode .opt-INFORMADO { background-color: #0891b2 !important; color: #ffffff !important; }
-        body.dark-mode .opt-DNC { background-color: #dc2626 !important; color: #ffffff !important; }
-        body.dark-mode .opt-NOCONTESTA { background-color: #ea580c !important; color: #ffffff !important; }
-        body.dark-mode .opt-NOINTERESADO { background-color: #9333ea !important; color: #ffffff !important; }
-        body.dark-mode .opt-VENTA { background-color: #16a34a !important; color: #ffffff !important; }
-        body.dark-mode .opt-WSP { background-color: #eab308 !important; color: #000000 !important; }
+        /* Badges de Estado (opt-*): mismo refuerzo de especificidad, usando el selector compuesto "select.inline-edit.opt-XXX"
+           para que el <select> cerrado conserve su color en modo oscuro. */
+        body.dark-mode select.inline-edit.opt-INFORMADO, body.dark-mode .opt-INFORMADO { background-color: #0891b2 !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.opt-DNC, body.dark-mode .opt-DNC { background-color: #dc2626 !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.opt-NOCONTESTA, body.dark-mode .opt-NOCONTESTA { background-color: #ea580c !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.opt-NOINTERESADO, body.dark-mode .opt-NOINTERESADO { background-color: #9333ea !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.opt-VENTA, body.dark-mode .opt-VENTA { background-color: #16a34a !important; color: #ffffff !important; }
+        body.dark-mode select.inline-edit.opt-WSP, body.dark-mode .opt-WSP { background-color: #eab308 !important; color: #000000 !important; }
 
         /* Fondos claros de filas/tarjetas por estado (Ventas, Base Dito) y sus variantes hover: versión oscura equivalente */
         body.dark-mode .bg-yellow-50 { background-color: rgba(234,179,8,0.14) !important; }
