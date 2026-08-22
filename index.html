@@ -1067,27 +1067,20 @@
 
                                         let meses = vGlobal.meses || f.meses || [];
 
-                                        let allBaseV = [];
-                                        let step = 1000;
-                                        // Techo de seguridad reducido (antes 50 000): la paginación con .range() ya corta
-                                        // la descarga en cuanto un bloque viene incompleto, así que en la práctica nunca
-                                        // se llega a este límite salvo un filtro de ciclo mal configurado con datos masivos.
-                                        for (let i = 0; i < 5000; i += step) {
-                                            let query = _supabase.from('BASE DITO').select('*');
-                                            
-                                            if (ciclos.length === 1) {
-                                                query = query.eq('CICLO', parseInt(ciclos[0]));
-                                            } else if (ciclos.length > 1) {
-                                                query = query.in('CICLO', ciclos.map(c => parseInt(c)));
-                                            }
-                                            
-                                            let { data: chunk, error } = await query.range(i, i + step - 1);
-                                            if (error) throw error;
-                                            if (chunk && chunk.length > 0) {
-                                                allBaseV.push(...chunk);
-                                            }
-                                            if (!chunk || chunk.length < step) break;
+                                        let query = _supabase.from('BASE DITO').select('*');
+
+                                        if (ciclos.length === 1) {
+                                            query = query.eq('CICLO', parseInt(ciclos[0]));
+                                        } else if (ciclos.length > 1) {
+                                            query = query.in('CICLO', ciclos.map(c => parseInt(c)));
                                         }
+
+                                        // Límite estricto de 100 registros por consulta: los asesores operan dentro de ese
+                                        // rango diario, así se evita descargar bloques pesados de golpe desde Supabase.
+                                        // Los filtros de ciclo (eq/in) siguen aplicándose ANTES del límite, en el propio servidor.
+                                        let { data: allBaseVRaw, error } = await query.limit(100);
+                                        if (error) throw error;
+                                        let allBaseV = allBaseVRaw || [];
 
                                         let filtered = allBaseV.map(v => ({...v, ID: v.id !== undefined ? v.id : v.ID}));
                                         
@@ -1907,7 +1900,9 @@
                     }
                 }
 
-                let pauseMs = 0;
+                let banoMs = 0;
+                let breakMs = 0;
+                let capacitacionMs = 0;
                 let productivoMs = 0;
                 let improductivoMin = 0;
                 let currentState = 'CONECTADO';
@@ -1928,12 +1923,23 @@
                         if (matchMin) improductivoMin += parseInt(matchMin[1], 10);
                     }
 
-                    if (currentState === 'BAÑO' || currentState === 'BREAK') {
-                        pauseMs += duration;
+                    if (currentState === 'BAÑO') {
+                        banoMs += duration;
+                    } else if (currentState === 'BREAK') {
+                        breakMs += duration;
+                    } else if (currentState === 'CAPACITACION') {
+                        capacitacionMs += duration;
                     } else {
                         productivoMs += duration;
                     }
                 }
+                const pauseMs = banoMs + breakMs + capacitacionMs;
+
+                // Desglose de pausas: solo se listan los tipos de pausa efectivamente usados en el día.
+                let detallePausasHtml = '';
+                if (banoMs > 0) detallePausasHtml += '<p class="flex items-center justify-between pl-5"><span>🚻 Baño</span><span class="text-slate-700 font-black">' + formatDuracion(banoMs) + '</span></p>';
+                if (breakMs > 0) detallePausasHtml += '<p class="flex items-center justify-between pl-5"><span>☕ Break</span><span class="text-slate-700 font-black">' + formatDuracion(breakMs) + '</span></p>';
+                if (capacitacionMs > 0) detallePausasHtml += '<p class="flex items-center justify-between pl-5"><span>📚 Capacitación</span><span class="text-slate-700 font-black">' + formatDuracion(capacitacionMs) + '</span></p>';
 
                 const tarjetaHtml = '<div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-slate-300 transition-all">' +
                     '<div class="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100">' +
@@ -1948,6 +1954,7 @@
                         '<p class="flex items-center justify-between"><span><i class="fas fa-sign-out-alt text-slate-400 mr-1.5 w-4 inline-block text-center"></i>Último registro</span><span class="text-slate-800 font-black">' + (finTurnoFecha || itemsRelevantes[itemsRelevantes.length - 1].fecha).toLocaleTimeString('es-PE') + '</span></p>' +
                         '<p class="flex items-center justify-between"><span><i class="fas fa-bolt text-blue-600 mr-1.5 w-4 inline-block text-center"></i>Tiempo productivo</span><span class="text-slate-800 font-black">' + formatDuracion(productivoMs) + '</span></p>' +
                         '<p class="flex items-center justify-between"><span><i class="fas fa-pause-circle text-orange-500 mr-1.5 w-4 inline-block text-center"></i>Tiempo en pausas</span><span class="text-slate-800 font-black">' + formatDuracion(pauseMs) + '</span></p>' +
+                        detallePausasHtml +
                         '<p class="flex items-center justify-between pt-2.5 mt-1 border-t border-slate-100"><span><i class="fas fa-clock text-red-500 mr-1.5 w-4 inline-block text-center"></i>Tiempo improductivo</span><span class="text-red-600 font-black">' + formatDuracion(improductivoMin * 60000) + '</span></p>' +
                     '</div>' +
                 '</div>';
