@@ -1724,6 +1724,10 @@
 
         window.registrarLog = async function(tipo, detalle) {
             if (!currentUser) return;
+            // Exclusión total de Gerencia / Admin: nunca deben ensuciar la bitácora de productividad.
+            const rolUp = String(currentUser.rol || '').toUpperCase();
+            const nombreUp = String(currentUser.nombre || '').toUpperCase();
+            if (rolUp === 'GERENCIA' || rolUp.includes('ADMIN') || nombreUp.includes('ADMIN')) return;
             try {
                 // Omitimos FECHA_HORA para que Supabase use nativamente now() con la hora correcta del servidor
                 const { error } = await _supabase.from('LOGS_PRODUCTIVIDAD').insert([{
@@ -1793,7 +1797,9 @@
             // Monitoreo en Vivo inteligente (sin heartbeat): se basa exclusivamente en la última acción/estado real.
             // - BAÑO / BREAK / CAPACITACION: se muestran tal cual, sin importar el tiempo transcurrido.
             // - FIN DE TURNO: se considera desconexión inmediata.
-            // - CONECTADO (o cualquier acción normal): si pasaron más de 15 minutos sin ningún log nuevo, se marca DESCONECTADO.
+            // - CONECTADO (o cualquier acción normal): si pasó más de 1 hora sin ningún log nuevo, se marca DESCONECTADO.
+            //   (Umbral alineado a 1 hora, igual que el corte de tiempo productivo en las tarjetas, ya que ahora
+            //   las acciones de Base Dito se registran como máximo cada 20 minutos por el anti-spam.)
             const finReferencia = obtenerFinReferencia(fechaBuscada, logsFiltrados);
             Object.keys(porUsuario).forEach(function(usuario) {
                 const info = porUsuario[usuario];
@@ -1805,7 +1811,7 @@
                 if (esPausaEstable) return;
 
                 const gapMs = finReferencia - info.ultimoLogGeneral;
-                if (gapMs > 15 * 60 * 1000) {
+                if (gapMs > 60 * 60 * 1000) {
                     info.estado = 'DESCONECTADO';
                 }
             });
@@ -2100,6 +2106,14 @@
             estadoConexionActual = nuevoEstado;
             tiempoEnEstado = 0;
             tiempoInactivo = 0;
+
+            // Al pasar a un estado de pausa (BAÑO/BREAK/CAPACITACION/FIN DE TURNO), se registran 2 logs:
+            // 1) un checkpoint de "última actividad" justo antes de pausar (para que el corte de tiempo
+            //    productivo en las tarjetas quede exacto en este instante), y 2) el cambio de estado en sí.
+            const esPausa = (nuevoEstado === 'BAÑO' || nuevoEstado === 'BREAK' || nuevoEstado === 'CAPACITACION' || nuevoEstado === 'FIN DE TURNO');
+            if (esPausa) {
+                registrarLog('ACCION', 'Última actividad antes de iniciar pausa: ' + nuevoEstado);
+            }
             registrarLog('ESTADO', 'Cambió a estado: ' + nuevoEstado);
         };
 
@@ -2471,7 +2485,18 @@
             // El propio elemento editado (select/input) ya refleja su nuevo valor y clase in-place vía el onchange del HTML,
             // y baseVentasGlobal queda sincronizado en memoria; solo se elimina la fila si corresponde ocultar gestionados.
 
-            registrarLog('ACCION', 'Gestión en Base Dito: ' + campo + ' a ' + valor);
+            // Anti-spam: mientras el asesor trabaja activamente en Base Dito (cambia estados, guarda observaciones, etc.),
+            // solo se registra UN log de acción cada 20 minutos como máximo, para no saturar la bitácora con cientos
+            // de clics intermedios. Esto no afecta a los cambios de estado superior (BAÑO/BREAK/CAPACITACION/FIN DE TURNO),
+            // que siempre se registran de inmediato desde cambiarEstadoConexion().
+            if (currentUser) {
+                const claveThrottle = 'ffvv_ultimo_log_basedito_' + currentUser.nombre;
+                const ultimo = parseInt(localStorage.getItem(claveThrottle) || '0', 10);
+                if (Date.now() - ultimo >= 20 * 60 * 1000) {
+                    localStorage.setItem(claveThrottle, String(Date.now()));
+                    registrarLog('ACCION', 'Gestión en Base Dito: ' + campo + ' a ' + valor);
+                }
+            }
 
             google.script.run.withSuccessHandler(function(res) { if(res && res.success) { showToast('Guardado en BD'); } }).updateBaseVentasInline(id, campo, valor);
         }
