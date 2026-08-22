@@ -1078,7 +1078,13 @@
                                         // Límite estricto de 100 registros por consulta: los asesores operan dentro de ese
                                         // rango diario, así se evita descargar bloques pesados de golpe desde Supabase.
                                         // Los filtros de ciclo (eq/in) siguen aplicándose ANTES del límite, en el propio servidor.
-                                        let { data: allBaseVRaw, error } = await query.limit(100);
+                                        // IMPORTANTE: se ordena ANTES del .limit() para que los 100 registros elegidos sean
+                                        // los realmente accionables (no gestionados primero, y entre ellos los de más meses),
+                                        // en vez de un lote arbitrario donde la mayoría ya estén gestionados y queden ocultos.
+                                        let { data: allBaseVRaw, error } = await query
+                                            .order('GESTIONADO', { ascending: true, nullsFirst: true })
+                                            .order('MESES', { ascending: false })
+                                            .limit(100);
                                         if (error) throw error;
                                         let allBaseV = allBaseVRaw || [];
 
