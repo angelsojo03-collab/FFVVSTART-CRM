@@ -222,7 +222,20 @@
                         <div id="productividadResumenCards" class="space-y-8 mb-10"></div>
 
                         <div>
-                            <h3 class="text-[11px] uppercase font-black tracking-widest text-slate-400 mb-3 flex items-center gap-2"><i class="fas fa-list-ul"></i> Bitácora detallada</h3>
+                            <div class="flex flex-wrap items-end justify-between gap-3 mb-3">
+                                <h3 class="text-[11px] uppercase font-black tracking-widest text-slate-400 flex items-center gap-2"><i class="fas fa-list-ul"></i> Bitácora detallada</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <select id="filtroBitacoraUsuario" onchange="filtrarBitacora()" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-red-600">
+                                        <option value="">Todos los usuarios</option>
+                                    </select>
+                                    <select id="filtroBitacoraTipo" onchange="filtrarBitacora()" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-red-600">
+                                        <option value="">Todos los tipos</option>
+                                        <option value="ACCION">Acción</option>
+                                        <option value="ESTADO">Estado</option>
+                                        <option value="INACTIVIDAD">Inactividad</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="overflow-x-auto w-full border border-slate-200 rounded-xl">
                                 <table class="w-full text-xs md:text-sm text-left min-w-max">
                                     <thead class="text-slate-500 bg-slate-50 border-b border-slate-200 font-black tracking-wider uppercase">
@@ -236,6 +249,13 @@
                                     </thead>
                                     <tbody id="tablaProductividadCuerpo" class="divide-y divide-slate-100 text-slate-700"></tbody>
                                 </table>
+                            </div>
+                            <div class="flex items-center justify-between mt-3">
+                                <span id="bitacoraPagInfo" class="text-xs font-bold text-slate-400">0 registros</span>
+                                <div class="flex gap-2">
+                                    <button id="btnBitacoraAnterior" onclick="cambiarPaginaBitacora(-1)" class="px-3 py-1.5 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed" disabled><i class="fas fa-chevron-left"></i> Anterior</button>
+                                    <button id="btnBitacoraSiguiente" onclick="cambiarPaginaBitacora(1)" class="px-3 py-1.5 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed" disabled>Siguiente <i class="fas fa-chevron-right"></i></button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1855,24 +1875,38 @@
                 let items = porUsuario[usuario].items.sort((a, b) => a.fecha - b.fecha);
                 const rol = porUsuario[usuario].rol;
                 const primerLogin = items[0].fecha;
-                let ultimoCierre = items[items.length - 1].fecha;
-                
+
+                // Si existe un log de "FIN DE TURNO", el cierre oficial es ese instante: se ignora
+                // cualquier acción posterior por completo (ni se procesa ni se muestra).
+                let finTurnoFecha = null;
+                for (let i = 0; i < items.length; i++) {
+                    if (String(items[i].TIPO || '').trim().toUpperCase() === 'ESTADO') {
+                        const m = String(items[i].DETALLE || '').match(/estado:\s*(.+)$/i);
+                        const st = m ? m[1].trim().toUpperCase() : '';
+                        if (st === 'FIN DE TURNO') { finTurnoFecha = items[i].fecha; break; }
+                    }
+                }
+                const itemsRelevantes = finTurnoFecha ? items.filter(function(it) { return it.fecha <= finTurnoFecha; }) : items;
+                let ultimoCierre = finTurnoFecha || itemsRelevantes[itemsRelevantes.length - 1].fecha;
+
                 // Regla de ausencia (>1 hora sin ningún log): el cronometraje se detiene estrictamente en el
                 // último registro válido y ese periodo de silencio NO se suma al tiempo productivo.
-                const gapAusencia = finReferencia - ultimoCierre;
-                if (gapAusencia > 0 && gapAusencia <= 60 * 60 * 1000) {
-                    ultimoCierre = finReferencia;
+                // No aplica si el turno ya se cerró explícitamente con "FIN DE TURNO".
+                if (!finTurnoFecha) {
+                    const gapAusencia = finReferencia - ultimoCierre;
+                    if (gapAusencia > 0 && gapAusencia <= 60 * 60 * 1000) {
+                        ultimoCierre = finReferencia;
+                    }
                 }
 
                 let pauseMs = 0;
                 let productivoMs = 0;
                 let improductivoMin = 0;
                 let currentState = 'CONECTADO';
-                let stateStart = items[0].fecha;
 
-                for (let i = 0; i < items.length; i++) {
-                    let currentItem = items[i];
-                    let nextTime = (i + 1 < items.length) ? items[i + 1].fecha : ultimoCierre;
+                for (let i = 0; i < itemsRelevantes.length; i++) {
+                    let currentItem = itemsRelevantes[i];
+                    let nextTime = (i + 1 < itemsRelevantes.length) ? itemsRelevantes[i + 1].fecha : ultimoCierre;
                     let duration = nextTime - currentItem.fecha;
                     if (duration < 0) duration = 0;
 
@@ -1903,7 +1937,7 @@
                     '</div>' +
                     '<div class="space-y-2.5 text-xs font-bold text-slate-500">' +
                         '<p class="flex items-center justify-between"><span><i class="fas fa-sign-in-alt text-green-600 mr-1.5 w-4 inline-block text-center"></i>Primer registro</span><span class="text-slate-800 font-black">' + primerLogin.toLocaleTimeString('es-PE') + '</span></p>' +
-                        '<p class="flex items-center justify-between"><span><i class="fas fa-sign-out-alt text-slate-400 mr-1.5 w-4 inline-block text-center"></i>Último registro</span><span class="text-slate-800 font-black">' + items[items.length - 1].fecha.toLocaleTimeString('es-PE') + '</span></p>' +
+                        '<p class="flex items-center justify-between"><span><i class="fas fa-sign-out-alt text-slate-400 mr-1.5 w-4 inline-block text-center"></i>Último registro</span><span class="text-slate-800 font-black">' + (finTurnoFecha || itemsRelevantes[itemsRelevantes.length - 1].fecha).toLocaleTimeString('es-PE') + '</span></p>' +
                         '<p class="flex items-center justify-between"><span><i class="fas fa-bolt text-blue-600 mr-1.5 w-4 inline-block text-center"></i>Tiempo productivo</span><span class="text-slate-800 font-black">' + formatDuracion(productivoMs) + '</span></p>' +
                         '<p class="flex items-center justify-between"><span><i class="fas fa-pause-circle text-orange-500 mr-1.5 w-4 inline-block text-center"></i>Tiempo en pausas</span><span class="text-slate-800 font-black">' + formatDuracion(pauseMs) + '</span></p>' +
                         '<p class="flex items-center justify-between pt-2.5 mt-1 border-t border-slate-100"><span><i class="fas fa-clock text-red-500 mr-1.5 w-4 inline-block text-center"></i>Tiempo improductivo</span><span class="text-red-600 font-black">' + formatDuracion(improductivoMin * 60000) + '</span></p>' +
@@ -1935,6 +1969,93 @@
             cont.innerHTML = html;
         }
 
+        // ================= BITÁCORA DETALLADA: ESTADO LOCAL, FILTROS Y PAGINACIÓN (SIN VOLVER A CONSULTAR SUPABASE) =================
+        let bitacoraLogsGlobal = [];    // todos los logs del día (orden descendente, para la bitácora)
+        let bitacoraFiltrados = [];     // subconjunto tras aplicar filtro Usuario/Tipo
+        let bitacoraPage = 1;
+        const bitacoraPageSize = 20;
+
+        function poblarFiltroUsuariosBitacora(logs) {
+            const sel = document.getElementById('filtroBitacoraUsuario');
+            if (!sel) return;
+            const valorPrevio = sel.value;
+            const usuarios = Array.from(new Set(logs.map(function(l) { return l.USUARIO || 'Sin usuario'; }))).sort();
+            sel.innerHTML = '<option value="">Todos los usuarios</option>' + usuarios.map(function(u) { return '<option value="' + u + '">' + u + '</option>'; }).join('');
+            if (usuarios.includes(valorPrevio)) sel.value = valorPrevio;
+        }
+
+        window.filtrarBitacora = function() {
+            const usuarioSel = document.getElementById('filtroBitacoraUsuario');
+            const tipoSel = document.getElementById('filtroBitacoraTipo');
+            const usuario = usuarioSel ? usuarioSel.value : '';
+            const tipo = tipoSel ? tipoSel.value : '';
+
+            bitacoraFiltrados = bitacoraLogsGlobal.filter(function(log) {
+                if (usuario && (log.USUARIO || 'Sin usuario') !== usuario) return false;
+                if (tipo && String(log.TIPO || '').trim().toUpperCase() !== tipo) return false;
+                return true;
+            });
+            bitacoraPage = 1;
+            renderBitacora();
+        };
+
+        window.cambiarPaginaBitacora = function(delta) {
+            const totalPaginas = Math.max(1, Math.ceil(bitacoraFiltrados.length / bitacoraPageSize));
+            const nuevaPagina = bitacoraPage + delta;
+            if (nuevaPagina < 1 || nuevaPagina > totalPaginas) return;
+            bitacoraPage = nuevaPagina;
+            renderBitacora();
+        };
+
+        function renderBitacora() {
+            const tbody = document.getElementById('tablaProductividadCuerpo');
+            const infoEl = document.getElementById('bitacoraPagInfo');
+            const btnAnt = document.getElementById('btnBitacoraAnterior');
+            const btnSig = document.getElementById('btnBitacoraSiguiente');
+            if (!tbody) return;
+
+            if (!bitacoraFiltrados || bitacoraFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-12 text-center"><div class="flex flex-col items-center gap-2 text-slate-300"><i class="fas fa-inbox text-4xl"></i><span class="text-sm font-bold text-slate-400">Sin registros para este filtro</span></div></td></tr>';
+                if (infoEl) infoEl.textContent = '0 registros';
+                if (btnAnt) btnAnt.disabled = true;
+                if (btnSig) btnSig.disabled = true;
+                return;
+            }
+
+            const totalPaginas = Math.max(1, Math.ceil(bitacoraFiltrados.length / bitacoraPageSize));
+            if (bitacoraPage > totalPaginas) bitacoraPage = totalPaginas;
+            const desde = (bitacoraPage - 1) * bitacoraPageSize; // paginación local equivalente a .range(desde, desde+19)
+            const pagina = bitacoraFiltrados.slice(desde, desde + bitacoraPageSize);
+
+            tbody.innerHTML = pagina.map(function(log) {
+                const esInactividad = String(log.TIPO || '').trim().toUpperCase() === 'INACTIVIDAD';
+                const tipoUp = String(log.TIPO || '').trim().toUpperCase();
+                let badgeClase = 'bg-slate-100 text-slate-600';
+                if (tipoUp === 'INACTIVIDAD') badgeClase = 'bg-red-50 text-red-600';
+                else if (tipoUp === 'ACCION') badgeClase = 'bg-blue-50 text-blue-600';
+                else if (tipoUp === 'ESTADO') badgeClase = 'bg-amber-50 text-amber-700';
+                const filaClase = esInactividad ? 'bg-red-50/40' : 'hover:bg-slate-50';
+
+                let horaSolo = '';
+                if (log.FECHA_HORA) {
+                    let d = new Date(log.FECHA_HORA);
+                    horaSolo = d.toLocaleTimeString('es-PE');
+                }
+
+                return '<tr class="' + filaClase + ' transition-colors">' +
+                    '<td class="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">' + horaSolo + '</td>' +
+                    '<td class="py-3 px-4 font-black text-slate-800 whitespace-nowrap">' + (log.USUARIO || '') + '</td>' +
+                    '<td class="py-3 px-4 text-slate-500 font-bold whitespace-nowrap">' + (log.ROL || '') + '</td>' +
+                    '<td class="py-3 px-4"><span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wide ' + badgeClase + '">' + (log.TIPO || '') + '</span></td>' +
+                    '<td class="py-3 px-4 text-slate-600 font-semibold whitespace-normal break-words max-w-xs">' + (log.DETALLE || '') + '</td>' +
+                '</tr>';
+            }).join('');
+
+            if (infoEl) infoEl.textContent = bitacoraFiltrados.length + ' registros — página ' + bitacoraPage + ' de ' + totalPaginas;
+            if (btnAnt) btnAnt.disabled = (bitacoraPage <= 1);
+            if (btnSig) btnSig.disabled = (bitacoraPage >= totalPaginas);
+        }
+
         window.cargarProductividad = function() {
             const fechaInput = document.getElementById('fechaProductividad');
             if (!fechaInput || !fechaInput.value) { showToast('Selecciona una fecha'); return; }
@@ -1946,33 +2067,21 @@
             google.script.run.withSuccessHandler(function(res) {
                 if (!tbody) return;
                 if (res && res.success && res.logs && res.logs.length > 0) {
+                    // Copia ascendente (orden cronológico) para los cálculos de productividad/monitoreo,
+                    // y copia descendente (más nuevo primero) exclusivamente para la Bitácora.
                     renderMonitoreoVivo(res.logs, fechaBuscada);
                     renderResumenProductividad(res.logs, fechaBuscada);
-                    tbody.innerHTML = res.logs.map(function(log) {
-                        const esInactividad = String(log.TIPO || '').trim().toUpperCase() === 'INACTIVIDAD';
-                        const tipoUp = String(log.TIPO || '').trim().toUpperCase();
-                        let badgeClase = 'bg-slate-100 text-slate-600';
-                        if (tipoUp === 'INACTIVIDAD') badgeClase = 'bg-red-50 text-red-600';
-                        else if (tipoUp === 'ACCION') badgeClase = 'bg-blue-50 text-blue-600';
-                        else if (tipoUp === 'ESTADO') badgeClase = 'bg-amber-50 text-amber-700';
-                        const filaClase = esInactividad ? 'bg-red-50/40' : 'hover:bg-slate-50';
-                        
-                        let horaSolo = '';
-                        if (log.FECHA_HORA) { 
-                            let d = new Date(log.FECHA_HORA);
-                            horaSolo = d.toLocaleTimeString('es-PE');
-                        }
-                        
-                        return '<tr class="' + filaClase + ' transition-colors">' +
-                            '<td class="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">' + horaSolo + '</td>' +
-                            '<td class="py-3 px-4 font-black text-slate-800 whitespace-nowrap">' + (log.USUARIO || '') + '</td>' +
-                            '<td class="py-3 px-4 text-slate-500 font-bold whitespace-nowrap">' + (log.ROL || '') + '</td>' +
-                            '<td class="py-3 px-4"><span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wide ' + badgeClase + '">' + (log.TIPO || '') + '</span></td>' +
-                            '<td class="py-3 px-4 text-slate-600 font-semibold whitespace-normal break-words max-w-xs">' + (log.DETALLE || '') + '</td>' +
-                        '</tr>';
-                    }).join('');
+
+                    bitacoraLogsGlobal = res.logs.slice().sort(function(a, b) { return new Date(b.FECHA_HORA) - new Date(a.FECHA_HORA); });
+                    poblarFiltroUsuariosBitacora(bitacoraLogsGlobal);
+                    const tipoSel = document.getElementById('filtroBitacoraTipo'); if (tipoSel) tipoSel.value = '';
+                    bitacoraFiltrados = bitacoraLogsGlobal.slice();
+                    bitacoraPage = 1;
+                    renderBitacora();
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="py-12 text-center"><div class="flex flex-col items-center gap-2 text-slate-300"><i class="fas fa-inbox text-4xl"></i><span class="text-sm font-bold text-slate-400">Sin registros para esta fecha</span></div></td></tr>';
+                    bitacoraLogsGlobal = [];
+                    bitacoraFiltrados = [];
+                    renderBitacora();
                     const cont = document.getElementById('productividadResumenCards');
                     if(cont) cont.innerHTML = '<div class="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center"><i class="fas fa-power-off text-3xl text-red-400 mb-2"></i><p class="font-black text-slate-500 text-sm">Sin actividad registrada en esta fecha. Todo el personal figura como <span class="text-red-600">🔴 Desconectado</span> — no hay datos que arrastrar de días anteriores.</p></div>';
                     const contMon = document.getElementById('monitoreoVivoContainer');
@@ -2942,6 +3051,7 @@
         window.renderMovistarCycles = renderMovistarCycles;
         window.closeModalMisCambios = closeModalMisCambios;
         window.renderMonitoreoVivo = renderMonitoreoVivo;
+        window.renderBitacora = renderBitacora;
         window.mostrarToastNuevaVenta = mostrarToastNuevaVenta;
         window.iniciarRealtimeVentas = iniciarRealtimeVentas;
         window.applyTheme = applyTheme;
