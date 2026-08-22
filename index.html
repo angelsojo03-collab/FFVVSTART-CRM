@@ -1217,11 +1217,13 @@
                                         const inicioDia = fecha + 'T00:00:00-05:00';
                                         const finDia = fecha + 'T23:59:59-05:00';
                                         
+                                        // Orden descendente (más reciente primero): es el orden que manda en la consulta,
+                                        // para que la Bitácora muestre de inmediato lo último que hizo el equipo.
                                         const { data, error } = await _supabase.from('LOGS_PRODUCTIVIDAD')
                                             .select('*')
                                             .gte('FECHA_HORA', inicioDia)
                                             .lte('FECHA_HORA', finDia)
-                                            .order('FECHA_HORA', { ascending: true });
+                                            .order('FECHA_HORA', { ascending: false });
                                         if (error) throw error;
                                         result = { success: true, logs: data || [] };
                                     }
@@ -2067,12 +2069,14 @@
             google.script.run.withSuccessHandler(function(res) {
                 if (!tbody) return;
                 if (res && res.success && res.logs && res.logs.length > 0) {
-                    // Copia ascendente (orden cronológico) para los cálculos de productividad/monitoreo,
-                    // y copia descendente (más nuevo primero) exclusivamente para la Bitácora.
+                    // La consulta a Supabase ya devuelve los logs en orden descendente (más reciente primero).
+                    // Las tarjetas y el monitoreo en vivo son independientes del orden de entrada (cada uno
+                    // reordena cronológicamente sus propios datos por usuario), así que reciben el arreglo tal cual.
                     renderMonitoreoVivo(res.logs, fechaBuscada);
                     renderResumenProductividad(res.logs, fechaBuscada);
 
-                    bitacoraLogsGlobal = res.logs.slice().sort(function(a, b) { return new Date(b.FECHA_HORA) - new Date(a.FECHA_HORA); });
+                    // La Bitácora usa directamente el orden nativo de la consulta (descendente) sin reordenar.
+                    bitacoraLogsGlobal = res.logs.slice();
                     poblarFiltroUsuariosBitacora(bitacoraLogsGlobal);
                     const tipoSel = document.getElementById('filtroBitacoraTipo'); if (tipoSel) tipoSel.value = '';
                     bitacoraFiltrados = bitacoraLogsGlobal.slice();
