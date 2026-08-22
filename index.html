@@ -1045,6 +1045,19 @@
                                     }
                                     
                                     // COWORK BASE DITO - DESCARGA TOTAL PAGINADA POR BLOQUES HASTA 50,000 REGISTROS FILTRADOS POR CICLO
+                                    else if (prop === 'obtenerCamposCriticosBase') {
+                                        // Endpoint liviano: solo trae ID/ESTADO/CARRUSELERO/VENDEDOR de las filas
+                                        // que ya están en pantalla, para poder refrescarlas cada pocos segundos
+                                        // sin pagar el costo de traer la fila completa (select *).
+                                        const [ids] = args;
+                                        if (!ids || ids.length === 0) { result = { success: true, campos: [] }; }
+                                        else {
+                                            const { data, error } = await _supabase.from('BASE DITO').select('ID, ESTADO, CARRUSELERO, VENDEDOR').in('ID', ids);
+                                            if (error) throw error;
+                                            result = { success: true, campos: data || [] };
+                                        }
+                                    }
+
                                     else if (prop === 'obtenerBaseFiltrada') {
                                         const [f] = args; 
                                         let cloudConf = { cicloDefault: '20', vistaDito: null, organizarEstadoGlobal: false, globalSort: [
@@ -1309,8 +1322,9 @@
             aplicarFiltrosBase(false);
             if(baseSyncInterval) clearInterval(baseSyncInterval);
             if(window.baseHardSyncInterval) clearInterval(window.baseHardSyncInterval);
+            if(window.baseCriticalSyncInterval) clearInterval(window.baseCriticalSyncInterval);
             
-            // Actualización suave cada 5s (no interrumpe si el usuario edita)
+            // Actualización suave cada 7s (no interrumpe si el usuario edita) para el resto de columnas
             baseSyncInterval = setInterval(function() {
                 const vistaBase = document.getElementById('baseVentasView');
                 const activo = document.activeElement;
@@ -1318,7 +1332,13 @@
                 if (vistaBase && !vistaBase.classList.contains('view-hidden') && !editandoAhora) {
                     aplicarFiltrosBase(true);
                 }
-            }, 5000); 
+            }, 7000); 
+
+            // Actualización quirúrgica cada 3s: SOLO Estado/Carruselero/Vendedor, sin pisar lo que el usuario
+            // está seleccionando en ese instante. Evita que dos Carruseleros gestionen el mismo lead sin saberlo.
+            window.baseCriticalSyncInterval = setInterval(function() {
+                sincronizarCamposCriticosBase();
+            }, 3000);
 
             // Actualización OBLIGATORIA cada 1 minuto (60000 ms) para forzar el reordenamiento de "INFORMADOS"
             window.baseHardSyncInterval = setInterval(function() {
@@ -2472,17 +2492,63 @@
                             '<td class="px-4 py-2 text-slate-700 font-bold">' + (v.FV || '') + '</td>' +
                             '<td class="px-3 py-2 text-center text-slate-700 font-bold w-16">' + (v.MESES || '') + '</td>' +
                             '<td class="px-3 py-2 text-blue-700 font-black text-center w-16">' + (v.CICLO || '') + '</td>' +
-                            '<td class="px-2 py-2 w-32"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit font-black rounded text-xs \' + (this.value ? \'opt-\'+this.value.replace(/\\s+/g, \'\') : \'bg-transparent text-slate-800\');" class="inline-edit font-black rounded text-xs ' + selectEstadoClass + '" ' + blockGestion + '>' + htmlEstado + '</select></td>' +
+                            '<td class="px-2 py-2 w-32"><select id="selEstado_' + v.ID + '" onchange="inlineUpdateBase(\'' + v.ID + '\', \'ESTADO\', this.value); this.className=\'inline-edit font-black rounded text-xs \' + (this.value ? \'opt-\'+this.value.replace(/\\s+/g, \'\') : \'bg-transparent text-slate-800\');" class="inline-edit font-black rounded text-xs ' + selectEstadoClass + '" ' + blockGestion + '>' + htmlEstado + '</select></td>' +
                             '<td class="px-3 py-2"><input type="time" onchange="inlineUpdateBase(\'' + v.ID + '\', \'HORA\', this.value)" value="' + (v.HORA || '') + '" class="inline-edit text-slate-800 font-bold w-20 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-3 py-2"><input type="text" onchange="inlineUpdateBase(\'' + v.ID + '\', \'OBS\', this.value)" value="' + safeObs + '" placeholder="Anotaciones..." class="inline-edit text-slate-800 font-bold w-32 bg-transparent" ' + blockGestion + '></td>' +
                             '<td class="px-4 py-2 text-center"><input type="checkbox" onchange="inlineUpdateBase(\'' + v.ID + '\', \'GESTIONADO\', this.checked ? \'TRUE\' : \'FALSE\')" class="w-5 h-5 cursor-pointer accent-red-600" ' + chkState + ' ' + blockGestion + '></td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit text-xs \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'bg-transparent text-purple-800 font-black\')));" class="inline-edit text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
-                            '<td class="px-3 py-2"><select onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value); this.className=\'inline-edit font-black text-xs \' + (this.value === \'ANGELICA\' ? \'vend-ANGELICA\' : (this.value === \'GEAN\' ? \'vend-GEAN\' : (this.value === \'SUNNY\' ? \'vend-SUNNY\' : \'bg-transparent text-blue-600 font-black\')));" class="inline-edit font-black text-xs ' + vendClass + '" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
+                            '<td class="px-3 py-2"><select id="selCarr_' + v.ID + '" onchange="inlineUpdateBase(\'' + v.ID + '\', \'CARRUSELERO\', this.value); this.className=\'inline-edit text-xs \' + (this.value === \'SARA\' ? \'carr-SARA\' : (this.value === \'ANA\' ? \'carr-ANA\' : (this.value === \'HUMBERTO\' ? \'carr-HUMBERTO\' : \'bg-transparent text-purple-800 font-black\')));" class="inline-edit text-xs ' + carrColorClass + '" ' + blockGestion + '>' + htmlCarr + '</select></td>' +
+                            '<td class="px-3 py-2"><select id="selVend_' + v.ID + '" onchange="inlineUpdateBase(\'' + v.ID + '\', \'VENDEDOR\', this.value); this.className=\'inline-edit font-black text-xs \' + (this.value === \'ANGELICA\' ? \'vend-ANGELICA\' : (this.value === \'GEAN\' ? \'vend-GEAN\' : (this.value === \'SUNNY\' ? \'vend-SUNNY\' : \'bg-transparent text-blue-600 font-black\')));" class="inline-edit font-black text-xs ' + vendClass + '" ' + blockVendedor + '>' + htmlVend + '</select></td>' +
                             '</tr>';
                     } catch(e) { console.error("Error fila Dito ID " + v.ID, e); }
                 });
                 tb.innerHTML = htmlTemp;
             } catch(e) { console.error("Error en renderBaseTable:", e); }
+        }
+
+        // ================= SINCRONIZACIÓN QUIRÚRGICA (SOLO ESTADO/CARRUSELERO/VENDEDOR) =================
+        // Estos 3 campos son los que varios Carruseleros/Asesores pueden tocar casi al mismo tiempo sobre el
+        // mismo lead (para evitar que dos personas gestionen el mismo registro). Por eso se refrescan cada
+        // 3 segundos con una consulta liviana (solo esas 4 columnas), en vez de esperar a la sincronización
+        // completa de la tabla (cada 7s). Nunca pisa un <select> que el usuario tiene enfocado en ese momento.
+        function sincronizarCamposCriticosBase() {
+            const vistaBase = document.getElementById('baseVentasView');
+            if (!vistaBase || vistaBase.classList.contains('view-hidden')) return;
+            if (!baseVentasGlobal || baseVentasGlobal.length === 0) return;
+
+            const ids = baseVentasGlobal.map(function(v) { return v.ID; });
+            google.script.run.withSuccessHandler(function(res) {
+                if (!res || !res.success || !res.campos) return;
+                const activo = document.activeElement;
+
+                res.campos.forEach(function(campo) {
+                    const row = baseVentasGlobal.find(function(v) { return String(v.ID) === String(campo.ID); });
+                    if (!row) return;
+
+                    // ESTADO
+                    const selEstado = document.getElementById('selEstado_' + campo.ID);
+                    if (selEstado && selEstado !== activo && String(row.ESTADO || '') !== String(campo.ESTADO || '')) {
+                        row.ESTADO = campo.ESTADO;
+                        selEstado.value = campo.ESTADO || '';
+                        selEstado.className = 'inline-edit font-black rounded text-xs ' + (campo.ESTADO ? 'opt-' + String(campo.ESTADO).replace(/\s+/g, '') : 'bg-transparent text-slate-800');
+                    }
+
+                    // CARRUSELERO
+                    const selCarr = document.getElementById('selCarr_' + campo.ID);
+                    if (selCarr && selCarr !== activo && String(row.CARRUSELERO || '') !== String(campo.CARRUSELERO || '')) {
+                        row.CARRUSELERO = campo.CARRUSELERO;
+                        selCarr.value = campo.CARRUSELERO || '';
+                        selCarr.className = 'inline-edit text-xs ' + (campo.CARRUSELERO === 'SARA' ? 'carr-SARA' : (campo.CARRUSELERO === 'ANA' ? 'carr-ANA' : (campo.CARRUSELERO === 'HUMBERTO' ? 'carr-HUMBERTO' : 'bg-transparent text-purple-800 font-black')));
+                    }
+
+                    // VENDEDOR
+                    const selVend = document.getElementById('selVend_' + campo.ID);
+                    if (selVend && selVend !== activo && String(row.VENDEDOR || '') !== String(campo.VENDEDOR || '')) {
+                        row.VENDEDOR = campo.VENDEDOR;
+                        selVend.value = campo.VENDEDOR || '';
+                        selVend.className = 'inline-edit font-black text-xs ' + (campo.VENDEDOR === 'ANGELICA' ? 'vend-ANGELICA' : (campo.VENDEDOR === 'GEAN' ? 'vend-GEAN' : (campo.VENDEDOR === 'SUNNY' ? 'vend-SUNNY' : 'bg-transparent text-blue-600 font-black')));
+                    }
+                });
+            }).withFailureHandler(function() {}).obtenerCamposCriticosBase(ids);
         }
 
         function inlineUpdateBase(id, campo, valor) {
@@ -3082,6 +3148,7 @@
         window.aplicarMultiSort = aplicarMultiSort;
         window.inlineUpdate = inlineUpdate;
         window.inlineUpdateBase = inlineUpdateBase;
+        window.sincronizarCamposCriticosBase = sincronizarCamposCriticosBase;
         window.inlineUpdateDate = inlineUpdateDate;
         window.changeInlineEstado = changeInlineEstado;
         window.openModalEdit = openModalEdit;
