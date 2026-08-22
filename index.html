@@ -1049,7 +1049,10 @@
 
                                         let allBaseV = [];
                                         let step = 1000;
-                                        for (let i = 0; i < 50000; i += step) {
+                                        // Techo de seguridad reducido (antes 50 000): la paginación con .range() ya corta
+                                        // la descarga en cuanto un bloque viene incompleto, así que en la práctica nunca
+                                        // se llega a este límite salvo un filtro de ciclo mal configurado con datos masivos.
+                                        for (let i = 0; i < 5000; i += step) {
                                             let query = _supabase.from('BASE DITO').select('*');
                                             
                                             if (ciclos.length === 1) {
@@ -1765,14 +1768,22 @@
                 }
             });
 
-            // Regla de desconexión por ausencia: si pasó más de 1 hora sin ningún log y no está en pausa
-            // (BAÑO/BREAK/CAPACITACION/FIN DE TURNO), se marca automáticamente como DESCONECTADO.
+            // Monitoreo en Vivo inteligente (sin heartbeat): se basa exclusivamente en la última acción/estado real.
+            // - BAÑO / BREAK / CAPACITACION: se muestran tal cual, sin importar el tiempo transcurrido.
+            // - FIN DE TURNO: se considera desconexión inmediata.
+            // - CONECTADO (o cualquier acción normal): si pasaron más de 15 minutos sin ningún log nuevo, se marca DESCONECTADO.
             const finReferencia = obtenerFinReferencia(fechaBuscada, logsFiltrados);
             Object.keys(porUsuario).forEach(function(usuario) {
                 const info = porUsuario[usuario];
-                const enPausa = (info.estado === 'BAÑO' || info.estado === 'BREAK' || info.estado === 'CAPACITACION' || info.estado === 'FIN DE TURNO');
+                if (info.estado === 'FIN DE TURNO') {
+                    info.estado = 'DESCONECTADO';
+                    return;
+                }
+                const esPausaEstable = (info.estado === 'BAÑO' || info.estado === 'BREAK' || info.estado === 'CAPACITACION');
+                if (esPausaEstable) return;
+
                 const gapMs = finReferencia - info.ultimoLogGeneral;
-                if (!enPausa && gapMs > 60 * 60 * 1000) {
+                if (gapMs > 15 * 60 * 1000) {
                     info.estado = 'DESCONECTADO';
                 }
             });
@@ -1782,7 +1793,6 @@
                 'BAÑO': { punto: 'bg-orange-500', fondo: 'bg-orange-50', texto: 'text-orange-700', label: '🚻 Baño' },
                 'BREAK': { punto: 'bg-red-500', fondo: 'bg-red-50', texto: 'text-red-700', label: '☕ Break' },
                 'CAPACITACION': { punto: 'bg-blue-500', fondo: 'bg-blue-50', texto: 'text-blue-700', label: '🎓 Capacitación' },
-                'FIN DE TURNO': { punto: 'bg-slate-600', fondo: 'bg-slate-100', texto: 'text-slate-700', label: '🔴 Fin de Turno' },
                 'DESCONECTADO': { punto: 'bg-red-600', fondo: 'bg-red-100', texto: 'text-red-700', label: '🔴 Desconectado' }
             };
 
@@ -2082,15 +2092,6 @@
                     // CAPACITACION: sin límite de alerta, no se dispara nada por tiempo.
                 }
             }, 60000);
-
-            // ================= LATIDO DE ACTIVIDAD (HEARTBEAT) =================
-            // Cada 3 minutos, si el usuario está CONECTADO, registra un log automático para que el
-            // Monitoreo en Vivo y el cálculo de tiempo productivo reflejen actividad real (revisando leads, base, etc.).
-            setInterval(function() {
-                if (estadoConexionActual === 'CONECTADO') {
-                    registrarLog('ACCION', 'Sigue activo en la plataforma');
-                }
-            }, 180000);
         }
 
         function initResize(e) {
